@@ -16,9 +16,11 @@ const col = c => `rgba(${c.r},${c.g},${c.b},${c.a ?? 1})`;
 const J = { MIN: 'flex-start', CENTER: 'center', MAX: 'flex-end', SPACE_BETWEEN: 'space-between', BASELINE: 'baseline' };
 
 function html(tree, T) {
+  // 피그마의 절대 위치는 부모 프레임의 바깥 모서리 기준이고, CSS 는 테두리 안쪽 기준이다. 테두리 두께만큼 보정한다.
+  const absAt = (n, p) => `left:${n.x - (p.stroke ? p.stroke.w[3] : 0)}px;top:${n.y - (p.stroke ? p.stroke.w[0] : 0)}px;`;
   const sizeCss = (n, p) => {
     if (!p) return `width:${n.w}px;height:${n.h}px;`;
-    if (n.abs) return `position:absolute;left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px;`;
+    if (n.abs) return `position:absolute;${absAt(n, p)}width:${n.w}px;height:${n.h}px;`;
     const main = p.lay === 'H' ? ['sw', 'width', n.w] : ['sh', 'height', n.h], cross = p.lay === 'H' ? ['sh', 'height', n.h] : ['sw', 'width', n.w];
     let s = 'flex-shrink:0;';
     const m = n[main[0]] || 'FIXED', c = n[cross[0]] || 'FIXED';
@@ -36,7 +38,7 @@ function html(tree, T) {
       for (const r of runs) { inner += esc(n.chars.slice(i, r.s)); inner += `<span style="font-weight:${r.wt};font-size:${r.size}px;color:${col(r.c)};text-decoration:${r.deco === 'U' ? 'underline' : r.deco === 'S' ? 'line-through' : 'none'}">${esc(n.chars.slice(r.s, r.e))}</span>`; i = r.e; }
       inner += esc(n.chars.slice(i));
       let size;
-      if (n.abs) size = `position:absolute;left:${n.x}px;top:${n.y}px;`;
+      if (n.abs) size = `position:absolute;${absAt(n, p)}`;
       else if (n.ar === 'H') size = n.sw === 'FILL' ? (p.lay === 'H' ? 'flex:1 1 0;min-width:0;' : 'align-self:stretch;') : `width:${n.w}px;flex-shrink:0;`;
       else size = 'flex:0 0 auto;width:max-content;';
       return `<div style="${size}${op}white-space:pre;font:${f.wt} ${f.size}px/${f.lh}px 'IBM Plex Sans KR';letter-spacing:${f.ls}px;color:${col(n.c)};text-align:${n.align.toLowerCase()};text-decoration:${n.deco === 'U' ? 'underline' : n.deco === 'S' ? 'line-through' : 'none'};text-underline-offset:3px">${inner}</div>`;

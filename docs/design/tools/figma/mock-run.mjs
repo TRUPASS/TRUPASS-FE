@@ -43,7 +43,7 @@ class Base {
   get layoutSizingVertical() { return this._sh; } set layoutSizingVertical(v) { this._sizing('_sh', v); }
   set minHeight(v) { if (!(v > 0)) fail('minHeight must be positive'); if (!isAuto(this) && !isAuto(this.parent)) fail('minHeight needs auto layout'); this._minH = v; }
   set maxWidth(v) { if (!(v > 0)) fail('maxWidth must be positive'); if (!isAuto(this) && !isAuto(this.parent)) fail('maxWidth needs auto layout'); this._maxW = v; }
-  set constraints(v) { this._c = v; }
+  set constraints(v) { for (const k of ['horizontal', 'vertical']) if (!['MIN', 'CENTER', 'MAX', 'STRETCH', 'SCALE'].includes(v[k])) fail(`constraints.${k}: bad value ${v[k]}`); if (this._lp !== 'ABSOLUTE' && isAuto(this.parent)) fail('constraints need absolute positioning inside auto layout'); this._c = v; }
 }
 class Container extends Base {
   constructor(type) { super(type); this.children = []; }

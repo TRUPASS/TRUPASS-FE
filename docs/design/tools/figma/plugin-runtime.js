@@ -116,7 +116,7 @@ async function TRUPASS_BUILD() {
     if (n.abs) {
       ok(() => { node.layoutPositioning = 'ABSOLUTE'; }, 'abs');
       node.x = n.x; node.y = n.y;
-      ok(() => { node.constraints = { horizontal: 'MIN', vertical: 'MIN' }; }, 'constraints');
+      ok(() => { node.constraints = { horizontal: n.cons ? n.cons[0] : 'MIN', vertical: n.cons ? n.cons[1] : 'MIN' }; }, 'constraints');
     }
   }
   function corners(node, rad) {

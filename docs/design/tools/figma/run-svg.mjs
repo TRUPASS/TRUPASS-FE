@@ -40,12 +40,12 @@ if (args.includes('--boards')) {
   for (const bp of Object.keys(BP)) {
     const trees = order.filter(id => id !== '00-foundations' && existsSync(join(root, '.figma-build/tree', bp, id + '.json'))).map(id => JSON.parse(readFileSync(join(root, '.figma-build/tree', bp, id + '.json'), 'utf8')));
     if (!trees.length) continue;
-    const svg = toBoard(trees, join(root, 'assets'), `Trupass 리디자인 · ${NAMES[bp]}`, '2026.11 · 랜딩 → 로그인 → 가입 → 이용 안내 → 조합 → 수정 → 결제 → 완료. 화면을 낱개 프레임으로 쓰려면 이 보드를 선택하고 그룹 해제(⌘/Ctrl+Shift+G)하세요.');
-    writeFileSync(join(root, '.figma-build/boards', `Trupass 리디자인 · ${NAMES[bp]}.svg`), svg);
+    const svg = toBoard(trees, join(root, 'assets'), `Trupass 리디자인 v2 · ${NAMES[bp]}`, '2026.11 2차 · 칸 분할 검색 → 로그인 → 가입 → 이용 안내 → 통합 검색 → 항공권 · 숙소 → 장소 → 결제 → 완료. 화면을 낱개 프레임으로 쓰려면 이 보드를 선택하고 그룹 해제(⌘/Ctrl+Shift+G)하세요.');
+    writeFileSync(join(root, '.figma-build/boards', `Trupass 리디자인 v2 · ${NAMES[bp]}.svg`), svg);
     console.log(`board ${NAMES[bp]}: ${trees.length} screens, ${(svg.length / 1048576).toFixed(2)} MB`);
   }
   const fd = join(root, '.figma-build/tree/d/00-foundations.json');
-  if (existsSync(fd)) { const svg = toSvg(JSON.parse(readFileSync(fd, 'utf8')), join(root, 'assets')); writeFileSync(join(root, '.figma-build/boards', 'Trupass 디자인 기준.svg'), svg); console.log(`board foundations: ${(svg.length / 1048576).toFixed(2)} MB`); }
+  if (existsSync(fd)) { const svg = toSvg(JSON.parse(readFileSync(fd, 'utf8')), join(root, 'assets')); writeFileSync(join(root, '.figma-build/boards', 'Trupass 디자인 기준 v2.svg'), svg); console.log(`board foundations: ${(svg.length / 1048576).toFixed(2)} MB`); }
 }
 
 if (verify) {

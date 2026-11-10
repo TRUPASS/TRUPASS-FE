@@ -23,6 +23,7 @@ export function createTables() {
   function compact(n) {
     const o = { t: n.t, n: n.n || undefined, x: r2(n.x), y: r2(n.y), w: r2(n.w), h: r2(n.h) };
     if (n.abs) o.abs = 1;
+    if (n.cons) o.cons = n.cons;
     if (n.op != null) o.op = n.op;
     if (n.t === 'F') {
       Object.assign(o, { lay: n.lay, sw: n.sw, sh: n.sh, ja: n.ja, aa: n.aa });

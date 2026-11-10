@@ -7,6 +7,7 @@
 //   width/height 가 auto + stretch → 교차축 FILL,  auto + stretch 아님 → HUG,  그 외(px·%) → FIXED
 //   부모가 그 축에서 HUG 이면 자식은 FILL 이 될 수 없다 → 측정값 FIXED 로 낮춘다
 //   텍스트: 한 줄·왼쪽 정렬이면 자동 폭, 여러 줄이면 폭 고정 + 높이 자동 (줄바꿈은 브라우저 결과를 그대로 옮긴다)
+//   position: absolute · fixed → 절대 위치 자식. left/right/top/bottom 중 어느 변에 붙였는지를 제약(cons)으로 옮긴다
 
 export function inPage() {
   const px = v => parseFloat(v) || 0;
@@ -196,7 +197,15 @@ export function inPage() {
     const tag = el.tagName.toLowerCase();
     const abs = cs.position === 'absolute' || cs.position === 'fixed';
     const base = { n: el.dataset.n || '', x: r2(r.left - pRect.left), y: r2(r.top - pRect.top), w: r2(r.width), h: r2(r.height) };
-    if (abs) base.abs = true;
+    if (abs) {
+      base.abs = true;
+      // 붙어 있는 변: 아래·오른쪽에 붙은 요소(수정 요청 독, 지도 출처 표기)는 프레임 크기가 바뀌어도 그 변을 따라가야 한다
+      const sm = el.computedStyleMap();
+      const set = p => { const v = sm.get(p); return !!v && v.toString() !== 'auto'; };
+      const ch = set('left') && set('right') ? 'STRETCH' : set('right') ? 'MAX' : 'MIN';
+      const cv = set('top') && set('bottom') ? 'STRETCH' : set('bottom') ? 'MAX' : 'MIN';
+      if (ch !== 'MIN' || cv !== 'MIN') base.cons = [ch, cv];
+    }
     if (+cs.opacity < 1) base.op = +cs.opacity;
     if (pctx && +cs.order) base.order = +cs.order;
 
