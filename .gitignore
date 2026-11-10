@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+dist-ssr/
+*.tsbuildinfo
+coverage/
+
+# env (비밀 값은 커밋하지 않는다)
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# vercel
+.vercel
