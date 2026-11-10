@@ -52,14 +52,14 @@ export const kv = (k, v, line = true) => `<div class="kv${line ? ' line' : ''}" 
 export const note = (html, tone = '', icon = 'information') => `<div class="note ${tone}" data-n="Note">${ic(icon, 16)}<div class="grow">${html}</div></div>`;
 export const img = (file, w, h, o = {}) => `<img src="../assets/${file}" width="${w}" height="${h}" alt="${o.alt || ''}" data-n="${o.n || 'Image'}" style="width:${w}px;height:${h}px;border-radius:${o.r ?? 4}px${o.css ? ';' + o.css : ''}">`;
 
-// 진행 단계: 요청 → 조합 확인 → 결제 → 완료
-const STEPS = ['요청', '조합 확인', '결제', '완료'];
+// 진행 단계: 검색 → 항공 · 숙소 → 장소 → 결제 → 완료
+const STEPS = ['검색', '항공 · 숙소', '장소', '결제', '완료'];
 export const steps = cur =>
   `<div class="steps" data-n="Steps">${STEPS.map((l, i) => `${i ? `<span class="bar${i <= cur ? ' done' : ''}"></span>` : ''}<div class="step${i < cur ? ' done' : i === cur ? ' on' : ''}" data-n="Step"><span class="no">${i < cur ? ic('checkmark', 12) : i + 1}</span><span class="${i === cur ? '' : 'dt-only'}">${l}</span></div>`).join('')}</div>`;
 
 // 상단 바
 const NAV_OUT = ['서비스 소개', '이용 방법', '결제 권한 안내', '고객센터'];
-const NAV_IN = ['새 요청', '내 여행', '결제 내역'];
+const NAV_IN = ['새 검색', '내 여행', '결제 내역'];
 export const header = (o = {}) => {
   if (o.kind === 'bare') {
     return `<header class="hdr jb" data-n="Header">${logo()}<div class="row g12"><span class="t-sm c3 dt-only">${o.mail || ''}</span><a class="btn txt n sm" data-n="Button">로그아웃</a></div></header>`;
@@ -72,16 +72,52 @@ export const header = (o = {}) => {
 export const footer = () =>
   `<footer class="ftr jb" data-n="Footer"><span>© 2026 Trupass</span><div class="row g16 wrap"><span>이용약관</span><span>개인정보 처리방침</span><span>전자금융거래 이용약관</span><span>고객센터 1600-0000</span></div></footer>`;
 
-// 요청 입력 상자
+// 검색 입력 칸: 칸마다 문장으로 자유롭게 적는다. 빈 칸에는 예시가 연하게 깔린다(ph).
+// f = { l 라벨, opt 선택 표시, ph 예시, v 값, tall 여러 줄 }
+export const sfield = (f, o = {}) =>
+  fld(f.l, `<div class="sin${o.filled ? '' : ' ph'}${f.tall ? ' tall' : ''}${o.focus ? ' focus' : ''}" data-n="Box"><span class="grow">${o.filled ? f.v : f.ph}</span></div>`, { opt: f.opt, n: f.l });
+
+// 문장 입력 상자 (수정 요청 독 안에서 쓴다)
 export const pbox = (o = {}) => {
   const txt = o.text
     ? `<p class="pbox-x">${o.text}</p>`
     : `<p class="pbox-x ph">${o.ph || ''}</p>`;
-  return `<div class="pbox${o.focus ? ' focus' : ''}${o.sm ? ' sm' : ''}" data-n="${o.n || 'Prompt'}"><div class="pbox-t" data-n="Text">${txt}</div><div class="pbox-f${o.hint ? '' : ' je'}" data-n="Bar">${o.hint ? `<span class="hint grow">${o.hint}</span>` : ''}<div class="row g12 fn pbox-a"><span class="t-xs c3 num">${o.count ?? 0} / ${o.max ?? 500}</span>${btn(o.cta || '조합 요청', { kind: o.ckind ?? 'pri', after: o.cicon ?? 'arrow--right', n: 'Submit', cls: o.dis ? 'dis' : '' })}</div></div></div>`;
+  return `<div class="pbox${o.focus ? ' focus' : ''}${o.sm ? ' sm' : ''}" data-n="${o.n || 'Prompt'}"><div class="pbox-t" data-n="Text">${txt}</div><div class="pbox-f${o.hint ? '' : ' je'}" data-n="Bar">${o.hint ? `<span class="hint grow">${o.hint}</span>` : ''}<div class="row g12 fn pbox-a"><span class="t-xs c3 num">${o.count ?? 0} / ${o.max ?? 300}</span>${btn(o.cta || '다시 검색', { kind: o.ckind ?? 'pri', after: o.cicon ?? 'renew', n: 'Submit', cls: o.dis ? 'dis' : '' })}</div></div></div>`;
 };
 
+// 수정 요청 독: 결과 화면 아래에 늘 붙어 있다.
+//   내림(기본) — 머리줄 한 줄만 보인다.  올림(.up) — 마우스를 올리거나 입력을 시작하면 입력 상자가 올라온다.
+//   입력 없이 포인터가 벗어난 채 4초가 지나면 다시 내려간다. (움직임은 DOCK_JS, 규칙은 README)
+export const dock = (o = {}) => `<div class="dock${o.up ? ' up' : ''}" data-n="ReviseDock/${o.up ? '올림' : '내림'}" data-dock>
+<div class="dock-h" data-n="Head">${ic('edit', 16, 'c2')}<span class="t-sm w6 fn">수정 요청</span><span class="dock-ph t-sm grow">${o.ph}</span><span class="dock-de t-sm c2 grow">바꾸고 싶은 점을 문장으로 적어 주세요.<span class="dt-only"> ${o.desc || '조건을 반영해 다시 검색합니다.'}</span></span>${ic('chevron--up', 16, 'c3 i-up')}${ic('chevron--down', 16, 'c3 i-dn')}</div>
+<div class="dock-b" data-n="Body">${pbox({ sm: 1, n: 'RevisePrompt', text: o.text, focus: !!o.text, count: (o.text || '').length, ph: o.ph, hint: o.hint, ckind: o.text ? 'pri' : '' })}${o.egs ? `<div class="dock-eg" data-n="Examples"><span class="t-xs c3 fn">예시</span>${o.egs.map(t => `<a class="t-xs lnk">${t}</a>`).join('')}</div>` : ''}</div>
+</div>`;
+// 화면 아래 고정 영역: 수정 요청 독 + (태블릿·모바일) 합계와 다음 단계 버튼
+export const bottom = (o = {}) => `<div class="bottom" data-n="Bottom"><div class="bottom-in" data-n="DockArea">${dock(o.dock)}</div>${o.bar || ''}</div>`;
+
+// 시안에서 움직임을 확인하기 위한 스크립트: 독 올림/내림, 항공권별 숙소 펼침. 화면의 초기 상태는 건드리지 않는다.
+export const DOCK_JS = `(() => {
+  document.querySelectorAll('[data-tg]').forEach(t => t.addEventListener('click', e => { e.preventDefault(); t.closest('.fo').classList.toggle('open'); }));
+  const dock = document.querySelector('[data-dock]'); if (!dock) return;
+  const box = dock.querySelector('.pbox-x'), ph = dock.querySelector('.dock-ph').textContent, IDLE = 4000;
+  let timer = 0;
+  const empty = () => box.classList.contains('ph') || !box.textContent.trim();
+  const move = c => { dock.classList.remove('rise', 'drop'); void dock.offsetWidth; dock.classList.add(c); };
+  const up = () => { clearTimeout(timer); if (!dock.classList.contains('up')) { dock.classList.add('up'); move('rise'); } };
+  const down = () => { if (dock.classList.contains('up')) { dock.classList.remove('up'); move('drop'); } };
+  const later = () => { clearTimeout(timer); timer = setTimeout(() => { if (empty() && !dock.matches(':hover') && !dock.contains(document.activeElement)) down(); }, IDLE); };
+  dock.addEventListener('mouseenter', up); dock.addEventListener('mouseleave', later);
+  dock.addEventListener('focusin', up); dock.addEventListener('focusout', later);
+  dock.querySelector('.dock-h').addEventListener('click', () => (dock.classList.contains('up') && empty() ? down() : up()));
+  box.setAttribute('contenteditable', 'plaintext-only'); box.setAttribute('role', 'textbox');
+  box.addEventListener('focus', () => { if (box.classList.contains('ph')) { box.textContent = ''; box.classList.remove('ph'); } });
+  box.addEventListener('blur', () => { if (!box.textContent.trim()) { box.textContent = ph; box.classList.add('ph'); } });
+  const cnt = dock.querySelector('.pbox-a .num'), send = dock.querySelector('.pbox-a .btn');
+  box.addEventListener('input', () => { cnt.textContent = box.textContent.trim().length + ' / 300'; send.classList.toggle('pri', !empty()); });
+})();`;
+
 // 문서 틀
-export const page = ({ title, cls = '', body }) => `<!doctype html>
+export const page = ({ title, cls = '', body, js = '' }) => `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -93,7 +129,7 @@ export const page = ({ title, cls = '', body }) => `<!doctype html>
 <link rel="stylesheet" href="../app.css">
 </head>
 <body class="${cls}" data-n="${title}">
-${body}
+${body}${js ? `\n<script>${js}</script>` : ''}
 </body>
 </html>
 `;

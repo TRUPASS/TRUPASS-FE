@@ -1,4 +1,4 @@
-"""장소·숙소·음식 예시 사진을 Wikimedia Commons 에서 받아 4:3(400x300)으로 잘라 넣는다.
+"""장소·숙소·음식 예시 사진을 Wikimedia Commons 에서 받아 4:3(400x300, 후기 썸네일은 200x150)으로 잘라 넣는다.
 무엇을 쓰는지는 assets/photos/manifest.json 에 적혀 있고(제목·작성자·라이선스), 이 스크립트는
 그 목록대로 내려받아 assets/photos/*.jpg 와 assets/CREDITS.md 를 만든다.
 목업용 예시 사진이며 실제 서비스에서는 장소 API가 주는 이미지로 대체한다.
@@ -12,7 +12,7 @@ UA = "TrupassDesignMock/0.1 (static design mockup; asset fetch)"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "assets", "photos")
 CACHE = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", ".photo-cache")
-W, H = 400, 300
+SIZE = (400, 300)
 
 
 def fetch(url):
@@ -41,6 +41,7 @@ for m in manifest:
         time.sleep(1.5)
     im = Image.open(raw).convert("RGB")
     w, h = im.size
+    W, H = m.get("size", SIZE)   # 후기 썸네일처럼 작게 쓰는 사진은 manifest 에 size 를 적는다
     if w / h > W / H:   # 가로가 남으면 좌우를 자른다
         nw = round(h * W / H)
         im = im.crop(((w - nw) // 2, 0, (w - nw) // 2 + nw, h))
@@ -67,7 +68,8 @@ lines = [
     "",
     "## 사진 (Wikimedia Commons)",
     "",
-    "모두 4:3으로 잘라 400×300으로 줄였다(변경 있음). 음식점·숙소는 가상의 이름이며 사진은 예시다.",
+    "모두 4:3으로 잘라 400×300(후기 썸네일은 200×150)으로 줄였다(변경 있음). 음식점·숙소는 가상의 이름이며 사진은 예시다.",
+    "후기 썸네일은 화면에서 '웹 검색으로 찾은 후기'의 자리를 보여 주기 위한 예시이며 실제 후기 사진이 아니다.",
     "",
     "| 파일 | 쓰임 | 원본 | 작성자 | 라이선스 |",
     "| --- | --- | --- | --- | --- |",

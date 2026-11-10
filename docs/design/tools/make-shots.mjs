@@ -10,7 +10,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHOTS = [
   ['05-home', 'viewport', 96, 72, 980],
   ['07-result', 'page', 104, 64, 1232],
-  ['08-revise', 'page', 440, 250, 900],
+  ['07-result-dock', 'viewport', 86, 366, 900],
+  ['09-places', 'page', 104, 64, 1232],
   ['11-checkout', 'page', 104, 64, 1232],
 ];
 const browser = await chromium.launch();

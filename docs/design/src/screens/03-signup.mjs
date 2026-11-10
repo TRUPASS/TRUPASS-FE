@@ -1,11 +1,12 @@
 // 03 회원가입 — Google 로 처음 로그인했을 때 한 번만 거친다.
 // 입력 순서: 이메일(확인) → 닉네임 → 출생 연도 → 성별(선택) → 여행 관심사 → 약관.
 import { page, header, footer, btn, ic, inp, fld, chk, rad, opt } from '../lib/ui.mjs';
-import { U, REQ } from '../lib/data.mjs';
+import { U } from '../lib/data.mjs';
+import { reqList } from './parts-search.mjs';
 
 const INTERESTS = [['미식 · 맛집', 1], ['관광 · 명소', 0], ['쇼핑', 0], ['휴양 · 온천', 0], ['문화 · 예술', 1], ['자연 · 야외 활동', 0], ['테마파크 · 체험', 0], ['야경 · 밤 문화', 0]];
 const TERMS = [['(필수) Trupass 이용약관', 1], ['(필수) 개인정보 수집 · 이용', 1], ['(선택) 여행 혜택 · 알림 수신', 0]];
-const USE = [['이메일', '영수증과 예약 확정서 발송'], ['닉네임', '화면과 알림에 표시'], ['출생 연도 · 성별', '연령대에 맞는 조합 추천'], ['관심사', '숙소 주변 추천 장소의 기준']];
+const USE = [['이메일', '영수증과 예약 확정서 발송'], ['닉네임', '화면과 알림에 표시'], ['출생 연도 · 성별', '연령대에 맞는 추천'], ['관심사', '추천 장소와 활동을 고르는 기준']];
 
 const form = () => `<form class="pnl two-m su-form" data-n="Form">
 <div class="pnl-b g20" data-n="Fields">
@@ -15,7 +16,7 @@ const form = () => `<form class="pnl two-m su-form" data-n="Form">
     ${fld('출생 연도', inp(U.birth + '년', { after: ic('chevron--down', 16) }), { hint: '연령대에 맞는 추천에 사용합니다.' })}
   </div>
   ${fld('성별', `<div class="radios" data-n="Radios">${rad('여성', 1)}${rad('남성', 0)}${rad('선택 안 함', 0)}</div>`, { opt: '선택 항목' })}
-  ${fld('여행 관심사', `<div class="tiles" data-n="Options">${INTERESTS.map(([l, on]) => opt(l, on)).join('')}</div>`, { opt: '최대 3개 · 2개 선택됨', hint: '숙소 주변 추천 장소를 고르는 기준이 됩니다. 설정에서 언제든 바꿀 수 있습니다.' })}
+  ${fld('여행 관심사', `<div class="tiles" data-n="Options">${INTERESTS.map(([l, on]) => opt(l, on)).join('')}</div>`, { opt: '최대 3개 · 2개 선택됨', hint: '추천 장소와 활동을 고르는 기준이 됩니다. 설정에서 언제든 바꿀 수 있습니다.' })}
 </div>
 <div class="hr"></div>
 <div class="pnl-b g8" data-n="Terms">
@@ -27,7 +28,7 @@ const form = () => `<form class="pnl two-m su-form" data-n="Form">
 </form>`;
 
 const side = () => `<aside class="two-r" data-n="Side">
-<div class="pnl" data-n="Pending"><div class="pnl-b g10"><span class="t-sm w6">보류 중인 요청</span><div class="recap"><p class="t-sm">${REQ.text}</p></div><span class="t-sm c2">가입을 마치면 이 요청으로 조합을 시작할 수 있습니다.</span></div></div>
+<div class="pnl" data-n="Pending"><div class="pnl-b g10"><span class="t-sm w6">보류 중인 검색</span><div class="recap">${reqList()}</div><span class="t-sm c2">가입을 마치면 이 조건으로 검색을 시작할 수 있습니다.</span></div></div>
 <div class="pnl" data-n="Usage"><div class="pnl-b g10"><span class="t-sm w6">입력 정보의 사용처</span><div data-n="List">${USE.map(([k, v]) => `<div class="use" data-n="Row"><span class="k">${k}</span><span class="grow c2">${v}</span></div>`).join('')}</div></div></div>
 </aside>`;
 

@@ -5,7 +5,7 @@ import { U, REQ, V2, MANDATE as M, PAY, BAG } from '../lib/data.mjs';
 
 const C = V2;
 const f = C.f, h = C.h;
-const shell = (title, head, body, cur) => page({ title, body: `${header({ kind: 'in', on: '새 요청' })}
+const shell = (title, head, body, cur) => page({ title, body: `${header({ kind: 'in', on: '새 검색' })}
 <main class="main" data-n="Main"><div class="cx g20" data-n="Content">
 <div class="pt" data-n="Title">${head}${steps(cur)}</div>
 ${body}
@@ -22,7 +22,7 @@ const mandateForm = () => `<form class="pnl two-m su-form" data-n="Form">
   </div>
   ${fld('허용 항목', `<div class="tiles t3" data-n="Options">${opt('항공권', 1)}${opt('숙박', 1)}${opt('체험 · 입장권', 0)}</div>`, { hint: '선택하지 않은 항목은 조합에 들어 있어도 결제되지 않습니다.' })}
   ${fld('유효기간', `<div class="radios" data-n="Radios">${rad('6개월', 0)}${rad('1년', 1)}${rad('직접 입력', 0)}</div>`, { hint: `${M.from} – ${M.until}` })}
-  ${fld('결제 승인 방식', `<div class="rlist" data-n="Radios">${rad('매 결제마다 패스키로 본인 확인', 1)}${rad('한도 안의 결제는 본인 확인 없이 진행', 0)}</div>`, { hint: '본인 확인 없이 진행하도록 바꾸면 조합을 확정하는 즉시 결제됩니다.' })}
+  ${fld('결제 승인 방식', `<div class="rlist" data-n="Radios">${rad('매 결제마다 패스키로 본인 확인', 1)}${rad('한도 안의 결제는 본인 확인 없이 진행', 0)}</div>`, { hint: '본인 확인 없이 진행하도록 바꾸면 [이 조합으로 결제]를 누르는 즉시 결제됩니다.' })}
 </div>
 <div class="pnl-f" data-n="Actions"><span class="t-sm c3 dt-only">서명에는 이 기기의 패스키(지문 · 얼굴 인식)를 사용합니다.</span>${btn('패스키로 서명하고 등록', { kind: 'pri', size: 'lg', icon: 'fingerprint-recognition', isz: 20, n: 'Sign' })}</div>
 </form>`;
@@ -35,7 +35,7 @@ ${note('권한 증명서는 회원님의 기기에서 서명됩니다. Trupass�
 export const mandate = {
   id: '10-mandate', no: '10', name: '결제 권한 등록 · 최초 1회', kind: 'page', bps: ['d', 't', 'm'],
   note: '가정한 보조 화면. 결제 권한이 없는 회원이 첫 결제에 들어가면 한도·허용 항목·유효기간·승인 방식을 정하고 패스키로 서명한다. 이후 결제는 이 화면을 건너뛴다.',
-  html: () => shell('10 결제 권한 등록', `<div class="g4"><h1 class="t-h1">결제 권한 등록</h1><p class="t-md c2">첫 결제 때 한 번 등록합니다. 이후 결제는 여기서 정한 범위 안에서만 실행됩니다.</p></div>`, `<div class="two">${mandateForm()}${mandateSide()}</div>`, 2),
+  html: () => shell('10 결제 권한 등록', `<div class="g4"><h1 class="t-h1">결제 권한 등록</h1><p class="t-md c2">첫 결제 때 한 번 등록합니다. 이후 결제는 여기서 정한 범위 안에서만 실행됩니다.</p></div>`, `<div class="two">${mandateForm()}${mandateSide()}</div>`, 3),
 };
 
 /* ── 11 결제 확인 ── */
@@ -77,8 +77,8 @@ ${btn('패스키로 승인하고 결제', { kind: 'pri', size: 'lg', cls: 'fill'
 </div></section></aside>`;
 export const checkout = {
   id: '11-checkout', no: '11', name: '결제 확인 · 권한 검증', kind: 'page',
-  note: '고객이 조합에 만족해 결제로 넘어온 화면. 서명해 둔 결제 권한(한도·항목·유효기간·서명)과 이번 결제를 항목별로 대조해 보여 주고, 패스키 승인 한 번으로 결제한다.',
-  html: () => shell('11 결제 확인', `<h1 class="t-h1">결제 확인</h1>`, `<div class="two"><div class="two-m" data-n="MainColumn">${items()}${pax()}${verify()}${terms()}</div>${payRail()}</div>`, 2),
+  note: '숙소 위치와 추천 장소까지 확인한 뒤 결제로 넘어온 화면. 서명해 둔 결제 권한(한도·항목·유효기간·서명)과 이번 결제를 항목별로 대조해 보여 주고, 패스키 승인 한 번으로 결제한다.',
+  html: () => shell('11 결제 확인', `<h1 class="t-h1">결제 확인</h1>`, `<div class="two"><div class="two-m" data-n="MainColumn">${items()}${pax()}${verify()}${terms()}</div>${payRail()}</div>`, 3),
 };
 
 /* ── 12 결제 진행 ── */
@@ -94,7 +94,7 @@ export const paying = {
   id: '12-processing', no: '12', name: '결제 진행', kind: 'page',
   note: '판매자마다 확보 → 결제 → 확정 순서로 진행 상황을 보여 준다. 한 곳이라도 실패하면 전체를 취소하는 규칙을 화면에 적어 둔다.',
   html: () => shell('12 결제 진행', `<h1 class="t-h1">결제를 진행하고 있습니다</h1>`, `<div class="two"><div class="two-m" data-n="MainColumn">${processing()}${note('두 판매자의 재고를 먼저 확보한 뒤 차례로 결제합니다. 한 곳이라도 실패하면 이미 결제된 건을 자동으로 취소하고 결제 전 상태로 되돌립니다. 이 화면을 닫아도 결제는 계속 진행됩니다.')}</div>
-<aside class="two-r" data-n="Rail"><section class="pnl" data-n="Approval"><div class="pnl-h"><h2 class="t-h3">승인 기록</h2></div><div class="pnl-b g0" style="padding-top:8px;padding-bottom:8px">${kv('승인 금액', `<span class="num w5">${won(C.total)}</span>`, false)}${kv('승인 방식', '패스키 본인 확인')}${kv('승인 시각', `<span class="num">${PAY.approved}</span>`)}${kv('권한 증명서', M.id)}</div></section></aside></div>`, 2),
+<aside class="two-r" data-n="Rail"><section class="pnl" data-n="Approval"><div class="pnl-h"><h2 class="t-h3">승인 기록</h2></div><div class="pnl-b g0" style="padding-top:8px;padding-bottom:8px">${kv('승인 금액', `<span class="num w5">${won(C.total)}</span>`, false)}${kv('승인 방식', '패스키 본인 확인')}${kv('승인 시각', `<span class="num">${PAY.approved}</span>`)}${kv('권한 증명서', M.id)}</div></section></aside></div>`, 3),
 };
 
 /* ── 13 결제 완료 ── */
@@ -116,10 +116,10 @@ ${DOCS.map(([i, t, s]) => `<div class="doc" data-n="Document/${t}">${ic(i, 20, '
 <aside class="two-r" data-n="Rail">
 <section class="pnl" data-n="Payment"><div class="pnl-h"><h2 class="t-h3">결제 요약</h2></div><div class="pnl-b g0" style="padding-top:8px;padding-bottom:8px">${kv('결제 금액', `<span class="t-h3 num">${won(C.total)}</span>`, false)}${kv('결제수단', `${U.card} · 일시불`)}${kv('결제 일시', `<span class="num">${PAY.at}</span>`)}${kv('주문번호', REQ.order)}</div></section>
 <section class="pnl" data-n="Approval"><div class="pnl-h jb"><h2 class="t-h3">승인 기록</h2>${st('ok', '검증 유효')}</div><div class="pnl-b g0" style="padding-top:8px;padding-bottom:8px">${kv('권한 증명서', M.id, false)}${kv('승인', `패스키 본인 확인<br><span class="t-xs c3 num">${PAY.approved}</span>`)}${kv('승인 범위', `1회 ${won(M.per)} 이하<br>${M.scope}`)}<div class="kv line"><span class="t-xs c3 grow">이 기록은 변경할 수 없으며, 결제에 이의가 생기면 승인 범위의 근거로 쓰입니다.</span></div></div></section>
-<div class="g8" data-n="Next">${btn('내 여행에서 일정 보기', { kind: 'pri', size: 'lg', cls: 'fill', after: 'arrow--right', n: 'Trips' })}${btn('새 요청', { size: 'lg', cls: 'fill', n: 'NewRequest' })}</div>
+<div class="g8" data-n="Next">${btn('내 여행에서 일정 보기', { kind: 'pri', size: 'lg', cls: 'fill', after: 'arrow--right', n: 'Trips' })}${btn('새 검색', { size: 'lg', cls: 'fill', n: 'NewSearch' })}</div>
 </aside></div>`;
 export const done = {
   id: '13-complete', no: '13', name: '결제 완료 · 이메일 발송 안내', kind: 'page',
   note: '결제 결과와 예약번호를 확인하는 화면. 영수증·e-티켓 확정서·숙소 예약 확정서가 가입 때 등록한 이메일로 발송됐음을 문서별로 표시한다.',
-  html: () => shell('13 결제 완료', `<h1 class="t-h1">결제 완료</h1>`, complete(), 4),
+  html: () => shell('13 결제 완료', `<h1 class="t-h1">결제 완료</h1>`, complete(), 5),
 };

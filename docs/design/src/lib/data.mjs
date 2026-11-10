@@ -1,106 +1,144 @@
-// Trupass 디자인 — 한 건의 요청이 로그인부터 결제 완료까지 가는 동안 쓰는 목업 데이터.
+// Trupass 디자인 — 한 건의 검색이 로그인부터 결제 완료까지 가는 동안 쓰는 목업 데이터.
 // 항공사·숙소·제휴사·음식점 이름은 모두 가상이다. 미술관·명소는 실제 장소다.
 
 export const U = { name: '서지안', nick: '지안', mail: 'jian.seo@example.com', birth: 1994, card: '한울카드 ···· 4821' };
 
+// 검색 입력 칸 (01 · 05). 한 문장으로 받던 요청을 칸으로 나눴다.
+// ph 는 빈 칸에 연하게 깔리는 예시(형식을 강제하지 않는다는 표시), v 는 이 시안에서 고객이 적은 값.
+export const FIELDS = [
+  { k: 'dest', l: '여행 장소', ph: '예) 도쿄 · 오사카와 교토 · 따뜻한 바닷가 도시', v: '도쿄' },
+  { k: 'when', l: '출발 시기', ph: '예) 12월 18일 ±3일 · 12월 중 · 아침 출발', v: '12월 18일 전후 3일, 아침 출발' },
+  { k: 'stay', l: '기간 · 인원', ph: '예) 3박 4일, 성인 2명 · 주말 포함 2박', v: '3박 4일, 성인 2명' },
+  { k: 'budget', l: '예산', opt: '선택', ph: '예) 총 160만원 이내 · 1인 80만원 안팎', v: '총 160만원 이내' },
+  { k: 'wish', l: '요청사항', opt: '선택', tall: 1, ph: '예) 관광, 쇼핑, 건축물 탐방, 문화 유적 탐방, 패션 등 하고 싶은 것을 자유롭게 적어 주세요', v: '미술관과 건축물 탐방 위주로 조용하게. 쇼핑은 하루만.' },
+];
+// 입력을 해석해 실제 검색에 적용한 조건 (06 · 07 · 08). 대략 적은 말이 어떤 범위로 바뀌었는지 보여 준다.
+export const APPLIED = [
+  ['출발일', '12.15 (화) – 12.21 (월)'], ['출발 시간', '오전 06:00 – 12:00'], ['기간', '3박'],
+  ['인원', '성인 2명'], ['예산', '1,600,000원 이하'], ['장소 기준', '미술관 · 건축물 · 쇼핑'],
+];
+export const PRESETS = ['도쿄 · 12월 18일 전후 · 미술관과 건축', '후쿠오카 · 1월 둘째 주 · 미식', '제주 · 2월 말 · 부모님과 3박'];
+
 export const REQ = {
-  text: '12월 18일부터 3박 4일 도쿄, 성인 2명, 예산 160만원. 미술관 위주로 조용하게 다니고 싶습니다.',
-  short: '12월 18일부터 3박 4일 도쿄, 성인 2명, 예산 160만원. 미술관 위주로 조용하게',
-  dest: '도쿄', range: '12.18 (금) – 12.21 (월)', nights: '3박 4일', pax: '성인 2명', budget: 1600000,
-  prefs: '미술관 · 조용한 일정', at: '2026.11.10 14:02', order: 'TP-20261110-0417',
+  range: '12.18 (금) – 12.21 (월)', nights: '3박 4일', pax: '성인 2명', budget: 1600000,
+  at: '2026.11.10 14:02', order: 'TP-20261110-0417',
 };
+// 결과 화면 아래 수정 요청 독에 적은 문장
 export const REV = {
   text: '숙소를 우에노 미술관 근처로 바꿔 주세요. 항공편과 수하물은 그대로 둡니다.',
   at: '2026.11.10 14:06',
 };
-export const EXAMPLES = [
-  '12월 18일부터 3박 4일 도쿄, 성인 2명, 예산 160만원. 미술관 위주로',
-  '1월 둘째 주 후쿠오카 2박 3일, 혼자, 80만원 이내. 맛집 중심으로',
-  '2월 말 부모님과 제주 3박 4일, 걷는 구간이 적은 일정으로',
-];
+export const REV_PLACES = { text: '건축물 탐방 장소를 더 넣어 주세요. 저녁 식당은 조용한 곳으로 부탁합니다.' };
 
+// 항공권 제안: 출발 시기를 "12월 18일 전후 3일, 아침 출발"로 적었으므로 날짜가 다른 편도 함께 제안한다.
+// fit 은 요청과 맞는 점(또는 다른 점)을 그대로 적은 문장이다.
 const leg = (no, d, dep, from, fc, arr, to, tc, dur) => ({ no, d, dep, from, fc, arr, to, tc, dur });
 export const FLIGHTS = [
   { id: 'F1', air: '한빛항공', tag: '추천', cls: '이코노미', bag: '위탁 15kg 포함', price: 596400, src: 'haneul',
+    fit: '요청한 12월 18일에 출발 · 오전 09:10 출발',
     out: leg('HB 721', '12.18 (금)', '09:10', '인천', 'ICN', '11:35', '나리타', 'NRT', '2시간 25분'),
     back: leg('HB 724', '12.21 (월)', '18:20', '나리타', 'NRT', '21:05', '인천', 'ICN', '2시간 45분') },
-  { id: 'F2', air: '새솔항공', cls: '이코노미', bag: '위탁 수하물 별도', price: 438200, src: 'airmoa',
-    out: leg('SL 305', '12.18 (금)', '14:40', '인천', 'ICN', '17:10', '나리타', 'NRT', '2시간 30분'),
-    back: leg('SL 308', '12.21 (월)', '20:15', '나리타', 'NRT', '23:05', '인천', 'ICN', '2시간 50분') },
+  { id: 'F2', air: '새솔항공', tag: '최저가', cls: '이코노미', bag: '위탁 수하물 별도', price: 438200, src: 'airmoa',
+    fit: '요청일보다 하루 이른 12월 17일 출발 · 오전 07:25 출발',
+    out: leg('SL 305', '12.17 (목)', '07:25', '인천', 'ICN', '09:55', '나리타', 'NRT', '2시간 30분'),
+    back: leg('SL 308', '12.20 (일)', '20:15', '나리타', 'NRT', '23:05', '인천', 'ICN', '2시간 50분') },
   { id: 'F3', air: '한빛항공', cls: '이코노미', bag: '위탁 15kg 포함', price: 742000, src: 'haneul',
+    fit: '요청한 12월 18일에 출발 · 오전 08:05 출발 · 김포–하네다 노선',
     out: leg('HB 701', '12.18 (금)', '08:05', '김포', 'GMP', '10:15', '하네다', 'HND', '2시간 10분'),
     back: leg('HB 704', '12.21 (월)', '19:40', '하네다', 'HND', '22:10', '김포', 'GMP', '2시간 30분') },
+  { id: 'F4', air: '새솔항공', cls: '이코노미', bag: '위탁 수하물 별도', price: 512800, src: 'airmoa',
+    fit: '요청일보다 하루 늦은 12월 19일 출발 · 오전 10:30 출발',
+    out: leg('SL 311', '12.19 (토)', '10:30', '인천', 'ICN', '13:00', '나리타', 'NRT', '2시간 30분'),
+    back: leg('SL 314', '12.22 (화)', '17:40', '나리타', 'NRT', '20:30', '인천', 'ICN', '2시간 50분') },
 ];
+// 추가 선택 (항공권을 펼친 자리에서 숙소와 함께 고른다)
 export const BAG = { label: '위탁 수하물 23kg으로 변경', sub: '성인 2명 왕복', price: 44000 };
+export const MEAL = { label: '조식 추가', sub: '2인 3박', price: 48000 };
 
-export const HOTELS_V1 = [
-  { id: 'H1', name: '호텔 미나토 시부야', grade: '4성급', area: '시부야역 도보 6분', room: '스탠다드 트윈', meal: '조식 포함', cancel: '12.15 (화)까지 무료 취소', price: 468000, src: 'stayon', tag: '추천', photo: 'photos/room_a.jpg' },
-  { id: 'H2', name: '신주쿠 가든 타워 호텔', grade: '4성급', area: '신주쿠산초메역 도보 4분', room: '모더레이트 더블', meal: '조식 불포함', cancel: '12.16 (수)까지 무료 취소', price: 402300, src: 'naru', photo: 'photos/room_b.jpg' },
-  { id: 'H3', name: '긴자 그랜드 레지던스', grade: '5성급', area: '긴자역 도보 3분', room: '디럭스 트윈', meal: '조식 포함', cancel: '12.11 (금)까지 무료 취소', price: 648000, src: 'stayon', photo: 'photos/room_c.jpg' },
-];
-export const HOTELS_V2 = [
-  { id: 'H4', name: '우에노 스테이 인', grade: '3성급', area: '우에노역 도보 3분', room: '스탠다드 더블', meal: '조식 불포함', cancel: '12.16 (수)까지 무료 취소', price: 312600, src: 'naru', tag: '변경', photo: 'photos/room_d.jpg' },
-  { id: 'H5', name: '호텔 시노바즈 우에노', grade: '4성급', area: '유시마역 도보 3분', room: '스탠다드 트윈', meal: '조식 포함', cancel: '12.14 (월)까지 무료 취소', price: 421800, src: 'stayon', photo: 'photos/room_e.jpg' },
-  { id: 'H6', name: '닛포리 타운 호텔', grade: '3성급', area: '닛포리역 도보 5분', room: '세미더블', meal: '조식 불포함', cancel: '환불 불가', price: 268400, src: 'naru', photo: 'photos/room_f.jpg' },
-];
+const H = (id, name, grade, area, room, meal, cancel, src, photo, tag) => ({ id, name, grade, area, room, meal, cancel, src, photo: 'photos/' + photo, tag });
+export const HOTELS = Object.fromEntries([
+  H('H1', '호텔 미나토 시부야', '4성급', '시부야역 도보 6분', '스탠다드 트윈', '조식 포함', '체크인 3일 전까지 무료 취소', 'stayon', 'room_a.jpg', '추천'),
+  H('H2', '신주쿠 가든 타워 호텔', '4성급', '신주쿠산초메역 도보 4분', '모더레이트 더블', '조식 불포함', '체크인 2일 전까지 무료 취소', 'naru', 'room_b.jpg'),
+  H('H3', '긴자 그랜드 레지던스', '5성급', '긴자역 도보 3분', '디럭스 트윈', '조식 포함', '체크인 7일 전까지 무료 취소', 'stayon', 'room_c.jpg'),
+  H('H4', '우에노 스테이 인', '3성급', '우에노역 도보 3분', '스탠다드 더블', '조식 불포함', '체크인 2일 전까지 무료 취소', 'naru', 'room_d.jpg', '추천'),
+  H('H5', '호텔 시노바즈 우에노', '4성급', '유시마역 도보 3분', '스탠다드 트윈', '조식 포함', '체크인 4일 전까지 무료 취소', 'stayon', 'room_e.jpg'),
+  H('H6', '닛포리 타운 호텔', '3성급', '닛포리역 도보 5분', '세미더블', '조식 불포함', '환불 불가', 'naru', 'room_f.jpg'),
+].map(h => [h.id, h]));
+// 항공권마다 그 일정에 예약할 수 있는 숙소 3곳과 3박 요금. [숙소 id, 요금]
+// V1 은 첫 검색(도쿄 전역), V2 는 수정 요청 "숙소를 우에노 미술관 근처로" 를 반영한 뒤.
+export const STAYS_V1 = {
+  F1: [['H1', 468000], ['H2', 402300], ['H3', 648000]],
+  F2: [['H1', 451200], ['H2', 386400], ['H3', 631500]],
+  F3: [['H1', 468000], ['H2', 402300], ['H3', 648000]],
+  F4: [['H1', 489600], ['H2', 418500], ['H3', 672000]],
+};
+export const STAYS_V2 = {
+  F1: [['H4', 312600], ['H5', 421800], ['H6', 268400]],
+  F2: [['H4', 298200], ['H5', 405600], ['H6', 254800]],
+  F3: [['H4', 312600], ['H5', 421800], ['H6', 268400]],
+  F4: [['H4', 327000], ['H5', 438900], ['H6', 281200]],
+};
+export const stays = (map, fid) => map[fid].map(([id, price]) => ({ ...HOTELS[id], price }));
+export const period = f => `${f.out.d} – ${f.back.d} · 3박`;
 
-// 지도: tools/fetch-assets.py 가 만든 OSM 타일 합성 이미지. meta 는 assets/map/meta.json
-const P = (no, name, kind, lat, lon, walk, dist, photo, why) => ({ no, name, kind, lat, lon, walk, dist, photo, why });
-export const AREA_V1 = {
-  key: 'shibuya', title: '시부야', hotel: { name: '호텔 미나토 시부야', lat: 35.6617, lon: 139.6989 },
+// 09 숙소 위치와 추천 장소. 지도 그림은 tools/fetch-map.py 가 만든 OSM 타일 합성 이미지(meta 는 assets/map/meta.json).
+// 평점·후기 수·후기 제목은 시안용 예시 값이다. 실제 화면에서는 지도·후기 검색 결과가 들어간다.
+// rv: 웹 검색으로 찾은 후기 [썸네일, 제목, 사이트]. 후기가 없는 장소는 빈 배열.
+const P = (no, name, kind, lat, lon, walk, dist, photo, why, o = {}) => ({ no, name, kind, lat, lon, walk, dist, photo: 'photos/' + photo, why, rate: o.rate, cnt: o.cnt, fit: o.fit, site: o.site || 'Google 지도', rv: (o.rv || []).map(([p, t, s]) => ({ photo: 'photos/' + p, t, s })) });
+export const AREA = {
+  key: 'ueno', title: '우에노', at: '2026.11.10 14:06',
+  hotel: { name: '우에노 스테이 인', lat: 35.7126, lon: 139.7792, access: '우에노역 도보 3분' },
   groups: [
-    { key: 'fit', title: '요청 맞춤', sub: '미술관 · 조용한 일정', items: [
-      P(1, '시부야구립 쇼토 미술관', '미술관', 35.6606, 139.6922, '도보 10분', '620m', 'photos/shoto.jpg', '주택가 안쪽의 구립 미술관'),
-      P(2, '오타 기념 미술관', '우키요에 전문 미술관', 35.6695, 139.7046, '도보 17분', '1.0km', 'photos/ota.jpg', '소규모 전시 · 평일 한산'),
-      P(3, '네즈 미술관', '동양 고미술 · 정원', 35.6622, 139.7171, '지하철 12분', '1.7km', 'photos/nezu.jpg', '정원 산책로 포함'),
+    { key: 'fit', title: '요청 맞춤', sub: '미술관 · 건축물 탐방', items: [
+      P(1, '국립서양미술관', '미술관 · 세계유산', 35.7154, 139.7758, '도보 7분', '440m', 'nmwa.jpg', '르 코르뷔지에가 설계한 본관',
+        { rate: '4.5', cnt: '9,214', fit: '건축물 탐방', rv: [['rv_nmwa_1.jpg', '본관 건축과 상설전 관람 후기', '블로그'], ['rv_nmwa_2.jpg', '앞뜰 조각과 건물 외관 사진', '트립어드바이저']] }),
+      P(2, '도쿄도 미술관', '미술관', 35.7172, 139.7729, '도보 13분', '770m', 'tobikan.jpg', '마에카와 구니오 설계 · 기획전 중심',
+        { rate: '4.3', cnt: '6,480', fit: '미술관', rv: [['rv_tobikan_1.jpg', '기획전 관람과 입구 조형물 사진', '블로그'], ['rv_tobikan_2.jpg', '벽돌 외관과 중정 둘러보기', '트립어드바이저']] }),
+      P(3, '도쿄 국립박물관', '박물관', 35.7188, 139.7765, '도보 12분', '730m', 'tnm.jpg', '본관 일본 미술 상설전 · 호류지 보물관',
+        { rate: '4.6', cnt: '12,907', fit: '미술관', rv: [['rv_tnm_1.jpg', '고고 유물 전시실 관람 후기', '블로그'], ['rv_tnm_2.jpg', '병풍 전시실 사진 후기', '트립어드바이저']] }),
     ] },
     { key: 'sight', title: '많이 찾는 명소', sub: '숙소 2km 이내', items: [
-      P(4, '시부야 스크램블 교차로', '랜드마크', 35.6595, 139.7005, '도보 5분', '290m', 'photos/crossing.jpg'),
-      P(5, '시부야 스카이', '전망대', 35.6585, 139.7022, '도보 8분', '470m', 'photos/sky.jpg'),
-      P(6, '오모테산도', '가로수길 · 쇼핑', 35.6652, 139.7123, '지하철 8분', '1.3km', 'photos/omotesando.jpg'),
+      P(4, '시노바즈 연못', '우에노 공원 · 산책로', 35.7122, 139.7710, '도보 12분', '740m', 'shinobazu.jpg', '연못 둘레를 도는 산책로',
+        { rate: '4.2', cnt: '3,156', rv: [['rv_shinobazu_1.jpg', '연잎이 덮인 여름 연못 산책', '블로그'], ['rv_shinobazu_2.jpg', '연못 너머로 보이는 시내 풍경', '트립어드바이저']] }),
+      P(5, '우에노 도쇼구', '신사', 35.7154, 139.7711, '도보 13분', '790m', 'toshogu.jpg', '에도 시대에 지은 금색 사전과 가라몬',
+        { rate: '4.3', cnt: '4,022', rv: [['rv_toshogu_1.jpg', '금색 가라몬을 가까이서 본 사진', '블로그'], ['rv_toshogu_2.jpg', '에마가 걸린 경내 풍경', '트립어드바이저']] }),
+      P(6, '우에노 동물원', '동물원', 35.7163, 139.7717, '도보 12분', '700m', 'zoo.jpg', '1882년에 문을 연 일본에서 가장 오래된 동물원',
+        { rate: '4.2', cnt: '18,350', rv: [['rv_zoo_1.jpg', '정문 매표소와 입장 안내', '블로그'], ['rv_zoo_2.jpg', '입장 줄이 늘어선 정문 사진', '트립어드바이저']] }),
     ] },
     { key: 'food', title: '주변 음식점', sub: '도보 5분 이내', items: [
-      P(7, '스시 우오마루', '스시 · 1인 4,000엔대', 35.6606, 139.6973, '도보 3분', '190m', 'photos/sushi.jpg'),
-      P(8, '멘야 사쿠라자카', '라멘 · 1인 1,200엔대', 35.6632, 139.7001, '도보 3분', '200m', 'photos/ramen.jpg'),
-      P(9, '깃사 로쿠메이', '카페 · 경양식', 35.6600, 139.7014, '도보 5분', '300m', 'photos/kissa.jpg'),
+      P(7, '소바도코로 하나미즈', '소바 · 1인 1,500엔대', 35.7124, 139.7812, '도보 3분', '180m', 'soba.jpg', '점심부터 영업 · 자루소바',
+        { rate: '4.1', cnt: '312', rv: [['rv_soba_1.jpg', '자루소바 점심 세트 후기', '타베로그'], ['rv_soba_2.jpg', '김을 올린 자루소바 사진', '블로그']] }),
+      P(8, '돈카츠 야마베', '돈카츠 · 1인 2,000엔대', 35.7116, 139.7800, '도보 2분', '130m', 'tonkatsu.jpg', '숙소에서 가장 가까운 음식점',
+        { rate: '4.0', cnt: '187', rv: [['rv_tonkatsu_1.jpg', '로스카츠 정식 후기', '타베로그'], ['rv_tonkatsu_2.jpg', '점심 정식 구성 사진', '블로그']] }),
+      P(9, '야키토리 도리신', '꼬치구이 · 1인 2,500엔대', 35.7139, 139.7806, '도보 3분', '190m', 'yakitori.jpg', '저녁 영업 · 카운터석'),
     ] },
   ],
 };
-export const AREA_V2 = {
-  key: 'ueno', title: '우에노', hotel: { name: '우에노 스테이 인', lat: 35.7126, lon: 139.7792 },
-  groups: [
-    { key: 'fit', title: '요청 맞춤', sub: '미술관 · 조용한 일정', items: [
-      P(1, '국립서양미술관', '미술관 · 세계유산', 35.7154, 139.7758, '도보 7분', '440m', 'photos/nmwa.jpg', '르 코르뷔지에 설계 본관'),
-      P(2, '도쿄도 미술관', '미술관', 35.7172, 139.7729, '도보 13분', '770m', 'photos/tobikan.jpg', '기획전 · 오전 시간대 한산'),
-      P(3, '도쿄 국립박물관', '박물관', 35.7188, 139.7765, '도보 12분', '730m', 'photos/tnm.jpg', '본관 일본 미술 상설전'),
-    ] },
-    { key: 'sight', title: '많이 찾는 명소', sub: '숙소 2km 이내', items: [
-      P(4, '시노바즈 연못', '우에노 공원 · 산책로', 35.7122, 139.7710, '도보 12분', '740m', 'photos/shinobazu.jpg'),
-      P(5, '우에노 도쇼구', '신사', 35.7154, 139.7711, '도보 13분', '790m', 'photos/toshogu.jpg'),
-      P(6, '우에노 동물원', '동물원', 35.7167, 139.7733, '도보 12분', '700m', 'photos/zoo.jpg'),
-    ] },
-    { key: 'food', title: '주변 음식점', sub: '도보 5분 이내', items: [
-      P(7, '소바도코로 하나미즈', '소바 · 1인 1,500엔대', 35.7124, 139.7812, '도보 3분', '180m', 'photos/soba.jpg'),
-      P(8, '돈카츠 야마베', '돈카츠 · 1인 2,000엔대', 35.7116, 139.7800, '도보 2분', '130m', 'photos/tonkatsu.jpg'),
-      P(9, '야키토리 도리신', '꼬치구이 · 1인 2,500엔대', 35.7139, 139.7806, '도보 3분', '190m', 'photos/yakitori.jpg'),
-    ] },
-  ],
-};
+// 추천 활동: 요청사항의 어느 말과 맞는지(fit)를 함께 보여 준다.
+export const ACTS = [
+  { t: '우에노 공원 건축 산책', fit: '건축물 탐방', time: '약 2시간 · 도보 2km 안팎', photo: 'photos/act_arch.jpg',
+    d: '국립서양미술관(르 코르뷔지에) → 도쿄문화회관(마에카와 구니오) → 국제어린이도서관(안도 다다오 증축) → 호류지 보물관(다니구치 요시오) 순서로 걷습니다.' },
+  { t: '아메요코 상점가 둘러보기', fit: '쇼핑은 하루만', time: '약 1~2시간 · 숙소에서 도보 7분', photo: 'photos/act_ameyoko.jpg',
+    d: '우에노역과 오카치마치역 사이 철로를 따라 이어지는 시장 골목입니다. 잡화 · 의류 · 식료품 가게가 모여 있습니다.' },
+  { t: '시노바즈 연못 보트와 산책', fit: '조용하게', time: '약 1시간 · 숙소에서 도보 12분', photo: 'photos/act_pond.jpg',
+    d: '연못 둘레 산책로를 걷거나 보트장에서 보트를 탑니다.' },
+];
+export const PLACE_SRC = [['지도 · 장소', 'Google 지도 · 9곳'], ['후기', '트립어드바이저 · 타베로그 · 블로그 · 16건'], ['활동', '웹 검색 · 3건']];
 
 // 합계 계산은 전부 여기서 한다 (화면에 숫자를 직접 적지 않는다).
-export const combo = ({ flight = 'F1', hotel = 'H1', bag = false, hotels = HOTELS_V1 } = {}) => {
-  const f = FLIGHTS.find(x => x.id === flight), h = hotels.find(x => x.id === hotel);
+export const combo = ({ flight = 'F1', hotel = 'H1', bag = false, map = STAYS_V1 } = {}) => {
+  const f = FLIGHTS.find(x => x.id === flight), h = stays(map, flight).find(x => x.id === hotel);
   const lines = [
     { k: '항공권', t: `${f.air} ${f.out.no} / ${f.back.no}`, s: `${f.cls} · 성인 2명 왕복`, p: f.price, m: f.air, src: f.src },
     ...(bag ? [{ k: '수하물', t: '위탁 23kg으로 변경', s: BAG.sub, p: BAG.price, m: f.air, src: f.src }] : []),
     { k: '숙소', t: h.name, s: `${h.room} · 3박 · ${h.meal}`, p: h.price, m: h.name, src: h.src },
   ];
   const total = lines.reduce((s, l) => s + l.p, 0);
-  return { f, h, lines, total, left: REQ.budget - total, air: f.price + (bag ? BAG.price : 0) };
+  return { f, h, bag, map, lines, total, left: REQ.budget - total, air: f.price + (bag ? BAG.price : 0) };
 };
 export const V1 = combo();
 export const V1B = combo({ bag: true });
-export const V2 = combo({ bag: true, hotel: 'H4', hotels: HOTELS_V2 });
+export const V2 = combo({ bag: true, hotel: 'H4', map: STAYS_V2 });
 
 // 결제 권한(사전 서명된 권한 증명서)
 export const MANDATE = {
