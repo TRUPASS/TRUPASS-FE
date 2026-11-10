@@ -1,0 +1,211 @@
+# Trupass core API — 임시 초안 스펙
+# 백엔드(Spring Boot)가 /v3/api-docs 를 제공하면 `pnpm gen:api --remote` 로 교체한다.
+openapi: 3.0.3
+info:
+  title: Trupass Core API (draft)
+  version: 0.0.1
+  description: FE 초기 세팅용 최소 초안. 실제 스펙은 백엔드 OpenAPI 를 기준으로 한다.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: trip-requests
+  - name: checkouts
+paths:
+  /api/trip-requests:
+    post:
+      tags: [trip-requests]
+      operationId: createTripRequest
+      summary: 자연어 여행 요청 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequestBody'
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTripRequestResponse'
+  /api/trip-requests/{requestId}/packages:
+    get:
+      tags: [trip-requests]
+      operationId: getPackageOptions
+      summary: AI 가 만든 패키지 후보 조회
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: 패키지 후보 목록 (2~3안)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PackageOption'
+  /api/checkouts:
+    post:
+      tags: [checkouts]
+      operationId: createCheckout
+      summary: 선택한 패키지로 체크아웃 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutBody'
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCheckoutResponse'
+  /api/checkouts/{checkoutId}/mandate:
+    post:
+      tags: [checkouts]
+      operationId: submitMandate
+      summary: 패스키(WebAuthn) 서명 결과(AP2 Mandate) 제출
+      parameters:
+        - $ref: '#/components/parameters/CheckoutId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitMandateBody'
+      responses:
+        '204':
+          description: 서명 접수됨
+  /api/checkouts/{checkoutId}:
+    get:
+      tags: [checkouts]
+      operationId: getCheckoutStatus
+      summary: 체크아웃(Saga) 진행 상태 조회 — FE 가 폴링한다
+      parameters:
+        - $ref: '#/components/parameters/CheckoutId'
+      responses:
+        '200':
+          description: 현재 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutStatusResponse'
+components:
+  parameters:
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+    CheckoutId:
+      name: checkoutId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    CreateTripRequestBody:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: 다음 달에 오사카 2박 3일 다녀오고 싶어
+    CreateTripRequestResponse:
+      type: object
+      required: [requestId]
+      properties:
+        requestId:
+          type: string
+    Currency:
+      type: string
+      description: ISO 4217 통화 코드
+      example: KRW
+    OfferType:
+      type: string
+      enum: [FLIGHT, STAY, EXPERIENCE]
+    PackageItem:
+      type: object
+      required: [offerId, merchant, type, name, amount]
+      properties:
+        offerId:
+          type: string
+        merchant:
+          type: string
+          description: 판매자 식별자/이름
+        type:
+          $ref: '#/components/schemas/OfferType'
+        name:
+          type: string
+        amount:
+          type: integer
+          format: int64
+          description: 판매자별 금액 (백엔드 계산 값, 최소 화폐 단위)
+    PackageOption:
+      type: object
+      required: [packageId, title, totalAmount, currency, items]
+      properties:
+        packageId:
+          type: string
+        title:
+          type: string
+        totalAmount:
+          type: integer
+          format: int64
+          description: 총액 (백엔드 계산 값. FE 는 계산하지 않는다)
+        currency:
+          $ref: '#/components/schemas/Currency'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageItem'
+    CreateCheckoutBody:
+      type: object
+      required: [packageId]
+      properties:
+        packageId:
+          type: string
+    CreateCheckoutResponse:
+      type: object
+      required: [checkoutId]
+      properties:
+        checkoutId:
+          type: string
+    SubmitMandateBody:
+      type: object
+      description: >-
+        TODO: 패스키(WebAuthn) 서명 결과 형식은 백엔드 WebAuthn 라이브러리 확정 후 정의한다.
+      additionalProperties: true
+    CheckoutStatus:
+      type: string
+      enum: [SIGNED, IN_PROGRESS, COMPLETED, COMPENSATING, FAILED, NEEDS_MANUAL_REVIEW]
+    SagaStep:
+      type: string
+      enum: [HOLD, COLLECT, PAY, CONFIRM]
+    StepState:
+      type: string
+      enum: [PENDING, SUCCEEDED, FAILED, COMPENSATED]
+    CheckoutStepStatus:
+      type: object
+      required: [merchant, step, state]
+      properties:
+        merchant:
+          type: string
+        step:
+          $ref: '#/components/schemas/SagaStep'
+        state:
+          $ref: '#/components/schemas/StepState'
+    CheckoutStatusResponse:
+      type: object
+      required: [status, steps]
+      properties:
+        status:
+          $ref: '#/components/schemas/CheckoutStatus'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutStepStatus'
