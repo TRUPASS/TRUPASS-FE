@@ -1,0 +1,16 @@
+{
+ "koreanair": {
+  "label": "대한항공",
+  "w": 105,
+  "h": 16,
+  "source": "https://commons.wikimedia.org/wiki/File:Korean_Air_2025.svg",
+  "by": "Korean Air (Lippincott 디자인)"
+ },
+ "jejuair": {
+  "label": "제주항공",
+  "w": 61,
+  "h": 12,
+  "source": "https://commons.wikimedia.org/wiki/File:Jeju_Air_Logo.svg",
+  "by": "Jeju Air (벡터화: Jeromi Mikhael)"
+ }
+}

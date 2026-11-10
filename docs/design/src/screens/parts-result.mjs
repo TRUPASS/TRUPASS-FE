@@ -2,7 +2,7 @@
 //   항공권 표 — 항공권 한 건이 한 줄이다. 화면에 들어오면 한 줄씩 떠오른다. 줄 아래의 [추천 숙소 3곳]을 펼쳐 숙소를 고른다.
 //   선택한 조합(오른쪽) · 검색 기록 · 아래 고정 영역.  고르기와 합계 계산은 src/js/site.js 가 #tp-data 를 읽어 처리한다.
 //   고르는 자리는 전부 실제 라디오 · 체크박스이고, 숙소 펼치기는 details/summary 라서 스크립트 없이도 열린다.
-import { ic, btn, chk, tag, src, won, sgn, steps, header, footer, page, bottom } from '../lib/ui.mjs';
+import { ic, btn, chk, tag, src, airlineLogo, won, sgn, steps, header, footer, page, bottom } from '../lib/ui.mjs';
 import { REQ, FLIGHTS, BAG, MEAL, NEW_IN_V2, stays, period } from '../lib/data.mjs';
 import { requestPanel } from './parts-search.mjs';
 
@@ -18,14 +18,14 @@ const stayCard = (h, i, fid, on, isNew) => `<label class="sc rise" style="--i:${
 <span class="sc-f" data-n="Price"><span class="t-h3 num">${won(h.price)}</span>${src(h.src)}</span></span></label>`;
 // 추가 선택: 수하물은 항공권에, 조식은 조식이 빠진 숙소를 골랐을 때만 붙는다.
 const addon = (k, a, on, show) => `<div class="ax-r"${show ? '' : ' hidden'} data-addon="${k}" data-n="AddOn">${chk(`${a.label} <span class="c3">${a.sub}</span>`, on)}<span class="t-sm num w5 fn">${sgn(a.price)}</span></div>`;
-// 항공권 한 줄: 고르기 + 항공사 + 가는 편 · 오는 편 + 요금, 그 아래 요청과 맞는 점과 숙소 펼치기
+// 항공권 한 줄: 고르기 + 항공사(로고 · 이름) + 가는 편 · 오는 편 + 요금, 그 아래 요청과 맞는 점과 숙소 펼치기
 const flightRow = (f, i, { c, changed, open }) => {
   const list = stays(c.map, f.id), on = f.id === c.f.id, min = Math.min(...list.map(h => h.price));
   const pickedText = `고른 숙소 ${c.h.name}`, offerText = `추천 숙소 3곳, ${won(min)}부터`;
   return `<article class="fo rise${on ? ' on' : ''}" style="--i:${i}" data-flight="${f.id}" data-n="Flight/${f.air} ${f.out.no}">
 <div class="fo-r" data-pick data-n="Row">
   <label class="fo-k"><input class="vh" type="radio" name="flight" value="${f.id}"${on ? ' checked' : ''}><span class="rad" data-n="Dot"></span><span class="vh">${f.air} ${f.out.no} 선택</span></label>
-  <div class="fo-a" data-n="Airline"><div class="row g8"><span class="t-h3">${f.air}</span>${f.tag ? tag(f.tag, 'b') : ''}</div><span class="t-xs c3">${f.cls}, ${f.bag}</span></div>
+  <div class="fo-a" data-n="Airline">${f.logo ? airlineLogo(f.logo) : ''}<div class="row g8"><span class="t-h3">${f.air}</span>${f.tag ? tag(f.tag, 'b') : ''}</div><span class="t-xs c3">${f.cls}, ${f.bag}</span></div>
   <div class="fo-l" data-n="Legs">${leg('가는 편', f.out)}${leg('오는 편', f.back)}</div>
   <div class="fo-p" data-n="Price"><span class="t-h2 num">${won(f.price)}</span>${src(f.src)}</div>
 </div>

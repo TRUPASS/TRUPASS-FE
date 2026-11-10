@@ -1,8 +1,12 @@
 // Trupass 디자인 — 화면이 공통으로 쓰는 마크업 조각.
 // data-n 은 피그마 레이어 이름이 된다. 화면의 뼈대는 flex(row/column)+gap+padding 으로 짠다.
 // 누를 수 있는 것은 실제 a(주소가 있을 때) · button · input 으로 만든다.
+import { readFileSync } from 'node:fs';
 import { ICONS } from './icons.mjs';
 import { BRANDS } from './brands.mjs';
+
+// 항공사 로고의 화면 크기 (tools/fetch-airline-logos.py 가 로고와 함께 만든다)
+const AIRLINES = JSON.parse(readFileSync(new URL('../../assets/brands/airlines.json', import.meta.url), 'utf8'));
 
 export const won = n => n.toLocaleString('ko-KR') + '원';
 export const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toLocaleString('ko-KR') + '원';
@@ -40,6 +44,12 @@ export const brandMark = (k, s = 16) => {
   return `<svg ${at} width="${s}" height="${s}" viewBox="0 0 24 24"><path d="${b.path}"/></svg>`;
 };
 export const brandName = k => BRANDS[k].label;
+// 항공사 로고 (Wikimedia Commons 의 공식 로고 벡터). 이름은 옆에 글자로 따로 적으므로 대체 글은 비운다.
+export const airlineLogo = k => {
+  const a = AIRLINES[k];
+  if (!a) throw new Error('unknown airline: ' + k);
+  return `<img class="al" src="../assets/brands/${k}.svg" width="${a.w}" height="${a.h}" alt="" data-n="logo/${k}">`;
+};
 export const src = k => `<span class="src" data-n="Source">${brandMark(k)}<span class="nm">${BRANDS[k].label}</span></span>`;
 
 // 버튼. href 를 주면 그 화면으로 넘어가는 링크(a), 없으면 button 이다. at 은 스크립트가 붙는 자리(data-*) 와 aria 속성.

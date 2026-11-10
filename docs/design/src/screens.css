@@ -359,6 +359,7 @@ body[data-stage="flight"] .sp[data-sp="flight"] b, body[data-stage="stay"] .sp[d
 .fo-r { padding-top: 18px; padding-bottom: 8px; cursor: pointer; }
 .fo-k { position: relative; display: flex; width: 20px; flex: none; border-radius: 10px; cursor: pointer; }
 .fo-a { width: 150px; flex: none; gap: 3px; }
+.al { object-fit: contain; align-self: flex-start; margin-bottom: 3px; }
 .fo-a > .row { flex-wrap: wrap; row-gap: 4px; }
 .fo-a .t-h3 { white-space: nowrap; }
 .fo-l { display: flex; flex: 1 1 0; flex-direction: row; align-items: flex-start; gap: 28px; }

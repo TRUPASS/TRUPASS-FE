@@ -66,18 +66,18 @@ export const REV = {
 export const REV_PLACES = { text: '건축물 탐방 장소를 더 넣어 주세요. 저녁 식당은 조용한 곳으로 부탁합니다.' };
 
 // 항공권 3건: "12월 18일 전후로 … 아침에 출발"이라고 적었으므로 하루 이른 편과 다른 공항 노선도 함께 보여 준다.
-// fit 은 요청과 맞는 점(또는 다른 점)을 그대로 적은 문장이다. src 는 요금을 조회한 곳(lib/brands.mjs 의 키).
+// fit 은 요청과 맞는 점(또는 다른 점)을 그대로 적은 문장이다. src 는 요금을 조회한 곳(lib/brands.mjs 의 키), logo 는 항공사 로고(assets/brands/<키>.svg).
 const leg = (no, d, dep, from, fc, arr, to, tc, dur) => ({ no, d, dep, from, fc, arr, to, tc, dur });
 export const FLIGHTS = [
-  { id: 'F1', air: '대한항공', tag: '추천', cls: '이코노미', bag: '위탁 23kg 포함', price: 596400, src: 'tripdotcom',
+  { id: 'F1', air: '대한항공', logo: 'koreanair', tag: '추천', cls: '이코노미', bag: '위탁 23kg 포함', price: 596400, src: 'tripdotcom',
     fit: '요청한 12월 18일 오전 09:10 출발',
     out: leg('KE 703', '12.18 (금)', '09:10', '인천', 'ICN', '11:35', '나리타', 'NRT', '2시간 25분'),
     back: leg('KE 704', '12.21 (월)', '18:20', '나리타', 'NRT', '21:05', '인천', 'ICN', '2시간 45분') },
-  { id: 'F2', air: '제주항공', tag: '최저가', cls: '이코노미', bag: '위탁 수하물 별도', price: 438200, src: 'expedia',
+  { id: 'F2', air: '제주항공', logo: 'jejuair', tag: '최저가', cls: '이코노미', bag: '위탁 수하물 별도', price: 438200, src: 'expedia',
     fit: '요청일보다 하루 이른 12월 17일 오전 07:25 출발',
     out: leg('7C 1102', '12.17 (목)', '07:25', '인천', 'ICN', '09:55', '나리타', 'NRT', '2시간 30분'),
     back: leg('7C 1105', '12.20 (일)', '20:15', '나리타', 'NRT', '23:05', '인천', 'ICN', '2시간 50분') },
-  { id: 'F3', air: '대한항공', cls: '이코노미', bag: '위탁 23kg 포함', price: 742000, src: 'tripdotcom',
+  { id: 'F3', air: '대한항공', logo: 'koreanair', cls: '이코노미', bag: '위탁 23kg 포함', price: 742000, src: 'tripdotcom',
     fit: '요청한 12월 18일 오전 08:05 출발, 김포에서 하네다로 가는 노선',
     out: leg('KE 2101', '12.18 (금)', '08:05', '김포', 'GMP', '10:15', '하네다', 'HND', '2시간 10분'),
     back: leg('KE 2104', '12.21 (월)', '19:40', '하네다', 'HND', '22:10', '김포', 'GMP', '2시간 30분') },

@@ -40,7 +40,7 @@
 | 스크립트 없이 보이기 | `<html class="js">`는 스크립트가 켜져 있을 때만 붙는다. 스크롤 연출과 숨김은 전부 `.js` 아래에 있어, 스크립트가 꺼져 있으면 제목 · 숫자 · 이용 방법 다섯 걸음 · 문장 칸 세 개가 위에서 아래로 그대로 보인다. 숙소 펼치기는 `details`라 그대로 열리고, 수정 요청 독은 펼친 채 페이지 끝에 놓인다 |
 | 화면 결함 | 320px 폭에서 워드마크가 한 줄에 들어간다. 선택 타일은 이름이 길면 두 줄로 늘어나고 아주 좁은 화면에서는 한 줄에 하나씩 놓인다. 상단 바와 푸터는 본문 폭(1240)에 맞췄다. 검색 중 화면은 지금 단계의 문구 하나만 보이고 읽힌다 |
 | 문구와 자료 | 이름 자리의 특정 인물 이름을 뺐다. 조건 표기를 통일했다(범위는 `~`, 나열은 쉼표). 실제 호텔 간판이 찍힌 사진은 빼거나 간판 부분을 잘라 냈다. 브라우저 탭 제목을 화면 이름으로 바꿨다 |
-| 실제 회사 이름과 마크 | 항공사는 대한항공 · 제주항공, 요금 조회처는 트립닷컴 · 익스피디아(항공권), 부킹닷컴 · 호텔스닷컴(숙소), 지도는 Google 지도, 후기는 트립어드바이저 · 타베로그 · 네이버 블로그로 바꿨다. 마크는 Simple Icons(CC0) 자료다. **연동을 가정한 예시이며 실제 제휴 관계가 아니라는 점**을 랜딩과 앱 화면의 푸터에 적었다. 항공사 로고는 쓸 수 있는 조건이 확인된 자료가 없어 이름만 적었다 |
+| 실제 회사 이름과 마크 | 항공사는 대한항공 · 제주항공, 요금 조회처는 트립닷컴 · 익스피디아(항공권), 부킹닷컴 · 호텔스닷컴(숙소), 지도는 Google 지도, 후기는 트립어드바이저 · 타베로그 · 네이버 블로그로 바꿨다. 마크는 Simple Icons(CC0) 자료다. **연동을 가정한 예시이며 실제 제휴 관계가 아니라는 점**을 랜딩과 앱 화면의 푸터에 적었다. 항공권 줄에는 두 항공사의 로고(Wikimedia Commons 의 공식 로고 벡터)를 넣었다 |
 | 코드 정리 | 색 값은 전부 `tokens.css`의 토큰 블록에 있다(다른 파일에는 색 리터럴이 없다). 높이는 `svh`를 쓰고, 가로 넘침은 `overflow-x: clip`으로 막았다. 버튼에는 누름 · 꺼짐 상태가 있다 |
 | 꾸밈 줄이기 | 괄호 눈썹글, 메타 줄의 가운뎃점, 상태 점(진행 중만 남김), 랜딩의 영문 장식 문구(자간을 벌린 대문자, `(Scroll)`, `01 / 05`, `01 — Flights`), 버튼 끝의 화살표 동전, 푸터 제목의 색 강조 구절을 뺐다. 흐르는 글자는 남기고 멈춤 단추를 달았다 |
 | 앱 화면 머리부 | 제목을 56px에서 34px(앱 크기)로 줄이고 제목 옆에 진행 단계를 붙였다. 결과 화면의 첫 화면에 항공권 세 건이 거의 다 들어온다 |
@@ -127,7 +127,7 @@ docs/design
 │  ├─ lib/              아이콘(Carbon), 회사 마크(Simple Icons), 마크업 헬퍼, 목업 데이터
 │  ├─ screens/          화면 하나당 모듈 하나 (parts-*.mjs 는 여러 화면이 함께 쓰는 조각)
 │  └─ build.mjs         dist/ 생성
-├─ assets/              배경 사진 · 지도 · 장소 사진 · 지구본 데이터 · 이용 방법 그림, CREDITS.md
+├─ assets/              배경 사진 · 지도 · 장소 사진 · 항공사 로고 · 지구본 데이터 · 이용 방법 그림, CREDITS.md
 ├─ preview/             폭별 한눈에 보기(JPEG). 화면별 PNG는 렌더로 생성
 ├─ figma/plugin/        피그마 플러그인 (2차 수정본 기준, 아래 참고)
 └─ tools/               렌더, 흐름 검사, 에셋 가공, 피그마 변환
@@ -175,6 +175,7 @@ VERCEL_TOKEN=<토큰> python3 tools/deploy-vercel.py --name trupass-preview --te
 npm i --no-save @carbon/icons simple-icons@16.35.0
 node tools/gen-icons.mjs node_modules/@carbon/icons      # src/lib/icons.mjs
 node tools/gen-brands.mjs node_modules/simple-icons      # src/lib/brands.mjs (색은 tokens.css 의 --bx-* 에 같은 값으로 적는다)
+python3 tools/fetch-airline-logos.py                     # assets/brands/*.svg (항공사 로고, Wikimedia Commons)
 ```
 
 ## 피그마 반영 상태
@@ -195,7 +196,7 @@ node tools/gen-brands.mjs node_modules/simple-icons      # src/lib/brands.mjs (�
 ## 가정과 확인이 필요한 것
 
 - 랜딩의 숫자(연동 API 6개, 항공편 23건, 숙소 조합 9가지, 약 30초)는 시안의 예시 검색 한 건에서 나온 값이다. 실제 수치가 정해지면 `src/lib/data.mjs`의 `STATS`를 바꾼다(4차에서는 보류). 화면에도 예시 값이라고 적어 두었다.
-- 항공사(대한항공 · 제주항공)와 요금 조회처 · 지도 · 후기 사이트는 실제 회사 이름을 쓴다. **연동을 가정한 예시이며 제휴 관계가 아니다.** 편명 · 시각 · 요금 · 평점은 시안용 예시 값이다. 연동할 곳이 정해지면 `tools/gen-brands.mjs`의 목록과 `src/lib/data.mjs`를 바꾼다. 회사 마크는 Simple Icons 의 한 색 마크이므로, 실제 서비스에서는 각 회사의 브랜드 가이드에 맞는 공식 자료로 바꿔야 한다. 항공사 로고는 넣지 않았다.
+- 항공사(대한항공 · 제주항공)와 요금 조회처 · 지도 · 후기 사이트는 실제 회사 이름을 쓴다. **연동을 가정한 예시이며 제휴 관계가 아니다.** 편명 · 시각 · 요금 · 평점은 시안용 예시 값이다. 연동할 곳이 정해지면 `tools/gen-brands.mjs`의 목록과 `src/lib/data.mjs`를 바꾼다. 회사 마크는 Simple Icons 의 한 색 마크, 항공사 로고는 Wikimedia Commons 에 퍼블릭 도메인으로 올라 있는 벡터다. 저작권과 별개로 상표권은 각 회사에 있으므로, 실제 서비스에서는 각 회사의 브랜드 가이드에 맞는 공식 자료와 사용 허락을 확인해야 한다.
 - 숙소와 음식점 이름, 결제 카드 이름은 가상이다. 미술관 · 명소는 실제 장소이고 거리는 좌표로 계산했다.
 - 문장 세 개(항공 · 숙소 · 체험)의 구성과 질문 · 예시 문구는 `src/lib/data.mjs`의 `PROMPTS` 한 곳에서 바꾼다.
 - 지구본의 출발 · 도착 국가와 도시는 `data.mjs`의 `ROUTE`에서 정한다. 지금은 대한민국 → 일본 고정이며, 적은 문장에서 도착 국가를 뽑아 바꾸는 일은 실제 검색이 붙을 때 한다. 확대해서 그릴 수 있는 정밀 경계는 동아시아 5개국만 넣어 두었다(`tools/gen-geo.mjs`의 `DETAIL`).
@@ -210,4 +211,4 @@ node tools/gen-brands.mjs node_modules/simple-icons      # src/lib/brands.mjs (�
 
 ## 출처
 
-배경 사진 · 장소 사진(Wikimedia Commons), 지도(OpenStreetMap), 지구본 데이터(Natural Earth), 아이콘(IBM Carbon), 회사 마크(Simple Icons), 글꼴(Outfit · Gothic A1), 지구본 라이브러리(d3-geo 외)의 출처와 라이선스는 [`assets/CREDITS.md`](assets/CREDITS.md)에 있다.
+배경 사진 · 장소 사진 · 항공사 로고(Wikimedia Commons), 지도(OpenStreetMap), 지구본 데이터(Natural Earth), 아이콘(IBM Carbon), 회사 마크(Simple Icons), 글꼴(Outfit · Gothic A1), 지구본 라이브러리(d3-geo 외)의 출처와 라이선스는 [`assets/CREDITS.md`](assets/CREDITS.md)에 있다.

@@ -17,7 +17,7 @@ const css = ['tokens.css', 'components.css', 'screens.css'].map(f => readFileSyn
 writeFileSync(join(dist, 'app.css'), css);
 cpSync(join(here, 'js'), join(dist, 'js'), { recursive: true });
 // 화면이 쓰는 자료만 옮긴다
-for (const d of ['bg', 'geo', 'map', 'photos', 'tutorial', 'vendor', 'CREDITS.md']) {
+for (const d of ['bg', 'brands', 'geo', 'map', 'photos', 'tutorial', 'vendor', 'CREDITS.md']) {
   if (existsSync(join(root, 'assets', d))) cpSync(join(root, 'assets', d), join(dist, 'assets', d), { recursive: true });
 }
 

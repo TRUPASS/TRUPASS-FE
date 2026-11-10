@@ -17,7 +17,7 @@
 - 요금 조회처 · 지도 · 후기 사이트의 마크: [Simple Icons](https://simpleicons.org) 16.35.0, CC0 1.0. `tools/gen-brands.mjs` 가 화면에 쓰는 여덟 개(Trip.com · Expedia · Booking.com · Hotels.com · Google Maps · Tripadvisor · Tabelog · Naver)만 `src/lib/brands.mjs` 에 담았다.
 - 마크와 이름의 상표권은 각 회사에 있다. 화면에 적은 회사는 연동을 가정한 예시이며 실제 제휴 관계가 아니다. 같은 내용을 랜딩과 앱 화면의 푸터에 적었다.
 - 작은 크기(14~16px)에서도 알아볼 수 있도록 그리는 방법만 조정했다. 가로로 긴 Trip.com 워드마크는 글자가 있는 띠만 잘라 넓게 쓰고, 색이 옅은 Tripadvisor · Tabelog · Naver 는 회사 색 바탕 위에 마크를 올렸다. 마크의 모양은 바꾸지 않았다. 실제 서비스에서는 각 회사의 브랜드 가이드에 맞는 공식 자료로 바꾼다.
-- 항공사(대한항공 · 제주항공)는 이름만 적었다. 쓸 수 있는 조건이 확인된 로고 자료가 없어 넣지 않았다.
+- 항공사 로고: `assets/brands/koreanair.svg` 는 [Korean Air 2025.svg](https://commons.wikimedia.org/wiki/File:Korean_Air_2025.svg)(Korean Air, Lippincott 디자인), `assets/brands/jejuair.svg` 는 [Jeju Air Logo.svg](https://commons.wikimedia.org/wiki/File:Jeju_Air_Logo.svg)(Jeju Air, 벡터화 Jeromi Mikhael)이다. 둘 다 Wikimedia Commons 에 퍼블릭 도메인(저작권 보호 대상이 아닌 단순한 로고)으로 올라 있고, 상표로 보호된다. `tools/fetch-airline-logos.py` 가 받아서 화면에 필요 없는 정의(mask · id · class)만 걷어 냈다. 모양과 색은 원본 그대로다.
 - Google 로그인 버튼의 G 마크는 Google 의 상표이며 로그인 버튼 용도로만 썼다.
 
 ## 배경 사진 (Wikimedia Commons)

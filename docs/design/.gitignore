@@ -7,3 +7,4 @@ preview/m/
 .tile-cache/
 .photo-cache/
 node_modules/
+.logo-cache/
