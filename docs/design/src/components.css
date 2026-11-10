@@ -39,6 +39,12 @@
 .btn.ico { width: 48px; padding: 0; }
 .btn.ico.sm { width: 38px; }
 .btn.fill { align-self: stretch; }
+/* 끝에 동그란 화살표가 붙는 버튼 (랜딩 오른쪽 위의 검색 시작). 올리면 화살표가 오른쪽으로 돈다 */
+.btn.cta { padding-right: 8px; gap: 12px; }
+.btn.sm.cta { padding-right: 4px; gap: 8px; }
+.btn .arr { display: flex; flex: none; width: 32px; height: 32px; border-radius: 16px; align-items: center; justify-content: center; background: var(--brand); color: var(--on-photo); transition: transform .25s var(--ease); }
+.btn.sm .arr { width: 30px; height: 30px; border-radius: 15px; }
+.btn.pri .arr { background: var(--n-0); color: var(--brand); }
 .btn:active { transform: translateY(1px); }
 .btn:disabled, .btn[aria-disabled="true"] { background: var(--n-100); border-color: var(--n-200); color: var(--tx-3); cursor: not-allowed; }
 .btn:disabled:active, .btn[aria-disabled="true"]:active { transform: none; }
@@ -46,6 +52,7 @@
   .btn:hover { border-color: var(--n-700); }
   .btn.pri:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
   .btn.txt:hover { border-color: transparent; }
+  .btn.cta:hover .arr { transform: rotate(45deg); }
   .btn:disabled:hover, .btn[aria-disabled="true"]:hover { border-color: var(--n-200); }
 }
 /* 글자로만 된 작은 버튼 (약관 보기 · 예시 문장) */

@@ -27,6 +27,7 @@ const total = page => page.evaluate(() => document.querySelector('.sum [data-sum
   const { ctx, page } = await open(D);
   await page.goto(url('01-landing.html'));
   await page.waitForTimeout(400);
+  ok('랜딩: 오른쪽 위 [검색 시작] 끝에 동그란 화살표가 있다', await page.evaluate(() => { const a = document.querySelector('.lp-top [data-n="Start"] .arr'); return !!a && a.getBoundingClientRect().width >= 24 && a.getAttribute('aria-hidden') === 'true'; }));
   await page.evaluate(() => window.scrollTo(0, window.__tpStop('hero', 0.5)));
   await page.waitForTimeout(900);
   const p = await page.evaluate(() => +document.querySelector('.lp-hero').style.getPropertyValue('--p'));
@@ -202,8 +203,15 @@ const total = page => page.evaluate(() => document.querySelector('.sum [data-sum
   ok('결제 확인 → 결제 진행', /12-processing/.test(page.url()));
   await page.waitForURL(/13-complete/, { timeout: 9000 }).catch(() => {});
   ok('결제 진행 → 결제 완료 (자동)', /13-complete/.test(page.url()));
+  await Promise.all([page.waitForNavigation(), page.click('[data-n="Trips"]')]);
+  const tr = await page.evaluate(() => ({ cur: (document.querySelector('.hdr .nav a[aria-current="page"]') || {}).textContent, days: document.querySelectorAll('.tl-d').length, docs: document.querySelectorAll('#docs .doc').length }));
+  ok('결제 완료 → 내 여행 (날짜별 일정과 문서함)', /14-trips/.test(page.url()) && tr.cur === '내 여행' && tr.days === 3 && tr.docs === 3, JSON.stringify(tr));
+  await Promise.all([page.waitForNavigation(), page.click('.tl [data-n="Places"]')]);
+  ok('내 여행: 자유 일정에서 추천 장소로 간다', /09-places/.test(page.url()));
+  await Promise.all([page.waitForNavigation(), page.click('.hdr .nav a[href="14-trips.html"]')]);
+  ok('상단 메뉴의 [내 여행]을 누르면 내 여행으로 간다', /14-trips/.test(page.url()));
   await Promise.all([page.waitForNavigation(), page.click('[data-n="NewSearch"]')]);
-  ok('결제 완료 → 새 검색', /05-home/.test(page.url()));
+  ok('내 여행 → 새 검색', /05-home/.test(page.url()));
   await page.focus('[data-ask="flight"] input'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   ok('새 검색: 엔터로 다음 문장 칸에 커서가 간다', (await page.evaluate(() => document.activeElement && document.activeElement.name)) === 'stay');
   await ctx.close();

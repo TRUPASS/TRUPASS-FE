@@ -459,6 +459,19 @@ body[data-stage="flight"] .sp[data-sp="flight"] b, body[data-stage="stay"] .sp[d
 .doc { flex-direction: row; align-items: center; gap: 12px; padding: 14px var(--pad); border-top: 1px solid var(--line); }
 .acts { flex-direction: row; align-items: center; gap: 8px; }
 
+/* ───────── 14 내 여행 ───────── */
+/* 여행 한 건: 요약(기간 · 인원 · 주문번호) 아래에 날짜별 일정. 날짜는 왼쪽 칸에, 그날의 일은 시각 순서로 오른쪽에 놓는다 */
+.trip-m { display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px 48px; padding: 16px var(--pad); border-bottom: 1px solid var(--line); background: var(--surface-sub); }
+.tl-d { flex-direction: row; align-items: flex-start; gap: 20px; padding: 20px var(--pad); border-top: 1px solid var(--line); }
+.tl-d.first { border-top: 0; }
+.tl-k { width: 104px; flex: none; font-weight: var(--fw-bold); }
+.tl-l { flex: 1 1 0; gap: 16px; }
+.tl-i { flex-direction: row; align-items: flex-start; gap: 16px; }
+.tl-t { width: 112px; flex: none; line-height: 24px; color: var(--tx-2); }
+.tl-x { flex: 1 1 0; gap: 2px; }
+.tl-c { flex: none; line-height: 24px; }
+.doc.first { border-top: 0; }
+
 @media (max-width: 1199px) {
   .two { flex-direction: column; align-items: stretch; }
   .two-m { flex: none; }
@@ -541,6 +554,12 @@ body[data-stage="flight"] .sp[data-sp="flight"] b, body[data-stage="stay"] .sp[d
   .pax { flex-wrap: wrap; gap: 2px 12px; }
   .pax .nm { width: 100%; }
   .doc { flex-wrap: wrap; }
+  .trip-m { gap: 8px 28px; }
+  .tl-d { flex-direction: column; gap: 8px; }
+  .tl-k { width: auto; }
+  .tl-i { flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+  .tl-t { width: auto; }
+  .tl-x { order: 2; flex: 1 1 100%; }
   .acts { flex-direction: column; align-items: stretch; }
 }
 /* 아주 좁은 화면: 선택 타일은 이름이 꺾이지 않게 한 줄에 하나씩 놓는다 */

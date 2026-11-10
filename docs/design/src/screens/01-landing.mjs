@@ -8,7 +8,7 @@ import { PROMPTS, STATS, HOW } from '../lib/data.mjs';
 const pad2 = n => String(n).padStart(2, '0');
 
 // 오른쪽 위에 늘 떠 있는 알약 두 개
-const top = () => `<div class="lp-top" data-n="TopBar">${btn('로그인', { size: 'sm', href: '02-login.html', n: 'Login' })}${btn('검색 시작', { size: 'sm', href: '#search', at: 'data-goto="stage:0"', n: 'Start' })}</div>`;
+const top = () => `<div class="lp-top" data-n="TopBar">${btn('로그인', { size: 'sm', href: '02-login.html', n: 'Login' })}${btn('검색 시작', { size: 'sm', arr: true, href: '#search', at: 'data-goto="stage:0"', n: 'Start' })}</div>`;
 
 const hero = () => `<section class="lp-hero" data-sec="hero" data-n="Hero"><div class="hold"><div class="win" data-n="Window">
 <div class="lyr sky" data-n="Sky"></div><div class="lyr mid" data-n="CloudSea"></div><div class="lyr deck" data-n="CloudDeck"></div><div class="lyr haze" data-n="Haze"></div>

@@ -53,9 +53,10 @@ export const airlineLogo = k => {
 export const src = k => `<span class="src" data-n="Source">${brandMark(k)}<span class="nm">${BRANDS[k].label}</span></span>`;
 
 // 버튼. href 를 주면 그 화면으로 넘어가는 링크(a), 없으면 button 이다. at 은 스크립트가 붙는 자리(data-*) 와 aria 속성.
+// arr 는 끝에 동그란 화살표를 붙인다(랜딩 오른쪽 위의 검색 시작). true 면 오른쪽 위를 가리키는 화살표, 아이콘 이름을 주면 그 아이콘.
 export const btn = (label, o = {}) => {
-  const cls = `btn${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.cls ? ' ' + o.cls : ''}`;
-  const inner = `${o.icon ? ic(o.icon, o.isz || 16) : ''}${o.pre || ''}${label}${o.after ? ic(o.after, o.isz || 16) : ''}`;
+  const cls = `btn${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.arr ? ' cta' : ''}${o.cls ? ' ' + o.cls : ''}`;
+  const inner = `${o.icon ? ic(o.icon, o.isz || 16) : ''}${o.pre || ''}${label}${o.after ? ic(o.after, o.isz || 16) : ''}${o.arr ? `<span class="arr" aria-hidden="true">${ic(o.arr === true ? 'arrow--up-right' : o.arr, o.size === 'sm' ? 14 : 16)}</span>` : ''}`;
   const rest = `${o.at ? ' ' + o.at : ''} data-n="${o.n || 'Button'}"`;
   return o.href
     ? `<a class="${cls}" href="${o.href}"${rest}>${inner}</a>`
@@ -100,7 +101,7 @@ export const steps = cur =>
   `<ol class="steps" aria-label="진행 단계" data-n="Steps">${STEPS.map((l, i) => `${i ? `<li class="bar${i <= cur ? ' done' : ''}" aria-hidden="true"></li>` : ''}<li class="step${i < cur ? ' done' : i === cur ? ' on' : ''}"${i === cur ? ' aria-current="step"' : ''} data-n="Step"><span class="no">${i < cur ? ic('checkmark', 12) : i + 1}</span><span class="${i === cur ? '' : 'dt-only'}">${l}</span></li>`).join('')}</ol>`;
 
 // 상단 바 (앱 화면). 아직 화면이 없는 메뉴는 주소 없이 이름만 둔다.
-const NAV_IN = [['새 검색', '05-home.html'], ['내 여행', ''], ['결제 내역', '']];
+const NAV_IN = [['새 검색', '05-home.html'], ['내 여행', '14-trips.html'], ['결제 내역', '']];
 export const header = (o = {}) => {
   const cls = `hdr jb${o.wide ? ' wide' : ''}`;
   if (o.kind === 'bare') {

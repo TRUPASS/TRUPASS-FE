@@ -1,4 +1,4 @@
-// 10 결제 권한 등록 · 11 결제 확인 · 12 결제 진행 · 13 결제 완료
+// 10 결제 권한 등록 · 11 결제 확인 · 12 결제 진행 · 13 결제 완료 (결제를 마치면 14 내 여행으로 이어진다)
 // 결제는 회원이 미리 서명한 결제 권한(권한 증명서)의 한도·항목 안에서만 실행된다.
 import { page, header, footer, btn, ic, inp, fld, chk, rad, opt, st, kv, note, src, won } from '../lib/ui.mjs';
 import { U, REQ, V1, MANDATE as M, PAY } from '../lib/data.mjs';
@@ -105,7 +105,9 @@ export const paying = {
 };
 
 /* ── 13 결제 완료 ── */
-const DOCS = [['document--pdf', '결제 영수증', `주문번호 ${REQ.order}`], ['document', '항공권 e-티켓 확정서', `${f.air} 예약번호 ${PAY.air.no}`], ['document', '숙소 예약 확정서', `${h.name} 예약번호 ${PAY.stay.no}`]];
+// 결제 요약 (13 결제 완료와 14 내 여행의 오른쪽 칸이 함께 쓴다)
+export const paySummary = () => `<section class="pnl" data-n="Payment"><div class="pnl-h"><h2 class="t-h3">결제 요약</h2></div><div class="pnl-b pnl-kv">${kv('결제 금액', `<span class="t-h3 num">${won(C.total)}</span>`, false)}${kv('결제수단', `${U.card}<br><span class="t-sm c2">일시불</span>`)}${kv('결제 일시', `<span class="num">${PAY.at}</span>`)}${kv('주문번호', REQ.order)}</div></section>`;
+export const DOCS = [['document--pdf', '결제 영수증', `주문번호 ${REQ.order}`], ['document', '항공권 e-티켓 확정서', `${f.air} 예약번호 ${PAY.air.no}`], ['document', '숙소 예약 확정서', `${h.name} 예약번호 ${PAY.stay.no}`]];
 const complete = () => `<div class="two"><div class="two-m" data-n="MainColumn">
 <section class="pnl" data-n="Result"><div class="done-h">${ic('checkmark--filled', 28, 'cok')}<div class="grow g4"><h2 class="t-h2">결제가 완료되었습니다</h2><p class="t-md c2">예약 2건이 모두 확정되었습니다. 주문번호 ${REQ.order}</p></div></div></section>
 <section class="pnl" data-n="Email">
@@ -121,9 +123,9 @@ ${DOCS.map(([i, t, s]) => `<div class="doc" data-n="Document/${t}">${ic(i, 20, '
 </section>
 </div>
 <aside class="two-r" data-n="Rail">
-<section class="pnl" data-n="Payment"><div class="pnl-h"><h2 class="t-h3">결제 요약</h2></div><div class="pnl-b pnl-kv">${kv('결제 금액', `<span class="t-h3 num">${won(C.total)}</span>`, false)}${kv('결제수단', `${U.card}<br><span class="t-sm c2">일시불</span>`)}${kv('결제 일시', `<span class="num">${PAY.at}</span>`)}${kv('주문번호', REQ.order)}</div></section>
+${paySummary()}
 <section class="pnl" data-n="Approval"><div class="pnl-h jb"><h2 class="t-h3">승인 기록</h2>${st('ok', '검증 유효')}</div><div class="pnl-b pnl-kv">${kv('권한 증명서', M.id, false)}${kv('승인', `패스키 본인 확인<br><span class="t-xs c3 num">${PAY.approved}</span>`)}${kv('승인 범위', `1회 ${won(M.per)} 이하<br>${M.scope}`)}<div class="kv line"><span class="t-xs c3 grow">이 기록은 변경할 수 없으며, 결제에 이의가 생기면 승인 범위의 근거로 쓰입니다.</span></div></div></section>
-<div class="g8" data-n="Next">${btn('내 여행에서 일정 보기', { kind: 'pri', size: 'lg', cls: 'fill', n: 'Trips' })}${btn('새 검색', { size: 'lg', cls: 'fill', href: '05-home.html', n: 'NewSearch' })}</div>
+<div class="g8" data-n="Next">${btn('내 여행에서 일정 보기', { kind: 'pri', size: 'lg', cls: 'fill', href: '14-trips.html', n: 'Trips' })}${btn('새 검색', { size: 'lg', cls: 'fill', href: '05-home.html', n: 'NewSearch' })}</div>
 </aside></div>`;
 export const done = {
   id: '13-complete', no: '13', name: '결제 완료 · 이메일 발송 안내', kind: 'page',

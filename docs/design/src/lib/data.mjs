@@ -170,6 +170,9 @@ export const combo = ({ flight = 'F1', hotel = 'H4', bag = false, map = STAYS_V1
 export const V1 = combo();
 export const V2 = combo({ map: STAYS_V2 });
 
+// 14 내 여행: 결제를 마친 여행의 일정. 체크인 · 체크아웃 시각은 시안용 예시 값이다.
+export const TRIP = { title: '도쿄 3박 4일', free: '12.19 (토) ~ 12.20 (일)', checkin: '15:00', checkout: '11:00' };
+
 // 결제 권한(사전 서명된 권한 증명서)
 export const MANDATE = {
   id: 'TP-M-26111002', signed: '2026.11.10 14:07', until: '2027.11.09', from: '2026.11.10',
