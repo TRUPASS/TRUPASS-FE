@@ -1,0 +1,113 @@
+/* Trupass 디자인 토큰
+   - 색: OKLCH에서 직접 뽑은 램프(중립 hue 258, 브랜드 hue 262). 프레임워크 기본 팔레트를 쓰지 않는다.
+   - 글꼴: IBM Plex Sans KR 한 벌. 숫자는 tabular-nums. 고정폭 글꼴은 쓰지 않는다.
+   - 모서리: 컨트롤 4, 패널 6, 모달 8. 그림자는 떠 있는 요소(모달·팝오버)에만 쓴다.
+   - 레이아웃: 전 요소 flex(row/column) + gap + padding. margin·grid·가상요소로 화면을 그리지 않는다.
+     (피그마 오토레이아웃과 1:1로 대응시키기 위한 규칙이다. docs/design/README.md 참고) */
+:root {
+  /* neutral */
+  --n-0: #ffffff;  --n-25: #fafbfc; --n-50: #f4f6f8; --n-100: #eaedf1; --n-200: #dce0e5; --n-300: #c8ccd3;
+  --n-400: #9ba0a9; --n-500: #666c76; --n-600: #4f565f; --n-700: #373e47; --n-800: #21272f; --n-900: #12161d;
+  /* brand blue */
+  --b-50: #f1f6ff; --b-100: #e1ecff; --b-200: #bed5ff; --b-300: #8eb4fb; --b-400: #4e82e5;
+  --b-500: #2760d1; --b-600: #134cbb; --b-700: #0b3c9d; --b-800: #0a2f77; --b-900: #082152;
+  /* status */
+  --g-50: #ebfaf0; --g-100: #d0f2dd; --g-600: #067d4d; --g-700: #00633c;
+  --y-50: #fff6e4; --y-100: #fee9be; --y-600: #a06604; --y-700: #824c01;
+  --r-50: #fff2f0; --r-100: #ffe2df; --r-600: #c02c29; --r-700: #9e1d1c;
+
+  /* semantic */
+  --canvas: var(--n-50);
+  --surface: var(--n-0);
+  --surface-sub: var(--n-25);
+  --line: var(--n-200);
+  --line-strong: var(--n-300);
+  --tx: var(--n-900);
+  --tx-2: var(--n-600);
+  --tx-3: var(--n-500);
+  --tx-dis: var(--n-400);
+  --brand: var(--b-600);
+  --brand-hover: var(--b-700);
+  --brand-ink: var(--b-900);
+  --brand-tint: var(--b-50);
+  --ok: var(--g-700);
+  --warn: var(--y-700);
+  --bad: var(--r-700);
+
+  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px;
+  --e1: 0 2px 8px rgba(18, 22, 29, .10);
+  --e2: 0 16px 40px rgba(18, 22, 29, .18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font: 400 14px/22px var(--font);
+  color: var(--tx);
+  background: var(--canvas);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; min-height: 100vh;
+}
+/* 컨테이너는 전부 세로 flex. 가로 배치는 .row */
+div, section, header, footer, main, nav, aside, form, ul, ol, li, label, fieldset {
+  display: flex; flex-direction: column; min-width: 0;
+}
+ul, ol { list-style: none; }
+fieldset { border: 0; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+img { display: block; flex: none; object-fit: cover; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { font-weight: 400; font-size: inherit; }
+b, strong { font-weight: 600; }
+
+/* layout */
+.row { flex-direction: row; align-items: center; }
+.top { align-items: flex-start; }
+.bot { align-items: flex-end; }
+.str { align-items: stretch; }
+.mid { align-items: center; }
+.jb { justify-content: space-between; }
+.jc { justify-content: center; }
+.je { justify-content: flex-end; }
+.grow { flex: 1 1 0; min-width: 0; }
+.fn { flex: none; }
+.wrap { flex-wrap: wrap; }
+.g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; } .g12 { gap: 12px; } .g16 { gap: 16px; }
+.g20 { gap: 20px; } .g24 { gap: 24px; } .g32 { gap: 32px; } .g40 { gap: 40px; } .g48 { gap: 48px; }
+
+/* type scale */
+.t-display { font-size: 36px; line-height: 50px; font-weight: 600; letter-spacing: -.02em; }
+.t-h1 { font-size: 24px; line-height: 34px; font-weight: 600; letter-spacing: -.01em; }
+.t-h2 { font-size: 18px; line-height: 28px; font-weight: 600; letter-spacing: -.005em; }
+.t-h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.t-lg { font-size: 16px; line-height: 26px; }
+.t-md { font-size: 14px; line-height: 22px; }
+.t-sm { font-size: 13px; line-height: 20px; }
+.t-xs { font-size: 12px; line-height: 18px; }
+.w4 { font-weight: 400; } .w5 { font-weight: 500; } .w6 { font-weight: 600; }
+.c1 { color: var(--tx); } .c2 { color: var(--tx-2); } .c3 { color: var(--tx-3); } .cb { color: var(--brand); }
+.cok { color: var(--ok); } .cwarn { color: var(--warn); } .cbad { color: var(--bad); } .cw { color: #fff; }
+.num { font-variant-numeric: tabular-nums; }
+.tr { text-align: right; } .tc { text-align: center; }
+.nw { white-space: nowrap; }
+.del { text-decoration: line-through; }
+.lnk { color: var(--brand); }
+.ul { text-decoration: underline; text-underline-offset: 3px; }
+
+/* breakpoints: desktop ≥1200 · tablet 768–1199 · mobile ≤767
+   표시 전환 클래스: d-only / t-only / m-only / dt-only(모바일에서 숨김) / tm-only(데스크톱에서 숨김) */
+@media (min-width: 1200px) { .t-only, .m-only, .tm-only { display: none !important; } }
+@media (min-width: 768px) and (max-width: 1199px) {
+  .d-only, .m-only { display: none !important; }
+  .t-display { font-size: 32px; line-height: 46px; }
+}
+@media (max-width: 767px) {
+  .d-only, .t-only, .dt-only { display: none !important; }
+  .t-display { font-size: 26px; line-height: 38px; letter-spacing: -.015em; }
+  .t-h1 { font-size: 20px; line-height: 30px; }
+  .t-h2 { font-size: 17px; line-height: 26px; }
+}
