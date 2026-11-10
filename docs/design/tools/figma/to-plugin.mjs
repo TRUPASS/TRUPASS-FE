@@ -34,7 +34,7 @@ const out = join(root, 'figma/plugin');
 mkdirSync(out, { recursive: true });
 const runtime = readFileSync(join(here, 'plugin-runtime.js'), 'utf8').replace('// @ts-check\n', '');
 const json = JSON.stringify(DATA);
-writeFileSync(join(out, 'code.js'), `// 생성 파일 — tools/figma/to-plugin.mjs 가 만든다. 직접 고치지 않는다.\n// 실행: 피그마 데스크톱 앱 > Plugins > Development > Import plugin from manifest… 로 manifest.json 을 고른 뒤 실행한다.\nconst TRUPASS_DATA = ${json};\n\n${runtime}`);
+writeFileSync(join(out, 'code.js'), `// 생성 파일 — tools/figma/to-plugin.mjs 가 만든다. 직접 고치지 않는다.\n// 실행: 피그마 데스크톱 앱 > Plugins > Development > Import plugin from manifest… 로 manifest.json 을 고른 뒤 실행한다.\n// (var 로 둔 이유: 브라우저 콘솔에 두 번 붙여 넣어도 재선언 오류가 나지 않게)\nvar TRUPASS_DATA = ${json};\n\n${runtime}`);
 writeFileSync(join(out, 'manifest.json'), JSON.stringify({ name: 'Trupass 화면 생성', id: 'trupass-screen-builder-local', api: '1.0.0', main: 'code.js', editorType: ['figma'], documentAccess: 'dynamic-page', networkAccess: { allowedDomains: ['none'] } }, null, 2) + '\n');
 const nodes = n => (n.kids || []).reduce((a, k) => a + nodes(k), 1);
 const total = boards.reduce((a, b) => a + b.screens.reduce((x, s) => x + nodes(s.tree), 0), 0);
