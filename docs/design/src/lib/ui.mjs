@@ -150,7 +150,7 @@ export const page = ({ title, tab, cls = '', body, scripts = [], attrs: at = '' 
 <script>document.documentElement.classList.add('js')</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../app.css">${/\bveil-in\b/.test(cls) ? '\n<link rel="preload" as="image" href="../assets/bg/deck.webp">' : ''}
 </head>
 <body class="${cls}" data-n="${title}"${at ? ' ' + at : ''}>

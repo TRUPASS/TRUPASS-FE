@@ -34,10 +34,10 @@
 /* 소개: 큰 워드마크(왼쪽 가운데) + 하늘색 문장(오른쪽 아래) */
 .hero-t { position: absolute; left: 0; top: 0; right: 0; bottom: 0; justify-content: center; gap: 4svh; padding: 12svh 4.2vw 6svh; opacity: var(--pt); transform: translateY(calc((1 - var(--pt)) * 36px)); pointer-events: none; }
 .hero-wm { align-self: flex-start; color: var(--n-900); }
-.wm-b { font-size: clamp(64px, 14.2vw, 232px); line-height: 1; font-weight: var(--fw-bold); letter-spacing: -.01em; margin-left: -.04em; white-space: nowrap; }
+.wm-b { font-size: clamp(64px, 14.2vw, 232px); line-height: 1; font-weight: var(--fw-mark); letter-spacing: -.01em; margin-left: -.04em; white-space: nowrap; }
 .wm-s { font-size: clamp(15px, 1.7vw, 26px); line-height: 1.5; font-weight: 400; letter-spacing: .02em; padding-left: .1em; }
 .hero-cp { align-self: flex-end; width: min(44vw, 560px); gap: 12px; margin-right: 6vw; }
-.hero-h { font-size: clamp(24px, 2.6vw, 40px); line-height: 1.28; font-weight: var(--fw-bold); letter-spacing: -.01em; color: var(--b-700); }
+.hero-h { font-size: clamp(24px, 2.6vw, 40px); line-height: 1.28; font-weight: 400; letter-spacing: -.01em; color: var(--b-700); }
 .hero-d { font-size: 15px; line-height: 24px; color: var(--b-800); }
 
 /* 숫자: 파란 하늘 위 계단식 줄 */
