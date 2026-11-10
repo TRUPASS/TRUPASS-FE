@@ -10,7 +10,7 @@ const sw = k => `<div class="sw" data-n="Swatch/${k}"><div class="c" style="back
 const ramp = (title, keys, desc) => `<div class="g8" data-n="Ramp/${title}"><div class="row g10"><span class="t-sm w6">${title}</span><span class="t-xs c3">${desc}</span></div><div class="sw-row">${keys.map(sw).join('')}</div></div>`;
 const R = p => Object.keys(TOK).filter(k => k.startsWith(p + '-'));
 const SEM = [['canvas', 'n-0', '페이지 바탕(흰색)'], ['surface-sub', 'n-50', '옅은 면'],['tx', 'n-900', '본문 · 제목(인디고)'], ['tx-2', 'n-600', '보조 글'], ['tx-3', 'n-500', '설명 · 캡션'], ['edge', 'n-450', '입력 칸 테두리'], ['brand', 'n-900', '주 버튼 · 선택'], ['sky', 'b-500', '강조(하늘색)'], ['sky-ink', 'b-600', '하늘색 글자 · 링크'], ['brand-tint', 'b-50', '선택된 줄'], ['ok', 'g-700', '완료 · 충족'], ['warn', 'y-700', '주의 · 변경'], ['bad', 'r-700', '실패 · 오류']];
-const TYPE = [['t-display', 'Display', '56 / 66 · 600', '다섯 걸음이면 여행이 정해집니다'], ['t-h1', 'Heading 1', '34 / 44 · 600', '항공권 3건을 찾았습니다'], ['t-h2', 'Heading 2', '22 / 32 · 600', '결제가 완료되었습니다'], ['t-h3', 'Heading 3', '17 / 26 · 600', '선택한 조합 · 909,000원'], ['t-lg', 'Body L', '17 / 28 · 400', '항공 · 숙소 · 하고 싶은 것을 평소 말하듯 적습니다.'], ['t-md', 'Body M', '15 / 24 · 400', '항공권 줄을 펼쳐 추천 숙소 3곳을 함께 고를 수 있습니다.'], ['t-sm', 'Body S', '13 / 20 · 400', '3성급, 우에노역 도보 3분'], ['t-xs', 'Caption', '12 / 18 · 400', '요금 조회 2026.11.10 14:02']];
+const TYPE = [['t-display', 'Display', '56 / 66 · 300', '다섯 걸음이면 여행이 정해집니다'], ['t-h1', 'Heading 1', '34 / 44 · 300', '항공권 3건을 찾았습니다'], ['t-h2', 'Heading 2', '22 / 32 · 500', '결제가 완료되었습니다'], ['t-h3', 'Heading 3', '17 / 26 · 600', '선택한 조합 · 909,000원'], ['t-lg', 'Body L', '17 / 28 · 400', '항공 · 숙소 · 하고 싶은 것을 평소 말하듯 적습니다.'], ['t-md', 'Body M', '15 / 24 · 400', '항공권 줄을 펼쳐 추천 숙소 3곳을 함께 고를 수 있습니다.'], ['t-sm', 'Body S', '13 / 20 · 400', '3성급, 우에노역 도보 3분'], ['t-xs', 'Caption', '12 / 18 · 400', '요금 조회 2026.11.10 14:02']];
 const MOTION = [
   ['하늘 → 소개', '화면 높이의 3.4배(340svh) 동안 고정. 하늘 1→1.26배, 구름 바다 1→1.72배, 아래에서 흰 구름층이 올라온다. 진행 30%부터 워드마크와 소개 문장이 14% 구간에 걸쳐 떠오른다.'],
   ['숫자', '화면 높이의 2.5배(250svh) 동안 고정. 하늘의 흐림 14px→0, 숫자는 스크롤에 맞춰 0에서 목표값까지 센다(줄마다 7%씩 늦게 시작).'],
@@ -30,7 +30,7 @@ const DOCK_RULES = [
 ];
 const RULES = [
   ['회색 바탕 위 각진 패널과 2~6px 모서리', '흰 바탕, 모서리 14 · 24 · 28과 알약형 버튼'],
-  ['굵은 제목(600)과 촘촘한 표', '제목 · 큰 숫자 · 요금처럼 강조하는 글자만 조금 굵게(600), 본문은 보통 굵기. 견주어 보는 자료는 가는 선으로 나눈 표로, 나머지는 넉넉한 여백으로'],
+  ['굵은 제목(600)과 촘촘한 표', '큰 글자는 가늘게(300). 견주어 보는 자료는 가는 선으로 나눈 표로, 나머지는 넉넉한 여백으로'],
   ['첫 화면 오른쪽의 이용 절차 · 검색 출처 상자', '이용 절차는 좌우로 넘기는 상자로, 검색 출처는 푸터로'],
   ['칸 다섯 개로 나눈 검색 폼', '항공 · 숙소 · 체험 문장 세 개. 화면 가운데 한 줄 입력'],
   ['단계 목록으로 보여 주던 검색 진행', '지구본 위 비행기와 지어지는 호텔'],
@@ -41,7 +41,7 @@ export const foundations = screens => ({
   id: '00-foundations', no: '00', name: '디자인 기준', kind: 'page', bps: ['d'],
   note: '색 · 글꼴 · 모서리 · 아이콘 · 컴포넌트 · 움직임 기준과 화면 흐름.',
   html: () => page({ title: '00 디자인 기준', body: `<main class="fd" data-n="Foundations">
-<div class="g10" data-n="Title"><h1 class="t-display">하늘 · 흰색 · 인디고</h1><p class="t-lg c2 mw720">Trupass 디자인 기준 3차, 2026.11 정리본. 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 색은 사진과 하늘이 맡고, 화면은 넉넉한 모서리로 부드럽게 정리한다. 강조하는 글자(워드마크 · 제목 · 큰 숫자 · 요금)는 조금 굵게(600) 쓴다. 화면 소스는 docs/design 에 있다.</p></div>
+<div class="g10" data-n="Title"><h1 class="t-display">하늘 · 흰색 · 인디고</h1><p class="t-lg c2 mw720">Trupass 디자인 기준 3차, 2026.11 정리본. 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 색은 사진과 하늘이 맡고, 화면은 넉넉한 모서리와 가는 큰 글자로 부드럽게 정리한다. 화면 소스는 docs/design 에 있다.</p></div>
 
 <section class="fd-sec" data-n="Logo"><div class="fd-h"><h2 class="t-h2">로고</h2><span class="t-sm c3">승인 체크의 긴 획이 이륙 방향으로 이어진다. 워드마크는 한 가지 색으로 쓴다.</span></div>
 <div class="row g16 wrap"><div class="logo-t row g24">${mark(64)}${mark(40)}${mark(24)}${mark(16)}</div><div class="logo-t">${logo(32, { href: '#' })}</div><div class="logo-t on-ink">${logo(32, { inv: 1, href: '#' })}</div><div class="logo-t on-sky">${logo(32, { inv: 1, href: '#' })}</div><div class="logo-t wmk"><span class="wm-b">TRUPASS</span><span class="wm-s">AI Travel Search</span></div></div></section>
@@ -51,7 +51,7 @@ ${ramp('Neutral', R('n'), '흰색 → 인디고 · 화면의 대부분')}${ramp(
 <div class="fd-row">${ramp('Success', R('g'), '완료 · 충족')}${ramp('Warning', R('y'), '주의 · 변경')}${ramp('Danger', R('r'), '실패 · 오류')}</div>
 <div class="g8" data-n="Semantic"><span class="t-sm w6">쓰임새</span><div class="sw-row">${SEM.map(([n, k, d]) => `<div class="sw" style="width:150px" data-n="Semantic/${n}"><div class="c" style="background:${TOK[k]}"></div><div class="g0"><span class="t-xs w5">${n}</span><span class="t-xs c3">${k} · ${d}</span></div></div>`).join('')}</div></div></section>
 
-<section class="fd-sec" data-n="Type"><div class="fd-h"><h2 class="t-h2">글꼴</h2><span class="t-sm c3">라틴 · 숫자 Outfit, 한글 Gothic A1 (둘 다 SIL OFL). 강조하는 글자는 600, 본문은 400 · 크기 / 줄 높이 · 굵기</span></div>
+<section class="fd-sec" data-n="Type"><div class="fd-h"><h2 class="t-h2">글꼴</h2><span class="t-sm c3">라틴 · 숫자 Outfit, 한글 Gothic A1 (둘 다 SIL OFL). 큰 글자는 300, 본문은 400 · 크기 / 줄 높이 · 굵기</span></div>
 <div data-n="Scale">${TYPE.map(([c, n, m, t]) => `<div class="ty" data-n="Type/${n}"><div class="m g0"><span class="t-sm w5">${n}</span><span class="t-xs c3 num">${m}</span></div><span class="${c} grow">${t}</span></div>`).join('')}</div></section>
 
 <section class="fd-sec" data-n="Shape"><div class="fd-h"><h2 class="t-h2">모서리 · 간격 · 그림자</h2><span class="t-sm c3">간격은 4의 배수. 사진을 담는 창은 화면 가장자리에서 16(태블릿 12 · 모바일 8) 띄운다.</span></div>

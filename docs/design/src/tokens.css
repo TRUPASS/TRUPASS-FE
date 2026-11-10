@@ -1,6 +1,6 @@
 /* Trupass 디자인 토큰 (3차: 하늘 · 흰색 · 인디고)
    - 색: 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 사진과 하늘이 색을 맡는다. 옅은 면과 선은 누런 기 없이 인디고 쪽 중립 톤.
-   - 글꼴: 라틴 · 숫자는 Outfit, 한글은 Gothic A1. 제목 · 큰 숫자 · 요금처럼 강조하는 글자는 조금 굵게(600), 본문은 보통 굵기(400).
+   - 글꼴: 라틴 · 숫자는 Outfit, 한글은 Gothic A1. 큰 글자는 가늘게(300), 작은 글자는 보통 굵기.
    - 모서리: 넉넉하게. 버튼과 표식은 알약형, 입력 14, 카드 24, 창(사진을 담는 틀) 28.
    - 레이아웃: 화면의 뼈대는 flex(row/column) + gap + padding. 스크롤 연출을 위한 겹침(하늘 · 구름 · 지구본)만 절대 위치를 쓴다.
    - 색 값은 전부 이 블록에 둔다. 다른 파일에서는 토큰만 쓴다. */
@@ -60,8 +60,6 @@
   --focus-gap: var(--n-0);
 
   --font: "Outfit", "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  --fw-bold: 600;                 /* 강조하는 글자: 제목 · 큰 숫자 · 요금 · 시각 · 이름. 처음의 가는 글자(300)와 굵은 글자(700) 사이로 잡았다. 굵기는 400(본문) · 500(이름표 · 버튼) · 600 세 가지만 쓴다 */
-  --fw-mark: 600;                 /* 랜딩의 큰 워드마크(TRUPASS). 지금은 강조 굵기와 같지만 따로 조절할 수 있게 나눠 둔다 */
   --r-xs: 6px; --r-sm: 14px; --r-md: 24px; --r-lg: 28px; --r-pill: 999px;
   --e1: 0 6px 24px var(--k-08);
   --e2: 0 24px 64px var(--k-18);
@@ -105,7 +103,7 @@ canvas { display: block; }
 h1, h2, h3, p { font-weight: 400; font-size: inherit; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
-b, strong { font-weight: var(--fw-bold); }
+b, strong { font-weight: 600; }
 table { border-collapse: collapse; border-spacing: 0; width: 100%; }
 th { font-weight: 400; text-align: left; }
 summary { list-style: none; cursor: pointer; }
@@ -146,16 +144,16 @@ summary::-webkit-details-marker { display: none; }
 .g0 { gap: 0; } .g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; } .g12 { gap: 12px; } .g16 { gap: 16px; }
 .g20 { gap: 20px; } .g24 { gap: 24px; } .g32 { gap: 32px; } .g40 { gap: 40px; } .g48 { gap: 48px; }
 
-/* type scale: 제목은 굵게, 본문은 보통 굵기 */
-.t-display { font-size: 56px; line-height: 66px; font-weight: var(--fw-bold); letter-spacing: -.025em; }
-.t-h1 { font-size: 34px; line-height: 44px; font-weight: var(--fw-bold); letter-spacing: -.02em; }
-.t-h2 { font-size: 22px; line-height: 32px; font-weight: var(--fw-bold); letter-spacing: -.01em; }
-.t-h3 { font-size: 17px; line-height: 26px; font-weight: var(--fw-bold); }
+/* type scale: 큰 글자는 가늘게 */
+.t-display { font-size: 56px; line-height: 66px; font-weight: 300; letter-spacing: -.02em; }
+.t-h1 { font-size: 34px; line-height: 44px; font-weight: 300; letter-spacing: -.015em; }
+.t-h2 { font-size: 22px; line-height: 32px; font-weight: 500; letter-spacing: -.01em; }
+.t-h3 { font-size: 17px; line-height: 26px; font-weight: 600; }
 .t-lg { font-size: 17px; line-height: 28px; }
 .t-md { font-size: 15px; line-height: 24px; }
 .t-sm { font-size: 13px; line-height: 20px; }
 .t-xs { font-size: 12px; line-height: 18px; }
-.w4 { font-weight: 400; } .w5 { font-weight: 500; } .w6 { font-weight: var(--fw-bold); }
+.w3 { font-weight: 300; } .w4 { font-weight: 400; } .w5 { font-weight: 500; } .w6 { font-weight: 600; }
 .c1 { color: var(--tx); } .c2 { color: var(--tx-2); } .c3 { color: var(--tx-3); } .cb { color: var(--sky-ink); }
 .cok { color: var(--ok); } .cwarn { color: var(--warn); } .cbad { color: var(--bad); } .cw { color: var(--on-photo); }
 .num { font-variant-numeric: tabular-nums; }
