@@ -131,7 +131,7 @@
       ctx.fillRect(-w / 2 - 1.5 * s, y - 2.4 * s, w + 3 * s, 2.4 * s);
       var k = eout(cap), bw = 11 * s * k;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, y - 2.4 * s - 12.5 * s * k, bw, 11 * s * k, 3 * s) : ctx.rect(-bw / 2, y - 14.9 * s, bw, 11 * s); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = '600 ' + (8.5 * s * k).toFixed(1) + 'px Outfit, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = '700 ' + (8.5 * s * k).toFixed(1) + 'px Outfit, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('H', 0, y - 2.4 * s - 6.8 * s * k);
       ctx.globalAlpha = 1;
     }
