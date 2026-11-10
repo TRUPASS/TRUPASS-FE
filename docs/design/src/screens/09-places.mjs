@@ -1,9 +1,9 @@
-// 09 숙소 위치와 추천 장소 — 08 에서 조합을 고른 다음 화면.
+// 09 숙소 위치와 추천 장소 — 07 · 08 에서 조합을 고른 다음 화면.
 // 숙소 위치 지도, 요청사항에 맞춘 추천 장소(웹 검색으로 찾은 후기 썸네일과 사이트 링크 포함), 추천 활동을 보여 준다.
 // 실제 화면의 지도는 Google 지도다. 시안의 지도 그림은 OpenStreetMap 자료로 만들었고 그 사실을 화면에도 적었다.
 import { readFileSync } from 'node:fs';
-import { page, header, footer, ic, tag, steps, kv, bottom, DOCK_JS } from '../lib/ui.mjs';
-import { AREA, ACTS, PLACE_SRC, V2, REV, REV_PLACES } from '../lib/data.mjs';
+import { page, header, footer, ic, tag, steps, kv, bottom } from '../lib/ui.mjs';
+import { AREA, ACTS, PLACE_SRC, V1, REQ, REV_PLACES } from '../lib/data.mjs';
 import { summaryPanel, ctaBar } from './parts-result.mjs';
 
 const MAP = JSON.parse(readFileSync(new URL('../../assets/map/meta.json', import.meta.url), 'utf8'));
@@ -21,7 +21,7 @@ const pins = (key, cls) => {
 };
 const out = (label, cls = '') => `<a class="lk${cls ? ' ' + cls : ''}" data-n="Link"><span>${label}</span>${ic('launch', 14)}</a>`;
 
-const mapPanel = () => `<section class="pnl" data-n="Map">
+const mapPanel = () => `<section class="pnl clip" data-n="Map">
 <div class="pnl-h jb"><div class="row g10 wrap">${ic('location', 20)}<h2 class="t-h3">숙소 위치</h2><span class="t-sm c3">${AREA.hotel.name}<span class="dt-only"> · ${AREA.hotel.access}</span></span></div>${out('Google 지도<span class="dt-only">에서 열기</span>')}</div>
 <div class="pnl-b g12">
 <div class="map" data-n="MapView"><img class="dk dt-only" src="../assets/map/${AREA.key}.jpg" width="880" height="480" alt="" data-n="MapImage"><img class="mb m-only" src="../assets/map/${AREA.key}_m.jpg" width="560" height="480" alt="" data-n="MapImage">${pins(AREA.key, 'dt-only')}${pins(AREA.key + '_m', 'm-only')}<div class="map-ctl dt-only" data-n="Zoom"><div class="b">${ic('add', 16)}</div><div class="b ln">${ic('subtract', 16)}</div></div><span class="map-attr">© OpenStreetMap contributors</span></div>
@@ -56,15 +56,15 @@ const srcPanel = () => `<section class="pnl" data-n="SearchSources">
 <div class="pnl-h jb"><h2 class="t-h3">검색 출처</h2><span class="t-xs c3 num">${AREA.at}</span></div>
 <div class="pnl-b" style="padding-top:8px;padding-bottom:8px"><div data-n="List">${PLACE_SRC.map(([k, v], i) => kv(k, v, !!i)).join('')}</div></div></section>`;
 
-const DOCK = { ph: '예) 건축물 탐방 장소를 더 넣어 주세요', hint: '장소와 활동을 바뀐 조건으로 다시 검색합니다. 항공권과 숙소 선택은 그대로 둡니다.', egs: ['건축물 탐방 장소를 더', '저녁 식당은 조용한 곳으로', '비 오는 날 갈 곳'] };
-const placesPage = ({ title, vp, dock = {} }) => page({ title, cls: 'has-dock' + (vp ? ' vp' : ''), js: DOCK_JS, body: `${header({ kind: 'in', on: '새 검색' })}
-<main class="main" data-n="Main"><div class="cx g20" data-n="Content">
-<div class="g8" data-n="Title"><div class="pt"><h1 class="t-h1">숙소 위치와 추천 장소</h1>${steps(2)}</div><p class="t-md c2">선택한 숙소 ${AREA.hotel.name}을 기준으로 지도와 후기 검색 결과를 정리했습니다. 장소가 마음에 들면 결제로 넘어갑니다.</p></div>
+const DOCK = { ph: '예) 건축물 탐방 장소를 더 넣어 주세요', hint: '장소와 활동을 바뀐 조건으로 다시 검색합니다. 항공권과 숙소 선택은 그대로 둡니다.', egs: ['건축물 탐방 장소를 더', '저녁 식당은 조용한 곳으로', '비 오는 날 갈 곳'], href: '09-places.html' };
+const placesPage = ({ title, vp, dock = {} }) => page({ title, cls: 'has-dock' + (vp ? ' vp' : ''), body: `${header({ on: '새 검색' })}
+<main class="main" data-n="Main"><div class="cx g24" data-n="Content">
+<div class="g10" data-n="Title"><div class="pt"><div class="g6"><span class="eyebrow">(숙소 위치 · 추천 장소)</span><h1 class="t-display">숙소 주변을 살펴보세요</h1></div>${steps(2)}</div><p class="t-md c2 mw720">고르신 숙소 ${AREA.hotel.name}을 기준으로 지도와 후기 검색 결과를 정리했습니다. 장소가 마음에 들면 결제로 넘어갑니다.</p></div>
 <div class="two"><div class="two-m" data-n="MainColumn">${mapPanel()}${placesPanel()}${actsPanel()}</div>
-<aside class="two-r stick" data-n="Rail">${summaryPanel({ c: V2, ver: `v2 · ${REV.at.slice(11)}`, cta: '이 조합으로 결제', back: '항공권 · 숙소 다시 선택', foot: '결제 단계에서 결제 권한의 한도와 허용 항목을 확인합니다. 요금은 결제 직전에 한 번 더 조회합니다.' })}${srcPanel()}</aside></div>
+<aside class="two-r stick" data-n="Rail">${summaryPanel({ c: V1, ver: `v1 · ${REQ.at.slice(11)}`, cta: '이 조합으로 결제', href: '10-mandate.html', back: '항공권 · 숙소 다시 선택', backHref: '07-result.html', foot: '결제 단계에서 결제 권한의 한도와 허용 항목을 확인합니다. 요금은 결제 직전에 한 번 더 조회합니다.' })}${srcPanel()}</aside></div>
 </div></main>
 ${footer()}
-${bottom({ dock: { ...DOCK, ...dock }, bar: ctaBar(V2, '이 조합으로 결제') })}` });
+${bottom({ dock: { ...DOCK, ...dock }, bar: ctaBar(V1, '이 조합으로 결제', '10-mandate.html') })}` });
 
 export const places = {
   id: '09-places', no: '09', name: '숙소 위치와 추천 장소', kind: 'page',

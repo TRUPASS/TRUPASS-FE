@@ -1,49 +1,54 @@
-/* Trupass 디자인 토큰
-   - 색: OKLCH에서 직접 뽑은 램프(중립 hue 258, 브랜드 hue 262). 프레임워크 기본 팔레트를 쓰지 않는다.
-   - 글꼴: IBM Plex Sans KR 한 벌. 숫자는 tabular-nums. 고정폭 글꼴은 쓰지 않는다.
-   - 모서리: 컨트롤 4, 패널 6, 모달 8. 그림자는 떠 있는 요소(모달·팝오버)에만 쓴다.
-   - 레이아웃: 전 요소 flex(row/column) + gap + padding. margin·grid·가상요소로 화면을 그리지 않는다.
-     (피그마 오토레이아웃과 1:1로 대응시키기 위한 규칙이다. docs/design/README.md 참고) */
+/* Trupass 디자인 토큰 (3차: 하늘 · 흰색 · 인디고)
+   - 색: 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 사진과 하늘이 색을 맡는다. 옅은 면과 선은 누런 기 없이 인디고 쪽 중립 톤.
+   - 글꼴: 라틴 · 숫자는 Outfit, 한글은 Gothic A1. 큰 글자는 가늘게(300), 작은 글자는 보통 굵기.
+   - 모서리: 넉넉하게. 버튼과 표식은 알약형, 입력 14, 카드 24, 창(사진을 담는 틀) 28.
+   - 레이아웃: 화면의 뼈대는 flex(row/column) + gap + padding. 스크롤 연출을 위한 겹침(하늘 · 구름 · 지구본)만 절대 위치를 쓴다. */
 :root {
-  /* neutral */
-  --n-0: #ffffff;  --n-25: #fafbfc; --n-50: #f4f6f8; --n-100: #eaedf1; --n-200: #dce0e5; --n-300: #c8ccd3;
-  --n-400: #9ba0a9; --n-500: #666c76; --n-600: #4f565f; --n-700: #373e47; --n-800: #21272f; --n-900: #12161d;
-  /* brand blue */
-  --b-50: #f1f6ff; --b-100: #e1ecff; --b-200: #bed5ff; --b-300: #8eb4fb; --b-400: #4e82e5;
-  --b-500: #2760d1; --b-600: #134cbb; --b-700: #0b3c9d; --b-800: #0a2f77; --b-900: #082152;
+  /* neutral: 흰색에서 인디고로 */
+  --n-0: #ffffff;  --n-25: #fbfcfe; --n-50: #f5f6fb; --n-100: #eef0f7; --n-200: #e2e5ef; --n-300: #cfd3e1;
+  --n-400: #a7aabf; --n-500: #7b7f9f; --n-600: #555a82; --n-700: #373b6c; --n-800: #272b60; --n-900: #1c1f5a;
+  /* sky blue */
+  --b-50: #eef6fd; --b-100: #dcedfa; --b-200: #b8dbf5; --b-300: #86c2ee; --b-400: #4fa6e4;
+  --b-500: #2b8fd9; --b-600: #1b76bd; --b-700: #175f99; --b-800: #154c7a; --b-900: #12385a;
   /* status */
-  --g-50: #ebfaf0; --g-100: #d0f2dd; --g-600: #067d4d; --g-700: #00633c;
-  --y-50: #fff6e4; --y-100: #fee9be; --y-600: #a06604; --y-700: #824c01;
-  --r-50: #fff2f0; --r-100: #ffe2df; --r-600: #c02c29; --r-700: #9e1d1c;
+  --g-50: #ebf8f0; --g-100: #d2efdd; --g-600: #107a4f; --g-700: #0a6240;
+  --y-50: #fff5e3; --y-100: #fde6bd; --y-600: #a06604; --y-700: #824c01;
+  --r-50: #fff1ef; --r-100: #ffdfdc; --r-600: #c02c29; --r-700: #9e1d1c;
 
   /* semantic */
-  --canvas: var(--n-50);
+  --canvas: var(--n-0);
   --surface: var(--n-0);
-  --surface-sub: var(--n-25);
-  --line: var(--n-200);
-  --line-strong: var(--n-300);
+  --surface-sub: var(--n-50);
+  --line: rgba(28, 31, 90, .12);
+  --line-strong: rgba(28, 31, 90, .22);
   --tx: var(--n-900);
   --tx-2: var(--n-600);
   --tx-3: var(--n-500);
   --tx-dis: var(--n-400);
-  --brand: var(--b-600);
-  --brand-hover: var(--b-700);
-  --brand-ink: var(--b-900);
-  --brand-tint: var(--b-50);
+  --brand: var(--n-900);          /* 주 버튼 · 선택 표시 */
+  --brand-hover: var(--n-800);
+  --brand-ink: var(--n-900);
+  --brand-tint: var(--b-50);      /* 선택된 줄 */
+  --sky: var(--b-500);            /* 강조 */
+  --sky-ink: var(--b-600);        /* 하늘색 글자 · 링크 */
   --ok: var(--g-700);
   --warn: var(--y-700);
   --bad: var(--r-700);
 
-  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px;
-  --e1: 0 2px 8px rgba(18, 22, 29, .10);
-  --e2: 0 16px 40px rgba(18, 22, 29, .18);
+  --font: "Outfit", "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --r-xs: 6px; --r-sm: 14px; --r-md: 24px; --r-lg: 28px; --r-pill: 999px;
+  --e1: 0 6px 24px rgba(28, 31, 90, .08);
+  --e2: 0 24px 64px rgba(28, 31, 90, .18);
+  --gut: 32px;                    /* 페이지 좌우 여백 */
+  --frame: 16px;                  /* 창(사진 틀)과 화면 가장자리 사이 */
+  --pad: 24px;                    /* 카드 안쪽 여백 */
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  font: 400 14px/22px var(--font);
+  font: 400 15px/24px var(--font);
   color: var(--tx);
   background: var(--canvas);
   word-break: keep-all;
@@ -58,9 +63,13 @@ div, section, header, footer, main, nav, aside, form, ul, ol, li, label, fieldse
 ul, ol { list-style: none; }
 fieldset { border: 0; }
 a { color: inherit; text-decoration: none; }
-button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+form { margin: 0; }
+[hidden] { display: none !important; }
+input, textarea { font: inherit; color: inherit; border: 0; background: none; outline: 0; min-width: 0; }
 img { display: block; flex: none; object-fit: cover; }
 svg { display: block; flex: none; }
+canvas { display: block; }
 h1, h2, h3, p { font-weight: 400; font-size: inherit; }
 b, strong { font-weight: 600; }
 
@@ -76,38 +85,44 @@ b, strong { font-weight: 600; }
 .grow { flex: 1 1 0; min-width: 0; }
 .fn { flex: none; }
 .wrap { flex-wrap: wrap; }
-.g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; } .g12 { gap: 12px; } .g16 { gap: 16px; }
+.g0 { gap: 0; } .g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; } .g12 { gap: 12px; } .g16 { gap: 16px; }
 .g20 { gap: 20px; } .g24 { gap: 24px; } .g32 { gap: 32px; } .g40 { gap: 40px; } .g48 { gap: 48px; }
 
-/* type scale */
-.t-display { font-size: 36px; line-height: 50px; font-weight: 600; letter-spacing: -.02em; }
-.t-h1 { font-size: 24px; line-height: 34px; font-weight: 600; letter-spacing: -.01em; }
-.t-h2 { font-size: 18px; line-height: 28px; font-weight: 600; letter-spacing: -.005em; }
-.t-h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
-.t-lg { font-size: 16px; line-height: 26px; }
-.t-md { font-size: 14px; line-height: 22px; }
+/* type scale: 큰 글자는 가늘게 */
+.t-display { font-size: 56px; line-height: 66px; font-weight: 300; letter-spacing: -.02em; }
+.t-h1 { font-size: 34px; line-height: 44px; font-weight: 300; letter-spacing: -.015em; }
+.t-h2 { font-size: 22px; line-height: 32px; font-weight: 500; letter-spacing: -.01em; }
+.t-h3 { font-size: 17px; line-height: 26px; font-weight: 600; }
+.t-lg { font-size: 17px; line-height: 28px; }
+.t-md { font-size: 15px; line-height: 24px; }
 .t-sm { font-size: 13px; line-height: 20px; }
 .t-xs { font-size: 12px; line-height: 18px; }
-.w4 { font-weight: 400; } .w5 { font-weight: 500; } .w6 { font-weight: 600; }
-.c1 { color: var(--tx); } .c2 { color: var(--tx-2); } .c3 { color: var(--tx-3); } .cb { color: var(--brand); }
+.w3 { font-weight: 300; } .w4 { font-weight: 400; } .w5 { font-weight: 500; } .w6 { font-weight: 600; }
+.c1 { color: var(--tx); } .c2 { color: var(--tx-2); } .c3 { color: var(--tx-3); } .cb { color: var(--sky-ink); }
 .cok { color: var(--ok); } .cwarn { color: var(--warn); } .cbad { color: var(--bad); } .cw { color: #fff; }
 .num { font-variant-numeric: tabular-nums; }
 .tr { text-align: right; } .tc { text-align: center; }
 .nw { white-space: nowrap; }
 .del { text-decoration: line-through; }
-.lnk { color: var(--brand); }
+.lnk { color: var(--sky-ink); }
 .ul { text-decoration: underline; text-underline-offset: 3px; }
 
 /* breakpoints: desktop ≥1200 · tablet 768–1199 · mobile ≤767
    표시 전환 클래스: d-only / t-only / m-only / dt-only(모바일에서 숨김) / tm-only(데스크톱에서 숨김) */
 @media (min-width: 1200px) { .t-only, .m-only, .tm-only { display: none !important; } }
 @media (min-width: 768px) and (max-width: 1199px) {
+  :root { --gut: 24px; --frame: 12px; }
   .d-only, .m-only { display: none !important; }
-  .t-display { font-size: 32px; line-height: 46px; }
+  .t-display { font-size: 46px; line-height: 56px; }
 }
 @media (max-width: 767px) {
+  :root { --gut: 16px; --frame: 8px; --pad: 16px; --r-md: 20px; --r-lg: 22px; }
   .d-only, .t-only, .dt-only { display: none !important; }
-  .t-display { font-size: 26px; line-height: 38px; letter-spacing: -.015em; }
-  .t-h1 { font-size: 20px; line-height: 30px; }
-  .t-h2 { font-size: 17px; line-height: 26px; }
+  .t-display { font-size: 34px; line-height: 44px; letter-spacing: -.015em; }
+  .t-h1 { font-size: 27px; line-height: 36px; }
+  .t-h2 { font-size: 19px; line-height: 28px; }
+}
+/* 움직임을 줄이도록 설정한 사용자 · 정지 화면 캡처: 전환과 반복 움직임을 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

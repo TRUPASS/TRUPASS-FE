@@ -14,7 +14,8 @@ wallet purchase security locked certificate credentials policy fingerprint-recog
 user user--avatar user--multiple notification menu overflow-menu--horizontal help settings logout
 star--filled pedestrian train filter send view copy history compare list--checked baggage-claim password
 dot-mark earth printer undo trash-can home stamp misuse warning--filled information--filled incomplete radio-button
-shopping--bag tree sight image send--alt caret--down caret--right link at`.split(/\s+/).filter(Boolean);
+shopping--bag tree sight image send--alt caret--down caret--right link at
+arrow--up-right compass chat idea ticket star mouse keyboard airplane play--filled-alt pause--filled`.split(/\s+/).filter(Boolean);
 
 const out = {};
 const missing = [];

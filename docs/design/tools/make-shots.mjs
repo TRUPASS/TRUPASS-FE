@@ -1,4 +1,4 @@
-// 이용 안내(04)에 넣는 캡처 이미지를 실제 화면에서 잘라 만든다.
+// 랜딩의 이용 방법 상자에 넣는 그림 다섯 장을 실제 화면에서 잘라 만든다 (assets/tutorial/step1–5.jpg).
 // 사용: node src/build.mjs && node tools/make-shots.mjs && node src/build.mjs
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,11 +8,11 @@ import { chromium, openScreen } from './render.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 // [화면 id, 잘라낼 영역 x, y, w] — 높이는 1280:760 비율로 정한다
 const SHOTS = [
-  ['05-home', 'viewport', 96, 72, 980],
-  ['07-result', 'page', 104, 64, 1232],
-  ['07-result-dock', 'viewport', 86, 366, 900],
-  ['09-places', 'page', 104, 64, 1232],
-  ['11-checkout', 'page', 104, 64, 1232],
+  ['05-home', 'viewport', 150, 84, 1140],          // 1 문장 세 개로 적는다
+  ['06-searching', 'viewport', 200, 92, 1040],     // 2 항공편과 숙소를 한 번에 찾는다
+  ['07-result', 'page', 96, 530, 1248],            // 3 항공권마다 숙소 3곳을 고른다
+  ['09-places', 'page', 96, 288, 1248],            // 4 숙소 위치와 주변 장소를 확인한다
+  ['11-checkout', 'page', 96, 288, 1248],          // 5 정해 둔 한도 안에서 결제한다
 ];
 const browser = await chromium.launch();
 mkdirSync(join(root, 'assets/tutorial'), { recursive: true });

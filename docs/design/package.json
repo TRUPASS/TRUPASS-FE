@@ -1,11 +1,14 @@
 {
   "name": "trupass-design",
   "private": true,
-  "description": "Trupass 화면 설계 소스와 피그마 반영 도구",
+  "description": "Trupass 화면 설계 소스(정적 사이트)와 피그마 반영 도구",
   "type": "module",
   "scripts": {
     "build": "node src/build.mjs",
+    "serve": "python3 -m http.server 4173 --directory dist",
+    "deploy": "node src/build.mjs && python3 tools/deploy-vercel.py",
     "render": "node tools/render.mjs",
+    "test:flow": "node src/build.mjs && node tools/flow-test.mjs",
     "shots": "node tools/make-shots.mjs && node src/build.mjs",
     "sheets": "python3 tools/contact-sheets.py",
     "figma:extract": "node tools/figma/run-extract.mjs",

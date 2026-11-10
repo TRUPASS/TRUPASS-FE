@@ -7,22 +7,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 screens = json.load(open(os.path.join(ROOT, "dist", "screens.json"), encoding="utf-8"))
 FONT = None
-for p in [os.path.expanduser("~/.fonts/IBMPlexSansKR-Medium.ttf"), "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"]:
+for p in [os.path.expanduser("~/.fonts/GothicA1-Medium.ttf"), os.path.expanduser("~/.fonts/IBMPlexSansKR-Medium.ttf"), "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"]:
     if os.path.exists(p):
         FONT = ImageFont.truetype(p, 22)
         break
 FONT = FONT or ImageFont.load_default()
 CFG = {"d": (5, 560, "desktop"), "t": (5, 400, "tablet"), "m": (7, 280, "mobile")}   # 열 수, 칸 폭
-PAD, LABEL, BG = 32, 44, (234, 237, 241)
+PAD, LABEL, BG = 32, 44, (226, 229, 239)
 
 for bp, (cols, cw, name) in CFG.items():
     items = []
     for s in screens:
-        f = os.path.join(ROOT, "preview", bp, s["id"] + ".png")
-        if s["id"] == "00-foundations" or bp not in s["bps"] or not os.path.exists(f):
+        if s["id"] == "00-foundations" or bp not in s["bps"]:
             continue
-        im = Image.open(f).convert("RGB")
-        items.append((f'{s["no"]} {s["name"]}', im.resize((cw, round(im.height * cw / im.width)), Image.LANCZOS)))
+        # 스크롤로 넘기는 화면은 찍어 둔 자리마다 한 칸씩 싣는다
+        shots = [(f'{s["no"]} {st[0]}', f'{s["id"]}@{i + 1:02d}.png') for i, st in enumerate(s["stops"])] if s.get("stops") else [(f'{s["no"]} {s["name"]}', s["id"] + ".png")]
+        for label, fn in shots:
+            f = os.path.join(ROOT, "preview", bp, fn)
+            if not os.path.exists(f):
+                continue
+            im = Image.open(f).convert("RGB")
+            items.append((label, im.resize((cw, round(im.height * cw / im.width)), Image.LANCZOS)))
     rows = [items[i:i + cols] for i in range(0, len(items), cols)]
     W = PAD + cols * (cw + PAD)
     H = PAD + sum(LABEL + max(i.height for _, i in r) + PAD for r in rows)
@@ -32,7 +37,7 @@ for bp, (cols, cw, name) in CFG.items():
     for r in rows:
         for c, (label, im) in enumerate(r):
             x = PAD + c * (cw + PAD)
-            dr.text((x, y + 6), label if len(label) < cw // 13 else label[: cw // 13 - 1] + "…", fill=(55, 62, 71), font=FONT)
+            dr.text((x, y + 6), label if len(label) < cw // 13 else label[: cw // 13 - 1] + "…", fill=(28, 31, 90), font=FONT)
             sheet.paste(im, (x, y + LABEL))
         y += LABEL + max(i.height for _, i in r) + PAD
     out = os.path.join(ROOT, "preview", f"sheet-{name}.jpg")

@@ -10,7 +10,25 @@
 ## 아이콘 · 글꼴
 
 - 아이콘: IBM Carbon Icons (`@carbon/icons`), Apache License 2.0. `src/lib/icons.mjs` 에 쓰는 것만 담았다.
-- 글꼴: IBM Plex Sans KR, SIL Open Font License 1.1 (Google Fonts 제공).
+- 글꼴: Outfit(라틴 · 숫자)과 Gothic A1(한글), 둘 다 SIL Open Font License 1.1 (Google Fonts 제공).
+
+## 배경 사진 (Wikimedia Commons)
+
+랜딩의 하늘 · 숫자 · 항공 · 숙소 · 체험 구간과 로그인 · 새 검색 화면의 창에 쓴 사진이다. `tools/make-bg.py` 가 가로 1920~2400으로 줄이고 밝기를 조금 손봤다(변경 있음).
+
+| 파일 | 쓰임 | 원본 | 작성자 | 라이선스 |
+| --- | --- | --- | --- | --- |
+| `bg/hero.jpg` | 랜딩 첫 화면의 하늘 · 로그인 화면의 창 | [Summer above the clouds (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Summer_above_the_clouds_(Unsplash).jpg) | Liane Metzler | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
+| `bg/deck.webp` | 스크롤하면 아래에서 올라오는 구름층 (아래쪽만 잘라 위 가장자리를 투명하게 녹임) | [Above The Clouds (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Above_The_Clouds_(Unsplash).jpg) | Aaron Burden | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
+| `bg/flight.jpg` | 항공 구간 · 새 검색 화면의 창 | [Wing with morning sunrise sky.jpg](https://commons.wikimedia.org/wiki/File:Wing_with_morning_sunrise_sky.jpg) | Michael | 퍼블릭 도메인 |
+| `bg/stats.jpg` | 숫자 구간의 하늘 (위 사진에서 날개가 없는 왼쪽 위만 자름) | 위와 같음 | Michael | 퍼블릭 도메인 |
+| `bg/hotel.jpg` | 숙소 구간 | [Kyoto Yura Hotel MGallery Deluxe Room Twin 20201102-001.jpg](https://commons.wikimedia.org/wiki/File:Kyoto_Yura_Hotel_MGallery_Deluxe_Room_Twin_20201102-001.jpg) | J o | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) — 줄인 사진도 같은 조건으로 쓴다 |
+| `bg/exp.jpg` | 체험 구간 | [Orange hallway leading to Kyoto Prefecture (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Orange_hallway_leading_to_Kyoto_Prefecture_(Unsplash).jpg) | Peter Gabas | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
+
+## 지구본 (06 검색 중)
+
+- 국가 경계: Natural Earth(퍼블릭 도메인)를 world-atlas 2.0.2 가 TopoJSON 으로 묶은 자료. `tools/gen-geo.mjs` 가 110m 전체와 동아시아 5개국의 50m 경계만 `assets/geo/world.js` 로 옮겼다.
+- 투영 · 그리기: d3-geo 3.1.2, d3-array 3.2.4, topojson-client 3.1.0 (모두 ISC License, Mike Bostock). `assets/vendor/` 에 배포판 그대로 들어 있다.
 - Google 로그인 버튼의 G 마크는 Google 의 상표이며 로그인 버튼 용도로만 썼다.
 
 ## 사진 (Wikimedia Commons)

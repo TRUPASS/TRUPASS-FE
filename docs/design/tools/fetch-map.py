@@ -8,7 +8,7 @@ OpenStreetMap 표준 타일을 몇 장 받아 이어 붙인 뒤 채도를 낮춘
 import json, math, os, sys, time, urllib.request
 from PIL import Image, ImageEnhance
 
-UA = "TrupassDesignMock/0.1 (static design mockup; few tiles, one-off)"
+UA = "design-mock-asset-fetch/0.1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "assets", "map")
 CACHE = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", ".tile-cache")

@@ -1,10 +1,9 @@
 // Trupass 디자인 — 화면이 공통으로 쓰는 마크업 조각.
-// data-n 은 피그마 레이어 이름이 된다. 레이아웃은 전부 flex(row/column)+gap+padding 으로만 짠다.
+// data-n 은 피그마 레이어 이름이 된다. 화면의 뼈대는 flex(row/column)+gap+padding 으로 짠다.
 import { ICONS } from './icons.mjs';
 
 export const won = n => n.toLocaleString('ko-KR') + '원';
 export const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toLocaleString('ko-KR') + '원';
-const a = (o = {}) => Object.entries(o).filter(([, v]) => v != null && v !== false).map(([k, v]) => ` ${k}="${v}"`).join('');
 
 // 아이콘: IBM Carbon (32 그리드). 색은 currentColor.
 export const ic = (name, size = 16, cls = '') => {
@@ -13,9 +12,11 @@ export const ic = (name, size = 16, cls = '') => {
 };
 
 // 로고: 승인 체크의 긴 획이 이륙 방향으로 이어지고 그 끝에 기체가 놓인다. 워드마크는 한 가지 색.
-export const mark = (s = 24, tile = '#0b3c9d', fg = '#fff') =>
-  `<svg class="mark" width="${s}" height="${s}" viewBox="0 0 32 32" data-n="logo/mark" aria-hidden="true"><rect width="32" height="32" rx="7" fill="${tile}"/><path d="M7.6 16.6l4.9 5 7.3-8.6" fill="none" stroke="${fg}" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 6l-9 2.5 4.1 2.4 2.4 4.1z" fill="${fg}"/></svg>`;
-export const logo = (s = 24) => `<a class="logo" data-n="Logo">${mark(s)}<span class="wm">Trupass</span></a>`;
+export const INK = '#1c1f5a';
+export const mark = (s = 28, tile = INK, fg = '#fff') =>
+  `<svg class="mark" width="${s}" height="${s}" viewBox="0 0 32 32" data-n="logo/mark" aria-hidden="true"><rect width="32" height="32" rx="10" fill="${tile}"/><path d="M7.6 16.6l4.9 5 7.3-8.6" fill="none" stroke="${fg}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 6l-9 2.5 4.1 2.4 2.4 4.1z" fill="${fg}"/></svg>`;
+export const logo = (s = 28, o = {}) =>
+  `<a class="logo${o.inv ? ' inv' : ''}" href="${o.href || '01-landing.html'}" data-n="Logo">${o.inv ? mark(s, '#ffffff', INK) : mark(s)}<span class="wm">Trupass</span></a>`;
 
 // Google 로그인 버튼용 G 마크 (Google 브랜드 가이드의 표준 4색 마크)
 export const gmark = (s = 18) =>
@@ -32,104 +33,89 @@ export const srcMark = (k, s = 16) => `<svg width="${s}" height="${s}" viewBox="
 export const srcName = k => SM[k][0];
 export const src = (k, o = {}) => `<a class="src" data-n="Source">${srcMark(k)}<span class="nm">${SM[k][0]}</span>${o.link === false ? '' : ic('launch', 14)}</a>`;
 
+// 버튼. href 를 주면 그 화면으로 넘어간다. arr 는 끝에 동그란 화살표를 붙인다. at 은 스크립트가 붙는 자리(data-*).
+const attrs = o => `${o.href ? ` href="${o.href}"` : ' role="button" tabindex="0"'}${o.at ? ' ' + o.at : ''}`;
 export const btn = (label, o = {}) =>
-  `<a class="btn${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.cls ? ' ' + o.cls : ''}" data-n="${o.n || 'Button'}">${o.icon ? ic(o.icon, o.isz || 16) : ''}${o.pre || ''}${label}${o.after ? ic(o.after, o.isz || 16) : ''}</a>`;
-export const ibtn = (icon, o = {}) => `<a class="btn ico${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.cls ? ' ' + o.cls : ''}" data-n="${o.n || 'IconButton'}">${ic(icon, o.isz || 20)}</a>`;
+  `<a class="btn${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.arr ? ' cta' : ''}${o.cls ? ' ' + o.cls : ''}"${attrs(o)} data-n="${o.n || 'Button'}">${o.icon ? ic(o.icon, o.isz || 16) : ''}${o.pre || ''}${label}${o.after ? ic(o.after, o.isz || 16) : ''}${o.arr ? `<span class="arr">${ic(o.arr === true ? 'arrow--up-right' : o.arr, 16)}</span>` : ''}</a>`;
+export const ibtn = (icon, o = {}) => `<a class="btn ico${o.kind ? ' ' + o.kind : ''}${o.size ? ' ' + o.size : ''}${o.cls ? ' ' + o.cls : ''}"${attrs(o)} data-n="${o.n || 'IconButton'}">${ic(icon, o.isz || 20)}</a>`;
 
 export const inp = (value, o = {}) =>
   `<div class="inp${o.ph ? ' ph' : ''}${o.ro ? ' ro' : ''}${o.focus ? ' focus' : ''}${o.cls ? ' ' + o.cls : ''}" data-n="Input"${o.w ? ` style="width:${o.w}px"` : ''}>${o.icon ? ic(o.icon) : ''}<span class="grow">${value}</span>${o.after || ''}</div>`;
 export const fld = (label, control, o = {}) =>
   `<div class="fld${o.cls ? ' ' + o.cls : ''}" data-n="Field/${o.n || label}"><div class="fld-l"><span class="l">${label}</span>${o.opt ? `<span class="o">${o.opt}</span>` : ''}</div>${control}${o.hint ? `<span class="hint">${o.hint}</span>` : ''}</div>`;
 export const chk = (label, on, o = {}) =>
-  `<label class="chk${o.cls ? ' ' + o.cls : ''}" data-n="Checkbox"><span class="box${on ? ' on' : ''}" data-n="Box">${on ? ic('checkmark', 14) : ''}</span><span class="${o.tcls || ''}">${label}</span>${o.after || ''}</label>`;
+  `<label class="chk${o.cls ? ' ' + o.cls : ''}"${o.at ? ' ' + o.at : ''} data-n="Checkbox"><span class="box${on ? ' on' : ''}" data-n="Box">${ic('checkmark', 14)}</span><span class="${o.tcls || ''}">${label}</span>${o.after || ''}</label>`;
 export const rad = (label, on, o = {}) =>
-  `<label class="chk${o.cls ? ' ' + o.cls : ''}" data-n="Radio"><span class="rad${on ? ' on' : ''}" data-n="Dot">${on ? '<span class="dot"></span>' : ''}</span>${label ? `<span>${label}</span>` : ''}</label>`;
-export const opt = (label, on) =>
-  `<label class="opt${on ? ' on' : ''}" data-n="Option"><span class="box${on ? ' on' : ''}" data-n="Box">${on ? ic('checkmark', 14) : ''}</span><span>${label}</span></label>`;
+  `<label class="chk${o.cls ? ' ' + o.cls : ''}" data-n="Radio"><span class="rad${on ? ' on' : ''}" data-n="Dot"><span class="dot"></span></span>${label ? `<span>${label}</span>` : ''}</label>`;
+export const opt = (label, on, at = '') =>
+  `<label class="opt${on ? ' on' : ''}"${at ? ' ' + at : ''} data-n="Option"><span class="box${on ? ' on' : ''}" data-n="Box">${ic('checkmark', 14)}</span><span>${label}</span></label>`;
+export const radio = on => `<span class="rad${on ? ' on' : ''}" data-n="Radio"><span class="dot"></span></span>`;
 export const st = (tone, text) => `<span class="st ${tone}" data-n="Status"><span class="d"></span><span>${text}</span></span>`;
 export const tag = (text, tone = '') => `<span class="tag ${tone}" data-n="Tag">${text}</span>`;
 export const kv = (k, v, line = true) => `<div class="kv${line ? ' line' : ''}" data-n="Row"><span class="k">${k}</span><div class="grow">${v}</div></div>`;
 export const note = (html, tone = '', icon = 'information') => `<div class="note ${tone}" data-n="Note">${ic(icon, 16)}<div class="grow">${html}</div></div>`;
-export const img = (file, w, h, o = {}) => `<img src="../assets/${file}" width="${w}" height="${h}" alt="${o.alt || ''}" data-n="${o.n || 'Image'}" style="width:${w}px;height:${h}px;border-radius:${o.r ?? 4}px${o.css ? ';' + o.css : ''}">`;
 
 // 진행 단계: 검색 → 항공 · 숙소 → 장소 → 결제 → 완료
 const STEPS = ['검색', '항공 · 숙소', '장소', '결제', '완료'];
 export const steps = cur =>
   `<div class="steps" data-n="Steps">${STEPS.map((l, i) => `${i ? `<span class="bar${i <= cur ? ' done' : ''}"></span>` : ''}<div class="step${i < cur ? ' done' : i === cur ? ' on' : ''}" data-n="Step"><span class="no">${i < cur ? ic('checkmark', 12) : i + 1}</span><span class="${i === cur ? '' : 'dt-only'}">${l}</span></div>`).join('')}</div>`;
 
-// 상단 바
-const NAV_OUT = ['서비스 소개', '이용 방법', '결제 권한 안내', '고객센터'];
-const NAV_IN = ['새 검색', '내 여행', '결제 내역'];
+// 상단 바 (앱 화면)
+const NAV_IN = [['새 검색', '05-home.html'], ['내 여행', ''], ['결제 내역', '']];
 export const header = (o = {}) => {
   if (o.kind === 'bare') {
-    return `<header class="hdr jb" data-n="Header">${logo()}<div class="row g12"><span class="t-sm c3 dt-only">${o.mail || ''}</span><a class="btn txt n sm" data-n="Button">로그아웃</a></div></header>`;
+    return `<header class="hdr jb" data-n="Header">${logo()}<div class="row g12"><span class="t-sm c3 dt-only">${o.mail || ''}</span><a class="btn txt n sm" href="01-landing.html" data-n="Button">로그아웃</a></div></header>`;
   }
-  if (o.kind === 'in') {
-    return `<header class="hdr jb" data-n="Header"><div class="row g32">${logo()}<nav class="nav dt-only" data-n="Nav">${NAV_IN.map(l => `<a class="${l === o.on ? 'on' : ''}">${l}</a>`).join('')}</nav></div><div class="row g4">${ibtn('notification', { kind: 'txt n', n: 'Notifications' })}<a class="me dt-only" data-n="Account"><span class="av">지</span><span class="w5">지안</span>${ic('chevron--down', 16, 'c3')}</a>${ibtn('menu', { kind: 'txt n', cls: 'm-only', n: 'Menu' })}</div></header>`;
-  }
-  return `<header class="hdr jb" data-n="Header"><div class="row g32">${logo()}<nav class="nav dt-only" data-n="Nav">${NAV_OUT.map(l => `<a>${l}</a>`).join('')}</nav></div><div class="row g8">${btn('로그인', { size: 'sm', n: 'Login' })}${ibtn('menu', { kind: 'txt n', size: 'sm', cls: 'm-only', n: 'Menu' })}</div></header>`;
+  return `<header class="hdr jb" data-n="Header"><div class="row g32">${logo(28, { href: '05-home.html' })}<nav class="nav dt-only" data-n="Nav">${NAV_IN.map(([l, h]) => `<a class="${l === o.on ? 'on' : ''}"${h ? ` href="${h}"` : ''}>${l}</a>`).join('')}</nav></div><div class="row g8">${ibtn('notification', { kind: 'txt n', n: 'Notifications' })}<a class="me dt-only" data-n="Account"><span class="av">O</span><span class="w5">OO님</span>${ic('chevron--down', 16, 'c3')}</a>${ibtn('menu', { kind: 'txt n', cls: 'm-only', n: 'Menu' })}</div></header>`;
 };
 export const footer = () =>
   `<footer class="ftr jb" data-n="Footer"><span>© 2026 Trupass</span><div class="row g16 wrap"><span>이용약관</span><span>개인정보 처리방침</span><span>전자금융거래 이용약관</span><span>고객센터 1600-0000</span></div></footer>`;
-
-// 검색 입력 칸: 칸마다 문장으로 자유롭게 적는다. 빈 칸에는 예시가 연하게 깔린다(ph).
-// f = { l 라벨, opt 선택 표시, ph 예시, v 값, tall 여러 줄 }
-export const sfield = (f, o = {}) =>
-  fld(f.l, `<div class="sin${o.filled ? '' : ' ph'}${f.tall ? ' tall' : ''}${o.focus ? ' focus' : ''}" data-n="Box"><span class="grow">${o.filled ? f.v : f.ph}</span></div>`, { opt: f.opt, n: f.l });
 
 // 문장 입력 상자 (수정 요청 독 안에서 쓴다)
 export const pbox = (o = {}) => {
   const txt = o.text
     ? `<p class="pbox-x">${o.text}</p>`
     : `<p class="pbox-x ph">${o.ph || ''}</p>`;
-  return `<div class="pbox${o.focus ? ' focus' : ''}${o.sm ? ' sm' : ''}" data-n="${o.n || 'Prompt'}"><div class="pbox-t" data-n="Text">${txt}</div><div class="pbox-f${o.hint ? '' : ' je'}" data-n="Bar">${o.hint ? `<span class="hint grow">${o.hint}</span>` : ''}<div class="row g12 fn pbox-a"><span class="t-xs c3 num">${o.count ?? 0} / ${o.max ?? 300}</span>${btn(o.cta || '다시 검색', { kind: o.ckind ?? 'pri', after: o.cicon ?? 'renew', n: 'Submit', cls: o.dis ? 'dis' : '' })}</div></div></div>`;
+  return `<div class="pbox${o.focus ? ' focus' : ''}" data-n="${o.n || 'Prompt'}"><div class="pbox-t" data-n="Text">${txt}</div><div class="pbox-f${o.hint ? '' : ' je'}" data-n="Bar">${o.hint ? `<span class="hint grow">${o.hint}</span>` : ''}<div class="row g12 fn pbox-a"><span class="t-xs c3 num">${o.count ?? 0} / ${o.max ?? 300}</span>${btn(o.cta || '다시 검색', { kind: o.ckind ?? 'pri', after: o.cicon ?? 'renew', n: 'Submit', cls: o.dis ? 'dis' : '', href: o.href })}</div></div></div>`;
 };
 
 // 수정 요청 독: 결과 화면 아래에 늘 붙어 있다.
 //   내림(기본) — 머리줄 한 줄만 보인다.  올림(.up) — 마우스를 올리거나 입력을 시작하면 입력 상자가 올라온다.
-//   입력 없이 포인터가 벗어난 채 4초가 지나면 다시 내려간다. (움직임은 DOCK_JS, 규칙은 README)
+//   입력 없이 포인터가 벗어난 채 4초가 지나면 다시 내려간다. (움직임은 src/js/site.js)
 export const dock = (o = {}) => `<div class="dock${o.up ? ' up' : ''}" data-n="ReviseDock/${o.up ? '올림' : '내림'}" data-dock>
 <div class="dock-h" data-n="Head">${ic('edit', 16, 'c2')}<span class="t-sm w6 fn">수정 요청</span><span class="dock-ph t-sm grow">${o.ph}</span><span class="dock-de t-sm c2 grow">바꾸고 싶은 점을 문장으로 적어 주세요.<span class="dt-only"> ${o.desc || '조건을 반영해 다시 검색합니다.'}</span></span>${ic('chevron--up', 16, 'c3 i-up')}${ic('chevron--down', 16, 'c3 i-dn')}</div>
-<div class="dock-b" data-n="Body">${pbox({ sm: 1, n: 'RevisePrompt', text: o.text, focus: !!o.text, count: (o.text || '').length, ph: o.ph, hint: o.hint, ckind: o.text ? 'pri' : '' })}${o.egs ? `<div class="dock-eg" data-n="Examples"><span class="t-xs c3 fn">예시</span>${o.egs.map(t => `<a class="t-xs lnk">${t}</a>`).join('')}</div>` : ''}</div>
+<div class="dock-b" data-n="Body">${pbox({ n: 'RevisePrompt', text: o.text, focus: !!o.text, count: (o.text || '').length, ph: o.ph, hint: o.hint, ckind: o.text ? 'pri' : '', href: o.href })}${o.egs ? `<div class="dock-eg" data-n="Examples"><span class="t-xs c3 fn">예시</span>${o.egs.map(t => `<a class="t-xs lnk" data-eg>${t}</a>`).join('')}</div>` : ''}</div>
 </div>`;
 // 화면 아래 고정 영역: 수정 요청 독 + (태블릿·모바일) 합계와 다음 단계 버튼
 export const bottom = (o = {}) => `<div class="bottom" data-n="Bottom"><div class="bottom-in" data-n="DockArea">${dock(o.dock)}</div>${o.bar || ''}</div>`;
 
-// 시안에서 움직임을 확인하기 위한 스크립트: 독 올림/내림, 항공권별 숙소 펼침. 화면의 초기 상태는 건드리지 않는다.
-export const DOCK_JS = `(() => {
-  document.querySelectorAll('[data-tg]').forEach(t => t.addEventListener('click', e => { e.preventDefault(); t.closest('.fo').classList.toggle('open'); }));
-  const dock = document.querySelector('[data-dock]'); if (!dock) return;
-  const box = dock.querySelector('.pbox-x'), ph = dock.querySelector('.dock-ph').textContent, IDLE = 4000;
-  let timer = 0;
-  const empty = () => box.classList.contains('ph') || !box.textContent.trim();
-  const move = c => { dock.classList.remove('rise', 'drop'); void dock.offsetWidth; dock.classList.add(c); };
-  const up = () => { clearTimeout(timer); if (!dock.classList.contains('up')) { dock.classList.add('up'); move('rise'); } };
-  const down = () => { if (dock.classList.contains('up')) { dock.classList.remove('up'); move('drop'); } };
-  const later = () => { clearTimeout(timer); timer = setTimeout(() => { if (empty() && !dock.matches(':hover') && !dock.contains(document.activeElement)) down(); }, IDLE); };
-  dock.addEventListener('mouseenter', up); dock.addEventListener('mouseleave', later);
-  dock.addEventListener('focusin', up); dock.addEventListener('focusout', later);
-  dock.querySelector('.dock-h').addEventListener('click', () => (dock.classList.contains('up') && empty() ? down() : up()));
-  box.setAttribute('contenteditable', 'plaintext-only'); box.setAttribute('role', 'textbox');
-  box.addEventListener('focus', () => { if (box.classList.contains('ph')) { box.textContent = ''; box.classList.remove('ph'); } });
-  box.addEventListener('blur', () => { if (!box.textContent.trim()) { box.textContent = ph; box.classList.add('ph'); } });
-  const cnt = dock.querySelector('.pbox-a .num'), send = dock.querySelector('.pbox-a .btn');
-  box.addEventListener('input', () => { cnt.textContent = box.textContent.trim().length + ' / 300'; send.classList.toggle('pri', !empty()); });
-})();`;
+// 문장 검색 상자 (랜딩 · 새 검색). p 는 data.mjs 의 PROMPTS 한 건.
+//   next: 엔터를 눌렀을 때 넘어갈 곳 — 'stage:1' 처럼 랜딩의 다음 구간이거나 화면 주소.
+//   filled: 고객이 적은 문장을 채워서 보여 준다(시안의 입력 뒤 상태).  plain: 사진이 아닌 종이 바탕 위에 놓을 때.
+export const ask = (p, o = {}) =>
+  `<form class="ask${o.plain ? ' plain' : ''}" data-ask="${p.k}" data-next="${o.next || ''}" data-n="Prompt/${p.l}">${ic(p.icon, 24)}<input type="text" name="${p.k}" placeholder="${p.ph}" value="${o.filled ? p.v : ''}" autocomplete="off" enterkeyhint="${o.last ? 'search' : 'next'}" aria-label="${p.l}"><button class="go" type="submit" aria-label="${o.last ? '검색' : '다음'}" data-n="Submit">${ic(o.last ? 'search' : 'arrow--right', 22)}</button></form>`;
+export const chips = (p, cls = '') => `<div class="chips${cls ? ' ' + cls : ''}" data-n="Examples">${p.egs.map(t => `<a class="chip" data-eg="${p.k}">${t}</a>`).join('')}</div>`;
+// 두 칸 전환
+export const seg = (tabs, on) => `<div class="seg" data-n="Tabs">${tabs.map(([k, l]) => `<a class="${k === on ? 'on' : ''}" data-tab="${k}">${l}</a>`).join('')}</div>`;
 
-// 문서 틀
-export const page = ({ title, cls = '', body, js = '' }) => `<!doctype html>
+// 문서 틀. scripts: 화면이 따로 쓰는 스크립트(../ 기준 경로). 공통 스크립트 site.js 는 항상 붙는다.
+// cls 에 veil-in 을 주면 그 화면은 구름 장막이 걷히며 열린다(로그인 · 회원 정보 입력). 장막(.veil)은 모든 화면에 깔려 있고 평소에는 보이지 않는다.
+export const page = ({ title, cls = '', body, scripts = [], attrs: at = '' }) => `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${title} — Trupass</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../app.css">
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../app.css">${/\bveil-in\b/.test(cls) ? '\n<link rel="preload" as="image" href="../assets/bg/deck.webp">' : ''}
 </head>
-<body class="${cls}" data-n="${title}">
-${body}${js ? `\n<script>${js}</script>` : ''}
+<body class="${cls}" data-n="${title}"${at ? ' ' + at : ''}>
+${body}
+<div class="veil" aria-hidden="true" data-n="CloudVeil"><i></i></div>
+${[...scripts, 'js/site.js'].map(s => `<script src="../${s}"></script>`).join('\n')}
 </body>
 </html>
 `;
