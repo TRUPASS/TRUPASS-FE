@@ -12,6 +12,14 @@
 - 아이콘: IBM Carbon Icons (`@carbon/icons`), Apache License 2.0. `src/lib/icons.mjs` 에 쓰는 것만 담았다.
 - 글꼴: Outfit(라틴 · 숫자)과 Gothic A1(한글), 둘 다 SIL Open Font License 1.1 (Google Fonts 제공).
 
+## 회사 마크
+
+- 요금 조회처 · 지도 · 후기 사이트의 마크: [Simple Icons](https://simpleicons.org) 16.35.0, CC0 1.0. `tools/gen-brands.mjs` 가 화면에 쓰는 여덟 개(Trip.com · Expedia · Booking.com · Hotels.com · Google Maps · Tripadvisor · Tabelog · Naver)만 `src/lib/brands.mjs` 에 담았다.
+- 마크와 이름의 상표권은 각 회사에 있다. 화면에 적은 회사는 연동을 가정한 예시이며 실제 제휴 관계가 아니다. 같은 내용을 랜딩과 앱 화면의 푸터에 적었다.
+- 작은 크기(14~16px)에서도 알아볼 수 있도록 그리는 방법만 조정했다. 가로로 긴 Trip.com 워드마크는 글자가 있는 띠만 잘라 넓게 쓰고, 색이 옅은 Tripadvisor · Tabelog · Naver 는 회사 색 바탕 위에 마크를 올렸다. 마크의 모양은 바꾸지 않았다. 실제 서비스에서는 각 회사의 브랜드 가이드에 맞는 공식 자료로 바꾼다.
+- 항공사(대한항공 · 제주항공)는 이름만 적었다. 쓸 수 있는 조건이 확인된 로고 자료가 없어 넣지 않았다.
+- Google 로그인 버튼의 G 마크는 Google 의 상표이며 로그인 버튼 용도로만 썼다.
+
 ## 배경 사진 (Wikimedia Commons)
 
 랜딩의 하늘 · 숫자 · 항공 · 숙소 · 체험 구간과 로그인 · 새 검색 화면의 창에 쓴 사진이다. `tools/make-bg.py` 가 가로 1920~2400으로 줄이고 밝기를 조금 손봤다(변경 있음).
@@ -29,7 +37,6 @@
 
 - 국가 경계: Natural Earth(퍼블릭 도메인)를 world-atlas 2.0.2 가 TopoJSON 으로 묶은 자료. `tools/gen-geo.mjs` 가 110m 전체와 동아시아 5개국의 50m 경계만 `assets/geo/world.js` 로 옮겼다.
 - 투영 · 그리기: d3-geo 3.1.2, d3-array 3.2.4, topojson-client 3.1.0 (모두 ISC License, Mike Bostock). `assets/vendor/` 에 배포판 그대로 들어 있다.
-- Google 로그인 버튼의 G 마크는 Google 의 상표이며 로그인 버튼 용도로만 썼다.
 
 ## 사진 (Wikimedia Commons)
 
@@ -51,8 +58,7 @@
 | `photos/room_b.jpg` | 객실 (가상 숙소 예시 사진) | [Kyoto Yura Hotel MGallery Deluxe Room Twin 20201102-001.jpg](https://commons.wikimedia.org/wiki/File:Kyoto_Yura_Hotel_MGallery_Deluxe_Room_Twin_20201102-001.jpg) | J o | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | `photos/room_c.jpg` | 객실 (가상 숙소 예시 사진) | [Imperial Hotel Osaka regular floor standard twin room 20120630-001.jpg](https://commons.wikimedia.org/wiki/File:Imperial_Hotel_Osaka_regular_floor_standard_twin_room_20120630-001.jpg) | J o | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | `photos/room_d.jpg` | 객실 (가상 숙소 예시 사진) | [Hotel Sunroute Ariake Standard Single bedroom 20110603-001.jpg](https://commons.wikimedia.org/wiki/File:Hotel_Sunroute_Ariake_Standard_Single_bedroom_20110603-001.jpg) | J o | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
-| `photos/room_e.jpg` | 숙소 외관 (가상 숙소 예시 사진) | [Dormy Inn Premium Shibuya Jingumae Hot Spring.jpg](https://commons.wikimedia.org/wiki/File:Dormy_Inn_Premium_Shibuya_Jingumae_Hot_Spring.jpg) | Syced | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
-| `photos/room_f.jpg` | 숙소 외관 (가상 숙소 예시 사진) | [JR上野駅前 - panoramio.jpg](https://commons.wikimedia.org/wiki/File:JR%E4%B8%8A%E9%87%8E%E9%A7%85%E5%89%8D_-_panoramio.jpg) | 伊部リコ | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
+| `photos/room_e.jpg` | 숙소 외관 (가상 숙소 예시 사진, 간판이 있던 윗부분은 잘라 냄) | [Dormy Inn Premium Shibuya Jingumae Hot Spring.jpg](https://commons.wikimedia.org/wiki/File:Dormy_Inn_Premium_Shibuya_Jingumae_Hot_Spring.jpg) | Syced | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
 | `photos/rv_nmwa_1.jpg` | 국립서양미술관 · 후기 썸네일 | [Tokyo National Museum of Western Art seen from the west.jpg](https://commons.wikimedia.org/wiki/File:Tokyo_National_Museum_of_Western_Art_seen_from_the_west.jpg) | Ymblanter | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | `photos/rv_nmwa_2.jpg` | 국립서양미술관 · 후기 썸네일 | [National Museum of Western Art, Tokyo 7.jpg](https://commons.wikimedia.org/wiki/File:National_Museum_of_Western_Art,_Tokyo_7.jpg) | Kakidai | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | `photos/rv_tobikan_1.jpg` | 도쿄도 미술관 · 후기 썸네일 | [Tokyo Metropolitan Art Museum 02 (15133033203).jpg](https://commons.wikimedia.org/wiki/File:Tokyo_Metropolitan_Art_Museum_02_(15133033203).jpg) | Joe Mabel on Flickr as Joe Mabel from Seattle, US | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |

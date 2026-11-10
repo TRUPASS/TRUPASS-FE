@@ -14,7 +14,7 @@
   if (calm) freeze = 'flight';
   var ctx = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1), S = 0;
 
-  var INK = '#1c1f5a', SKY = '#4fa6e4', SKY_D = '#1b76bd', SEA = '#e3eefa', LAND = '#fbfcff', EDGE = 'rgba(28,31,90,.24)', GRID = 'rgba(28,31,90,.06)';
+  var INK = '#1c1f5a', SKY = '#4fa6e4', SKY_D = '#1971b6', SEA = '#e3eefa', LAND = '#fbfcff', EDGE = 'rgba(28,31,90,.24)', GRID = 'rgba(28,31,90,.06)';
   var world = T.feature(G.world, G.world.objects.countries).features;
   var detail = {}; G.detail.features.forEach(function (f) { detail[f.id] = f; });
   var coarse = world.filter(function (f) { return !detail[String(f.id)]; });

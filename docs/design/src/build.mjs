@@ -5,6 +5,7 @@ import { mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync } fr
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { SCREENS } from './screens/index.mjs';
+import { DESC } from './lib/ui.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -29,7 +30,7 @@ for (const s of SCREENS) {
 writeFileSync(join(dist, 'screens.json'), JSON.stringify(SCREENS.map(({ id, no, name, kind, note, bps, stops }) => ({ id, no, name, kind, note, bps: bps || ['d', 't', 'm'], ...(stops ? { stops } : {}) })), null, 1));
 
 const head = title => `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>
-<meta name="robots" content="noindex, nofollow"><link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="app.css">`;
+<meta name="description" content="${DESC}"><meta name="robots" content="noindex, nofollow"><link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="app.css">`;
 // 첫 주소는 랜딩으로 보낸다
 writeFileSync(join(dist, 'index.html'), `${head('Trupass')}<meta http-equiv="refresh" content="0; url=screens/01-landing.html"></head>
 <body><main style="padding:48px 32px;gap:12px"><p class="t-md c2">랜딩으로 이동합니다.</p><a class="lnk" href="screens/01-landing.html">screens/01-landing.html</a><a class="lnk" href="screens.html">화면 목차</a></main></body></html>

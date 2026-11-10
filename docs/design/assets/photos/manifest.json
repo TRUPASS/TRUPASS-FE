@@ -157,7 +157,7 @@
  },
  {
   "file": "room_e.jpg",
-  "use": "숙소 외관 (가상 숙소 예시 사진)",
+  "use": "숙소 외관 (가상 숙소 예시 사진, 간판이 있던 윗부분은 잘라 냄)",
   "title": "File:Dormy Inn Premium Shibuya Jingumae Hot Spring.jpg",
   "page": "https://commons.wikimedia.org/wiki/File:Dormy_Inn_Premium_Shibuya_Jingumae_Hot_Spring.jpg",
   "artist": "Syced",
@@ -165,19 +165,12 @@
   "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Dormy_Inn_Premium_Shibuya_Jingumae_Hot_Spring.jpg/500px-Dormy_Inn_Premium_Shibuya_Jingumae_Hot_Spring.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
   "src_w": 3072,
-  "src_h": 4080
- },
- {
-  "file": "room_f.jpg",
-  "use": "숙소 외관 (가상 숙소 예시 사진)",
-  "title": "File:JR上野駅前 - panoramio.jpg",
-  "page": "https://commons.wikimedia.org/wiki/File:JR%E4%B8%8A%E9%87%8E%E9%A7%85%E5%89%8D_-_panoramio.jpg",
-  "artist": "伊部リコ",
-  "license": "CC BY 3.0",
-  "license_url": "https://creativecommons.org/licenses/by/3.0",
-  "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/JR%E4%B8%8A%E9%87%8E%E9%A7%85%E5%89%8D_-_panoramio.jpg/500px-JR%E4%B8%8A%E9%87%8E%E9%A7%85%E5%89%8D_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "src_w": 2498,
-  "src_h": 1812
+  "src_h": 4080,
+  "trim": {
+   "top": 0.12,
+   "left": 0.06,
+   "right": 0.06
+  }
  },
  {
   "file": "rv_nmwa_1.jpg",
