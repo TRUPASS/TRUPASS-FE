@@ -13,27 +13,31 @@ async function TRUPASS_BUILD() {
   const stat = { frames: 0, texts: 0, vectors: 0, images: 0, screens: 0 };
   const ok = (fn, label) => { try { return fn(); } catch (e) { warn.push(label + ': ' + (e && e.message ? e.message : e)); return undefined; } };
 
-  // ── 1. 글꼴 ────────────────────────────────────────────────
-  const WEIGHT = { 400: ['regular'], 500: ['medium'], 600: ['semibold', 'demibold'], 700: ['bold'] };
+  // ── 1. 글꼴: 라틴 글자 · 숫자는 Outfit, 한글은 Gothic A1 (둘 다 피그마에 들어 있는 Google Fonts) ──
+  const WEIGHT = { 200: ['extralight', 'ultralight'], 300: ['light'], 400: ['regular'], 500: ['medium'], 600: ['semibold', 'demibold'], 700: ['bold'] };
   const norm = s => String(s).toLowerCase().replace(/[\s_-]/g, '');
   const avail = await figma.listAvailableFontsAsync();
   const byFamily = fam => avail.filter(f => f.fontName.family === fam);
-  let family = D.font;
-  if (!byFamily(family).length) {
-    const alt = ['Noto Sans KR', 'Pretendard', 'Inter'].find(f => byFamily(f).length);
-    warn.push(`글꼴 "${D.font}" 을(를) 찾지 못해 "${alt || 'Inter'}" 로 대신했습니다. 글자 폭이 달라져 줄바꿈이 어긋날 수 있습니다.`);
-    family = alt || 'Inter';
-  }
-  const styles = byFamily(family).map(f => f.fontName.style);
-  /** @type {Record<number, FontName>} */
+  /** @type {Record<string, FontName>} */
   const FONT = {};
-  for (const wt of D.weights) {
-    const want = WEIGHT[wt] || ['regular'];
-    const hit = styles.find(s => want.includes(norm(s))) || styles.find(s => norm(s) === 'regular') || styles[0] || 'Regular';
-    FONT[wt] = { family, style: hit };
+  for (const [fam, weights] of Object.entries(D.fonts)) {
+    let family = fam;
+    if (!byFamily(family).length) {
+      const alt = ['Noto Sans KR', 'Pretendard', 'Inter'].find(f => byFamily(f).length);
+      warn.push(`글꼴 "${fam}" 을(를) 찾지 못해 "${alt || 'Inter'}" 로 대신했습니다. 글자 폭이 달라져 줄바꿈이 어긋날 수 있습니다.`);
+      family = alt || 'Inter';
+    }
+    const styles = byFamily(family).map(f => f.fontName.style);
+    for (const wt of /** @type {number[]} */ (weights)) {
+      const want = WEIGHT[wt] || ['regular'];
+      const hit = styles.find(s => want.includes(norm(s))) || styles.find(s => norm(s) === 'regular') || styles[0] || 'Regular';
+      FONT[fam + '|' + wt] = { family, style: hit };
+    }
   }
-  await Promise.all(Object.values(FONT).map(f => figma.loadFontAsync(f)));
-  const fontOf = wt => FONT[wt] || FONT[400] || Object.values(FONT)[0];
+  const uniq = {};
+  for (const f of Object.values(FONT)) uniq[f.family + '|' + f.style] = f;
+  await Promise.all(Object.values(uniq).map(f => figma.loadFontAsync(f)));
+  const fontOf = (fam, wt) => FONT[fam + '|' + wt] || FONT[fam + '|400'] || Object.values(FONT)[0];
 
   // ── 2. 놓을 자리: 새 페이지를 만들 수 있으면 만들고, 안 되면(무료 플랜 3페이지 제한 등) 현재 페이지 오른쪽에 놓는다 ──
   let page = figma.currentPage;
@@ -79,7 +83,7 @@ async function TRUPASS_BUILD() {
       for (const s of D.textStyles) {
         let st = local.find(x => x.name === s.name);
         if (!st) { st = figma.createTextStyle(); st.name = s.name; }
-        st.fontName = fontOf(s.wt);
+        st.fontName = fontOf(s.fam, s.wt);
         st.fontSize = s.size;
         st.lineHeight = { unit: 'PIXELS', value: s.lh };
         st.letterSpacing = { unit: 'PIXELS', value: s.ls || 0 };
@@ -109,6 +113,25 @@ async function TRUPASS_BUILD() {
     if (v) { const b = ok(() => figma.variables.setBoundVariableForPaint(p, 'color', v), 'bind'); if (b) p = b; }
     return p;
   }
+  // 배경 사진: 프레임(w × h) 안의 (b.x, b.y) 자리에 b.w × b.h 크기로 놓인 사진을 잘라 보이는 채움으로 옮긴다
+  function imagePaint(b, n) {
+    if (!IMG[b.img]) return null;
+    return { type: 'IMAGE', imageHash: IMG[b.img], scaleMode: 'CROP', imageTransform: [[n.w / b.w, 0, -b.x / b.w], [0, n.h / b.h, -b.y / b.h]] };
+  }
+  // 선형 그라데이션: 시작점 · 끝점(프레임 안의 픽셀 좌표)을 피그마의 변환 행렬로 옮긴다.
+  // 피그마의 행렬은 "프레임(0–1 좌표) → 그라데이션 좌표(가로 0–1 이 진행 방향, 세로 0.5 가 중심선)" 이므로, 그 반대 방향 행렬을 만들어 뒤집는다.
+  function linearPaint(g, n) {
+    const dx = g.x2 - g.x1, dy = g.y2 - g.y1;
+    const a = dx / n.w, c = dy / n.h, b = -dy / n.w, d = dx / n.h;                 // (a, c): 진행 방향, (b, d): 그에 수직인 방향
+    const tx = g.x1 / n.w - 0.5 * b, ty = g.y1 / n.h - 0.5 * d;
+    const det = a * d - b * c;
+    if (!det) return null;
+    return {
+      type: 'GRADIENT_LINEAR',
+      gradientTransform: [[d / det, -b / det, (b * ty - d * tx) / det], [-c / det, a / det, (c * tx - a * ty) / det]],
+      gradientStops: g.stops.map(s => ({ position: Math.min(1, Math.max(0, s.p)), color: { r: s.c.r / 255, g: s.c.g / 255, b: s.c.b / 255, a: s.c.a == null ? 1 : s.c.a } })),
+    };
+  }
   const dim = v => Math.max(0.01, v);
   function place(node, n, parent, isRoot) {
     parent.appendChild(node);
@@ -124,11 +147,26 @@ async function TRUPASS_BUILD() {
     if (rad.every(v => v === rad[0])) node.cornerRadius = rad[0];
     else { node.topLeftRadius = rad[0]; node.topRightRadius = rad[1]; node.bottomRightRadius = rad[2]; node.bottomLeftRadius = rad[3]; }
   }
+  // 자식을 넣는 순서: 흐름 안의 자식은 문서 순서대로, 절대 위치 자식은 자기보다 아래에 그려질 형제들 뒤에 (tools/figma/compact.mjs 의 orderKids 와 같은 규칙)
+  function orderKids(kids) {
+    const below = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+    const all = kids.map((k, i) => ({ k, key: [k.zi || 0, i] }));
+    const out = all.filter(e => !e.k.abs);
+    all.filter(e => e.k.abs).sort((a, b) => (below(a.key, b.key) ? -1 : 1)).forEach(e => {
+      let at = 0;
+      out.forEach((o, i) => { if (below(o.key, e.key)) at = i + 1; });
+      out.splice(at, 0, e);
+    });
+    return out.map(e => e.k);
+  }
 
   function buildFrame(n, parent, isRoot) {
     const f = figma.createFrame();
     f.name = n.n || 'Frame';
-    f.fills = n.fill ? [solid(n.fill)] : [];
+    /** @type {Paint[]} */
+    const fills = n.fill ? [solid(n.fill)] : [];
+    for (const b of n.bg || []) { const p = ok(() => (b.k === 'img' ? imagePaint(b, n) : linearPaint(b, n)), 'background'); if (p) fills.push(/** @type {Paint} */ (p)); }
+    ok(() => { f.fills = fills; }, `fills ${n.n}`);
     f.clipsContent = !!n.clip;
     f.layoutMode = n.lay === 'H' ? 'HORIZONTAL' : 'VERTICAL';
     f.itemSpacing = n.gap || 0;
@@ -164,14 +202,14 @@ async function TRUPASS_BUILD() {
       f.primaryAxisSizingMode = 'FIXED'; f.counterAxisSizingMode = 'FIXED';
     }
     stat.frames++;
-    for (const k of n.kids) build(k, f);
+    for (const k of orderKids(n.kids)) build(k, f);
     return f;
   }
 
   function buildText(n, parent) {
     const t = figma.createText();
     const st = TSTYLE[n.ts];
-    t.fontName = fontOf(n.font.wt);
+    t.fontName = fontOf(n.font.fam, n.font.wt);
     t.fontSize = n.font.size;
     t.lineHeight = { unit: 'PIXELS', value: n.font.lh };
     if (n.font.ls) t.letterSpacing = { unit: 'PIXELS', value: n.font.ls };
@@ -180,22 +218,26 @@ async function TRUPASS_BUILD() {
     if (n.ar === 'H') t.textAutoResize = 'HEIGHT';       // 글자를 넣기 전에 정한다
     place(t, n, parent, false);
     if (n.ar === 'H') t.resize(dim(n.w), dim(n.h));
-    t.characters = n.chars.replace(/\n/g, ' ');     // 브라우저의 줄바꿈 위치를 그대로 (문단 안 줄바꿈)
+    t.characters = n.chars.replace(/\n/g, ' ');     // 브라우저의 줄바꿈 위치를 그대로 (문단 안 줄바꿈)
     if (n.deco) t.textDecoration = n.deco === 'U' ? 'UNDERLINE' : 'STRIKETHROUGH';
+    // 섞인 글: 구간마다 글꼴(라틴 Outfit · 한글 Gothic A1) · 굵기 · 크기 · 색 · 자간을 따로 건다.
+    // 자간은 브라우저가 그린 폭에 맞춘 값이라, 고정 폭 글의 줄바꿈이 화면과 같은 자리에서 일어난다.
     for (const r of n.runs || []) {
       ok(() => {
-        if (r.wt !== n.font.wt) t.setRangeFontName(r.s, r.e, fontOf(r.wt));
+        if (r.fam !== n.font.fam || r.wt !== n.font.wt) t.setRangeFontName(r.s, r.e, fontOf(r.fam, r.wt));
         if (r.size !== n.font.size) t.setRangeFontSize(r.s, r.e, r.size);
-        if (r.c && hexOf(r.c) !== hexOf(n.c)) t.setRangeFills(r.s, r.e, [solid(r.c)]);
+        if (r.c && (hexOf(r.c) !== hexOf(n.c) || r.c.a !== n.c.a)) t.setRangeFills(r.s, r.e, [solid(r.c)]);
         if (r.deco !== (n.deco || '')) t.setRangeTextDecoration(r.s, r.e, r.deco === 'U' ? 'UNDERLINE' : r.deco === 'S' ? 'STRIKETHROUGH' : 'NONE');
+        if (Math.abs((r.ls || 0) - (n.font.ls || 0)) > 0.001) t.setRangeLetterSpacing(r.s, r.e, { unit: 'PIXELS', value: r.ls || 0 });
       }, 'text run');
     }
+    if (n.tsh) ok(() => { t.effects = [{ type: 'DROP_SHADOW', color: { r: n.tsh.c.r / 255, g: n.tsh.c.g / 255, b: n.tsh.c.b / 255, a: n.tsh.c.a }, offset: { x: n.tsh.x, y: n.tsh.y }, radius: n.tsh.blur, spread: 0, visible: true, blendMode: 'NORMAL' }]; }, 'text shadow');
     if (n.op != null) t.opacity = n.op;
     if (!n.abs && n.ar === 'H' && n.sw === 'FILL') {
       ok(() => { t.layoutSizingHorizontal = 'FILL'; }, 'text fill');
       if (t.width < 1) t.resize(dim(n.w), dim(n.h));     // 채움이 0폭으로 무너지면 측정값으로 되돌린다
     }
-    if (st && !(n.runs && n.runs.length)) pendingStyles.push([t, st]);
+    if (st) pendingStyles.push([t, st]);               // 한 가지 모양뿐인 글만 스타일 키(ts)를 가진다
     stat.texts++;
     return t;
   }
@@ -214,7 +256,8 @@ async function TRUPASS_BUILD() {
     const r = figma.createRectangle();
     r.name = n.n || 'Image';
     r.resize(dim(n.w), dim(n.h));
-    r.fills = IMG[n.img] ? [{ type: 'IMAGE', imageHash: IMG[n.img], scaleMode: 'FILL' }] : [{ type: 'SOLID', color: { r: 0.87, g: 0.88, b: 0.9 } }];
+    // fit: 기본은 채우기(cover). contain 은 맞춤, fill(구운 배경 · canvas)은 상자와 같은 비율이라 채우기로 충분하다.
+    r.fills = IMG[n.img] ? [{ type: 'IMAGE', imageHash: IMG[n.img], scaleMode: n.fit === 'contain' ? 'FIT' : 'FILL' }] : [{ type: 'SOLID', color: { r: 0.87, g: 0.88, b: 0.9 } }];
     corners(r, n.rad);
     if (n.op != null) r.opacity = n.op;
     place(r, n, parent, false);
@@ -228,27 +271,33 @@ async function TRUPASS_BUILD() {
     return ok(() => n.t === 'F' ? buildFrame(n, parent, false) : n.t === 'T' ? buildText(n, parent) : n.t === 'S' ? buildSvg(n, parent) : buildImage(n, parent), `${n.t} "${n.n || (n.chars || '').slice(0, 16)}"`);
   }
 
-  // ── 6. 보드: 폭별 한 줄, 화면 위에 이름표 ───────────────────
-  const GAP = 120, ROW_GAP = 480, LABEL = 56;
+  // ── 6. 보드: 보드마다 제목, 줄마다 줄 이름, 화면 위에 이름표 ───
+  const GAP = 120, ROW_GAP = 200, BOARD_GAP = 480, LABEL = 56;
+  const INK = { r: 28, g: 31, b: 90, a: 1 }, SUB = { r: 79, g: 86, b: 95, a: 1 };
+  const caption = (str, size, wt, c, x, y) => {
+    const t = figma.createText();
+    t.fontName = fontOf(D.label, wt); t.fontSize = size; t.characters = str;
+    t.fills = [solid(c)];
+    page.appendChild(t); t.x = x; t.y = y;
+    return t;
+  };
   let y = originY;
   const made = [];
   for (const board of D.boards) {
-    const title = figma.createText();
-    title.fontName = fontOf(600); title.fontSize = 44; title.characters = board.title;
-    title.fills = [solid({ r: 18, g: 22, b: 29, a: 1 })];
-    page.appendChild(title); title.x = originX; title.y = y;
+    caption(board.title, 44, 600, INK, originX, y);
     y += 120;
-    let x = originX, rowH = 0;
-    for (const s of board.screens) {
-      const label = figma.createText();
-      label.fontName = fontOf(500); label.fontSize = 22; label.characters = s.name;
-      label.fills = [solid({ r: 79, g: 86, b: 95, a: 1 })];
-      page.appendChild(label); label.x = x; label.y = y;
-      const root = ok(() => buildFrame(Object.assign({}, s.tree, { n: s.name }), page, true), 'screen ' + s.name);
-      if (root) { root.x = x; root.y = y + LABEL; made.push(root); stat.screens++; }
-      x += s.tree.w + GAP; rowH = Math.max(rowH, s.tree.h);
+    for (const row of board.rows) {
+      if (row.label) { caption(row.label, 30, 500, INK, originX, y); y += 96; }
+      let x = originX, rowH = 0;
+      for (const s of row.screens) {
+        caption(s.name, 22, 500, SUB, x, y);
+        const root = ok(() => buildFrame(Object.assign({}, s.tree, { n: s.name }), page, true), 'screen ' + s.name);
+        if (root) { root.x = x; root.y = y + LABEL; made.push(root); stat.screens++; }
+        x += s.tree.w + GAP; rowH = Math.max(rowH, s.tree.h);
+      }
+      y += LABEL + rowH + ROW_GAP;
     }
-    y += LABEL + rowH + ROW_GAP;
+    y += BOARD_GAP - ROW_GAP;
   }
 
   // 텍스트 스타일 연결 (한꺼번에)

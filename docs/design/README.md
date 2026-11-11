@@ -131,8 +131,7 @@ docs/design
 │  └─ build.mjs         dist/ 생성
 ├─ assets/              배경 사진 · 지도 · 장소 사진 · 항공사 로고 · 지구본 데이터 · 이용 방법 그림, CREDITS.md
 ├─ preview/             폭별 한눈에 보기(JPEG). 화면별 PNG는 렌더로 생성
-├─ figma/plugin/        피그마 플러그인 (2차 수정본 기준, 아래 참고)
-└─ tools/               렌더, 흐름 검사, 에셋 가공, 피그마 변환
+└─ tools/               렌더, 흐름 검사, 에셋 가공, 피그마 변환(tools/figma, 아래 "피그마 반영 상태" 참고)
 ```
 
 ## 실행
@@ -182,18 +181,56 @@ python3 tools/fetch-airline-logos.py                     # assets/brands/*.svg (
 
 ## 피그마 반영 상태
 
-- 피그마 파일에 올라가 있는 것은 **2차 수정본**이다(아래 링크). 3차는 사이트를 먼저 확인한 뒤 올리기로 해서 아직 올리지 않았다.
-- `figma/plugin/`과 `tools/figma/`도 2차 기준이다. 3차를 올리려면 스크롤 화면(랜딩)을 자리별 프레임으로 나누는 처리를 변환 도구에 더해야 한다.
+피그마 파일에는 **지금 배포된 사이트(4차) 기준 보드**가 올라가 있다. 폭마다 한 장이고, 첫 줄은 랜딩이 스크롤을 따라 지나는 자리 10곳, 둘째 줄은 로그인부터 내 여행까지다.
 
-| 보드 (2차 수정본) | 링크 |
+| 보드 | 링크 |
 | --- | --- |
-| Trupass 디자인 기준 v2 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=86-161 |
-| Trupass 리디자인 v2 · Desktop 1440 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=86-1520 |
-| Trupass 리디자인 v2 · Tablet 834 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=86-6391 |
-| Trupass 리디자인 v2 · Mobile 390 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=86-10772 |
+| Trupass 디자인 기준 v4 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-161 |
+| Trupass 화면 설계 v4 · Desktop 1440 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-1933 |
+| Trupass 화면 설계 v4 · Tablet 834 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-8183 |
+| Trupass 화면 설계 v4 · Mobile 390 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-14131 |
 | Trupass 로고 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=42-161 |
 
-피그마 MCP의 읽기 · 쓰기 도구가 Starter 플랜 월 한도에 걸려 있어 2차는 SVG 업로드로 넣었다. 이 경로로는 이미 있는 노드를 고치거나 지울 수 없으므로, 3차도 새 보드로 올라가게 된다.
+같은 페이지에 예전 보드(리디자인 1차 · v2)가 그대로 남아 있다. 아래의 올리는 경로로는 이미 있는 노드를 고치거나 지울 수 없어서, 필요 없으면 피그마에서 직접 지운다.
+
+### 보드를 만들고 올리는 순서
+
+```bash
+npm run build && npm run render     # dist/ 와 preview/{d,t,m}/*.png (검증에서 견주는 그림)
+npm run figma:extract               # 화면 → 노드 트리 (.figma-build/tree), 구운 배경 · 지구본 그림 (.figma-build/raster)
+npm run figma:svg                   # 트리 → SVG, 보드 4장 (.figma-build/boards), 화면 렌더와 화소 비교
+```
+
+- 추출(`tools/figma/extract.mjs`)은 화면을 실제 브라우저로 열어 요소의 자리 · 색 · 글자를 잰다. 랜딩은 정해 둔 스크롤 자리마다 한 장씩 뽑는다. 좌표는 1배율 화면에서 재고, 굽는 그림만 2배율로 뜬다.
+- 보드 SVG는 피그마 MCP의 `upload_assets`가 주는 주소로 올린다(`curl -F "file=@보드.svg;type=image/svg+xml" <주소>`). 올린 SVG는 편집할 수 있는 벡터 · 텍스트 · 이미지 층으로 들어간다. 피그마 MCP의 읽기 · 편집 도구는 Starter 플랜 월 한도에 걸려 있어 이 경로만 쓸 수 있었다.
+- 검증: SVG를 브라우저로 다시 그려 화면 렌더와 견줬다. 74장(랜딩 자리 30 + 화면 43 + 디자인 기준 1) 평균 0.4%, 최대 1.1%의 화소가 다르고, 남은 차이는 글자가 반 화소쯤 어긋나는 정도다. **피그마에 들어간 뒤의 모습은 읽기 도구 한도 때문에 직접 확인하지 못했다.**
+
+### 보드에 담긴 것
+
+| 화면의 요소 | 피그마에서 |
+| --- | --- |
+| 글자 | 살아 있는 텍스트. 화면은 라틴 글자 · 숫자를 Outfit, 한글을 Gothic A1로 그리므로 글꼴이 바뀌는 자리에서 층이 나뉜다(예: `909,000` + `원`). 구간의 폭이 화면과 같도록 자간을 맞춰 두었다 |
+| 사진 배경과 덧씌움 | 이미지 채움과 선형 그라데이션 채움 |
+| 랜딩의 하늘 구간 | 하늘 · 구름 바다 · 구름층 · 안개 네 층을 마스크로 겹친 구성이라, 자리마다 그때의 모습 한 장으로 구워 넣었다 |
+| 지구본(canvas) | 그려진 그림 한 장(PNG) |
+| 아이콘 · 회사 마크 · 항공사 로고 | 벡터 |
+| 입력 칸 | 상자 + 값(없으면 예시 문구). 넘치는 글자는 상자에서 잘린다 |
+| `::before` · `::after` | 라디오의 점, 이용 방법의 번호, 사진 위 덧씌움, 모바일 표의 이름표를 실제 층으로 옮겼다 |
+
+옮기지 못한 것: 유리 효과(`backdrop-filter`)는 반투명 채움만 남는다. 숫자의 고정폭 표기(`tabular-nums`)는 자간으로 폭만 맞췄다. 보드는 절대 좌표로 놓여 있고 오토레이아웃이 아니다.
+
+### 오토레이아웃 플러그인 (실험)
+
+같은 트리로 오토레이아웃 프레임 · 텍스트 스타일 · 색 변수를 짓는 플러그인도 만들 수 있다. 생성물(`figma/plugin/`, 약 12MB)은 저장소에 올리지 않는다.
+
+```bash
+npm run figma:sim                   # 오토레이아웃 규칙만으로 다시 그려 화면과 견준다
+npm run figma:plugin                # figma/plugin/code.js · manifest.json 생성 + 모의 실행
+```
+
+피그마 데스크톱 앱의 Plugins > Development > Import plugin from manifest… 에서 `figma/plugin/manifest.json`을 고르면 실행된다.
+
+지금 사이트는 오토레이아웃으로 옮기기 어려운 구성이 많아 정확도가 보드보다 낮다. 모의 배치 기준으로 화면과 다른 화소가 평균 1.1%, 최대 5.9%(모바일 검색 결과)다. 스크롤한 자리의 바깥 틀과 sticky 상자는 절대 위치로 고정했고, grid와 줄어드는 flex 줄은 놓인 자리로 방향 · 정렬을 미루어 정했다. 화면과 똑같은 모습이 필요하면 위의 보드를 쓴다.
 
 ## 가정과 확인이 필요한 것
 

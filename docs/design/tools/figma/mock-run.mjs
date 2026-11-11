@@ -14,6 +14,8 @@ const fkey = f => `${f.family}|${f.style}`;
 let idc = 0;
 const fail = m => { throw new Error(m); };
 const isAuto = n => n && n.type === 'FRAME' && n.layoutMode !== 'NONE';
+const checkMatrix = (m, what) => { if (!Array.isArray(m) || m.length !== 2 || m.some(r => !Array.isArray(r) || r.length !== 3 || r.some(v => typeof v !== 'number' || !Number.isFinite(v)))) fail(`${what} must be a 2×3 matrix of finite numbers`); };
+const checkEffects = v => { for (const e of v) { if (!['DROP_SHADOW', 'INNER_SHADOW'].includes(e.type)) fail('bad effect'); for (const k of ['r', 'g', 'b', 'a']) if (!(e.color[k] >= 0 && e.color[k] <= 1)) fail('effect color out of range'); if (!(e.radius >= 0)) fail('effect radius'); } };
 const checkPaints = (ps, what) => {
   if (!Array.isArray(ps)) fail(`${what} must be an array`);
   for (const p of ps) {
@@ -21,8 +23,18 @@ const checkPaints = (ps, what) => {
       for (const k of ['r', 'g', 'b']) if (!(p.color[k] >= 0 && p.color[k] <= 1)) fail(`${what}: color.${k} out of 0–1`);
       if ('a' in p.color) fail(`${what}: color must not carry "a"`);
       if (p.opacity != null && !(p.opacity >= 0 && p.opacity <= 1)) fail(`${what}: opacity out of range`);
-    } else if (p.type === 'IMAGE') { if (typeof p.imageHash !== 'string') fail(`${what}: imageHash missing`); }
-    else fail(`${what}: unknown paint type ${p.type}`);
+    } else if (p.type === 'IMAGE') {
+      if (typeof p.imageHash !== 'string') fail(`${what}: imageHash missing`);
+      if (!['FILL', 'FIT', 'CROP', 'TILE'].includes(p.scaleMode)) fail(`${what}: bad scaleMode ${p.scaleMode}`);
+      if (p.scaleMode === 'CROP') checkMatrix(p.imageTransform, `${what}: imageTransform`);
+    } else if (p.type === 'GRADIENT_LINEAR') {
+      checkMatrix(p.gradientTransform, `${what}: gradientTransform`);
+      if (!Array.isArray(p.gradientStops) || p.gradientStops.length < 2) fail(`${what}: gradient needs two stops`);
+      for (const t of p.gradientStops) {
+        if (!(t.position >= 0 && t.position <= 1)) fail(`${what}: stop position out of 0–1`);
+        for (const k of ['r', 'g', 'b', 'a']) if (!(t.color[k] >= 0 && t.color[k] <= 1)) fail(`${what}: stop color.${k} out of 0–1`);
+      }
+    } else fail(`${what}: unknown paint type ${p.type}`);
   }
 };
 
@@ -57,7 +69,7 @@ class Frame extends Container {
   set counterAxisSpacing(v) { if (this._wrap !== 'WRAP') fail('counterAxisSpacing needs layoutWrap WRAP'); if (!(v >= 0)) fail('counterAxisSpacing must be positive'); this._cas = v; }
   set primaryAxisAlignItems(v) { if (!['MIN', 'CENTER', 'MAX', 'SPACE_BETWEEN'].includes(v)) fail('bad primaryAxisAlignItems ' + v); this._ja = v; }
   set counterAxisAlignItems(v) { if (!['MIN', 'CENTER', 'MAX', 'BASELINE'].includes(v)) fail('bad counterAxisAlignItems ' + v); if (v === 'BASELINE' && this.layoutMode !== 'HORIZONTAL') fail('BASELINE needs HORIZONTAL'); this._aa = v; }
-  set effects(v) { for (const e of v) { if (!['DROP_SHADOW', 'INNER_SHADOW'].includes(e.type)) fail('bad effect'); for (const k of ['r', 'g', 'b', 'a']) if (!(e.color[k] >= 0 && e.color[k] <= 1)) fail('effect color out of range'); if (!(e.radius >= 0)) fail('effect radius'); } this._fx = v; }
+  set effects(v) { checkEffects(v); this._fx = v; }
   set strokesIncludedInLayout(v) { if (this.layoutMode === 'NONE') fail('strokesIncludedInLayout needs auto layout'); }
   set primaryAxisSizingMode(v) { if (!['FIXED', 'AUTO'].includes(v)) fail('bad primaryAxisSizingMode'); }
   set counterAxisSizingMode(v) { if (!['FIXED', 'AUTO'].includes(v)) fail('bad counterAxisSizingMode'); }
@@ -77,6 +89,8 @@ class Text extends Base {
   setRangeFontSize(s, e, v) { this._range(s, e); if (!(v >= 1)) fail('range size'); }
   setRangeFills(s, e, v) { this._range(s, e); checkPaints(v, 'range fills'); }
   setRangeTextDecoration(s, e, v) { this._range(s, e); }
+  setRangeLetterSpacing(s, e, v) { this._range(s, e); if (typeof v !== 'object' || !v.unit || typeof v.value !== 'number' || !Number.isFinite(v.value)) fail('range letterSpacing must be {unit, value}'); }
+  set effects(v) { checkEffects(v); this._fx = v; }
   async setTextStyleIdAsync(id) { if (typeof id !== 'string') fail('style id'); this._style = id; }
 }
 class Rect extends Base {
@@ -101,7 +115,7 @@ const figma = {
     if (open !== close) fail(`unbalanced svg tags (${open} vs ${close})`);
     const f = new Frame(); const m = /width="([\d.]+)" height="([\d.]+)"/.exec(svg); if (!m) fail('svg without width/height'); f.resize(+m[1], +m[2]); return f;
   },
-  async listAvailableFontsAsync() { return ['Thin', 'ExtraLight', 'Light', 'Regular', 'Text', 'Medium', 'SemiBold', 'Bold'].map(style => ({ fontName: { family: 'IBM Plex Sans KR', style } })).concat([{ fontName: { family: 'Inter', style: 'Regular' } }]); },
+  async listAvailableFontsAsync() { return ['Outfit', 'Gothic A1'].flatMap(family => ['Thin', 'ExtraLight', 'Light', 'Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold', 'Black'].map(style => ({ fontName: { family, style } }))).concat([{ fontName: { family: 'Inter', style: 'Regular' } }]); },
   async loadFontAsync(f) { loaded.add(fkey(f)); },
   base64Decode: s => new Uint8Array(Buffer.from(s, 'base64')),
   createImage(bytes) { if (!(bytes instanceof Uint8Array) || bytes.length < 100) fail('createImage: bad bytes'); if (!(bytes[0] === 0xff && bytes[1] === 0xd8) && !(bytes[0] === 0x89 && bytes[1] === 0x50)) fail('createImage: not JPEG/PNG'); return { hash: 'h' + bytes.length }; },
