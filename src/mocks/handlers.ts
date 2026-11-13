@@ -1,7 +1,8 @@
-import { delay, http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse, type JsonBodyType } from 'msw';
 import type { Schemas } from '@/shared/api/client';
 import { MOCK_SCENARIO_PARAM } from '@/shared/api/client';
-import { mockDb } from './db';
+import { mockDb, type MockUser } from './db';
+import { ACCESS_TTL_S, REFRESH_TTL_S, accountFromIdToken, failure, ok } from './fixtures/auth';
 import { buildCheckoutSnapshot, parseMockScenario, type MockScenario } from './fixtures/checkout';
 import { packageOptionsFixture } from './fixtures/packages';
 
@@ -12,8 +13,91 @@ function scenarioFrom(request: Request): MockScenario | undefined {
   return parseMockScenario(new URL(request.url).searchParams.get(MOCK_SCENARIO_PARAM));
 }
 
+// Mock 토큰은 사용자와 만료 시각을 그대로 담는다 (서버 쪽 저장 없이 검사할 수 있게)
+let tokenSeq = 0;
+function issueTokens(user: MockUser) {
+  const now = Date.now();
+  tokenSeq += 1;
+  return {
+    tokenType: 'Bearer',
+    accessToken: `mock-access.${user.userId}.${now + ACCESS_TTL_S * 1000}.${tokenSeq}`,
+    accessTokenExpiresIn: ACCESS_TTL_S,
+    refreshToken: `mock-refresh.${user.userId}.${now + REFRESH_TTL_S * 1000}.${tokenSeq}`,
+    refreshTokenExpiresIn: REFRESH_TTL_S,
+  };
+}
+
+/** 'mock-access.<userId>.<만료>.<번호>' 을 읽는다. 형식이 틀렸거나 만료됐으면 null */
+function readToken(token: string, kind: 'access' | 'refresh'): number | null {
+  const [prefix, userId, expiresAt] = token.split('.');
+  if (prefix !== `mock-${kind}` || Number(expiresAt) <= Date.now()) return null;
+  const id = Number(userId);
+  return Number.isInteger(id) ? id : null;
+}
+
+function me(user: MockUser) {
+  return {
+    userId: user.userId,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt,
+  };
+}
+
+const json = (body: JsonBodyType, status = 200) => HttpResponse.json(body, { status });
+
 export function createHandlers({ forceScenario }: { forceScenario?: MockScenario } = {}) {
   return [
+    // ── 로그인 (백엔드 AuthController 와 같은 규칙) ──
+    http.post(api('/auth/google'), async ({ request }) => {
+      const body = (await request.json().catch(() => null)) as { idToken?: string } | null;
+      if (!body?.idToken?.trim()) {
+        return json(
+          failure('COMMON400_1', '입력값이 올바르지 않습니다.', { idToken: '공백일 수 없습니다' }),
+          400,
+        );
+      }
+      const account = accountFromIdToken(body.idToken);
+      if (!account) return json(failure('AUTH401_1', 'Google 인증 정보가 올바르지 않습니다.'), 401);
+      if (!account.emailVerified) {
+        return json(failure('AUTH401_2', 'Google 계정 이메일이 인증되지 않았습니다.'), 401);
+      }
+      await delay();
+      const { user, newUser } = mockDb.signIn(account);
+      return json(ok({ tokens: issueTokens(user), user: me(user), newUser }));
+    }),
+
+    http.post(api('/auth/refresh'), async ({ request }) => {
+      const body = (await request.json().catch(() => null)) as { refreshToken?: string } | null;
+      const token = body?.refreshToken ?? '';
+      const userId = readToken(token, 'refresh');
+      const user = userId === null ? undefined : mockDb.findUser(userId);
+      if (!user || !mockDb.useRefreshToken(token)) {
+        return json(failure('AUTH401_3', 'refresh token이 올바르지 않거나 만료됐습니다.'), 401);
+      }
+      return json(ok(issueTokens(user)));
+    }),
+
+    http.post(api('/auth/logout'), async ({ request }) => {
+      const body = (await request.json().catch(() => null)) as { refreshToken?: string } | null;
+      if (body?.refreshToken) mockDb.useRefreshToken(body.refreshToken);
+      return json(ok());
+    }),
+
+    http.get(api('/users/me'), ({ request }) => {
+      const header = request.headers.get('Authorization') ?? '';
+      if (!header.startsWith('Bearer ')) {
+        return json(failure('COMMON401', '인증이 필요합니다.'), 401);
+      }
+      const userId = readToken(header.slice('Bearer '.length), 'access');
+      if (userId === null) {
+        return json(failure('COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.'), 401);
+      }
+      const user = mockDb.findUser(userId);
+      if (!user) return json(failure('USER404_1', '사용자를 찾을 수 없습니다.'), 404);
+      return json(ok(me(user)));
+    }),
+
     http.post(api('/api/trip-requests'), async ({ request }) => {
       const body = (await request.json()) as Schemas['CreateTripRequestBody'];
       if (!body?.message?.trim()) {
