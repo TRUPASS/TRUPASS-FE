@@ -22,7 +22,7 @@ export function StyleGuidePage() {
         <p className="t-lg c2 mw720">
           Trupass 디자인 기준 3차, 2026.11 정리본. 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한
           가지. 색은 사진과 하늘이 맡고, 화면은 넉넉한 모서리와 가는 큰 글자로 부드럽게 정리한다.
-          화면 소스는 docs/design 에 있다.
+          화면은 src/pages 와 src/features, 스타일은 src/styles 에 있다.
         </p>
       </div>
       <LogoSection />

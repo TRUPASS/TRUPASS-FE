@@ -7,7 +7,7 @@ export function MotionSection() {
   return (
     <Section
       title="움직임"
-      desc="스크롤 위치를 0→1 진행도로 바꿔 화면을 움직인다 (src/js/site.js · globe.js)"
+      desc="스크롤 위치를 0→1 진행도로 바꿔 화면을 움직인다 (features/landing/scroll.ts · features/search/globe.ts)"
     >
       <Terms items={MOTIONS} />
     </Section>
