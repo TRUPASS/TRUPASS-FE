@@ -1312,6 +1312,17 @@
   max-width: 420px;
   gap: 28px;
 }
+/* Google 이 그리는 로그인 버튼(iframe)을 담는 칸. 버튼이 뜨기 전에도 자리를 잡아 둔다.
+   안쪽은 Google 이 짜는 요소라 바탕 규칙(div 를 세로 flex 로)을 걸지 않는다 */
+.auth-gsi {
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+:where(.auth-gsi) div {
+  display: block;
+  min-width: auto;
+}
 /* 들어올 때: 구름이 걷히는 동안 하늘 창이 살짝 당겨지고, 내용이 아래에서 차례로 떠오른다 */
 @keyframes settle {
   from {

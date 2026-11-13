@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { routes } from '@/app/routes';
-import { Button, IconButton } from '@/shared/ui/Button';
-import { Icon } from '@/shared/ui/Icon';
+import { AccountMenu, SignOutButton } from '@/features/auth/AccountMenu';
+import { IconButton } from '@/shared/ui/Button';
 import { Logo } from '@/shared/ui/Logo';
 
 // 아직 화면이 없는 메뉴는 주소 없이 이름만 둔다.
@@ -18,10 +18,11 @@ interface AppHeaderProps {
   wide?: boolean;
   /** bare: 메뉴 없이 로고와 로그아웃만 (회원 정보 입력) */
   kind?: 'bare';
+  /** bare 일 때 로그아웃 앞에 보이는 이메일 */
   mail?: string;
 }
 
-/** 상단 바 (앱 화면) */
+/** 상단 바 (앱 화면). 오른쪽 계정 자리는 로그인 상태를 따른다 (AccountMenu) */
 export function AppHeader({ on, wide, kind, mail }: AppHeaderProps) {
   const cls = wide ? 'hdr jb wide' : 'hdr jb';
   if (kind === 'bare') {
@@ -30,9 +31,7 @@ export function AppHeader({ on, wide, kind, mail }: AppHeaderProps) {
         <Logo />
         <div className="row g12">
           <span className="t-sm c3 dt-only">{mail}</span>
-          <Button kind="txt n" size="sm" to={routes.landing}>
-            로그아웃
-          </Button>
+          <SignOutButton />
         </div>
       </header>
     );
@@ -62,12 +61,7 @@ export function AppHeader({ on, wide, kind, mail }: AppHeaderProps) {
       </div>
       <div className="row g8">
         <IconButton icon="notification" kind="txt n" label="알림" />
-        <button type="button" className="me dt-only" aria-label="OO님 계정 메뉴">
-          <span className="av">O</span>
-          <span className="w5">OO님</span>
-          <Icon name="chevron--down" size={16} className="c3" />
-        </button>
-        <IconButton icon="menu" kind="txt n" className="m-only" label="메뉴" />
+        <AccountMenu />
       </div>
     </header>
   );

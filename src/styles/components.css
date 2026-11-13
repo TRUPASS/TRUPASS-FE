@@ -895,6 +895,62 @@ html.leaving .veil::after {
   line-height: 16px;
   font-weight: 600;
 }
+/* 프로필 사진이 있으면 동그라미를 사진으로 채운다 */
+.av img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+/* 계정 메뉴: 로그인하면 상단 바의 계정 단추(모바일은 메뉴 단추)를 눌러 연다. 이름 · 이메일과 로그아웃 */
+.me-wrap {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+}
+.hdr .me-nm {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.me-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: max-content;
+  min-width: 240px;
+  max-width: min(320px, calc(100vw - 2 * var(--gut)));
+  padding: 6px;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: 0 16px 40px -12px rgb(28 31 90 / 0.24);
+}
+.me-who {
+  gap: 2px;
+  padding: 10px 12px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.me-it {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--tx);
+}
+.me-it:hover {
+  background: var(--surface-sub);
+}
 .ftr {
   flex-direction: row;
   align-items: center;

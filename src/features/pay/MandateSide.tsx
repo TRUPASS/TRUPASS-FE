@@ -1,9 +1,11 @@
 import { formatKrw } from '@/shared/lib/format';
+import { useMember } from '@/shared/auth/member';
 import { MANDATE as M, U } from '@/shared/sample/data';
 import { Kv, Note } from '@/shared/ui/Status';
 
 /** 결제 권한 등록의 오른쪽 칸: 서명할 내용(권한 증명서)과 서명이 어떻게 쓰이는지에 대한 안내 */
 export function MandateSide() {
+  const member = useMember();
   return (
     <aside className="two-r">
       <div className="pnl">
@@ -13,9 +15,9 @@ export function MandateSide() {
         </div>
         <div className="pnl-b pnl-kv">
           <Kv k="발급 대상" line={false}>
-            {U.name}
+            {member.name}
             <br />
-            <span className="t-xs c3">{U.mail}</span>
+            <span className="t-xs c3">{member.email}</span>
           </Kv>
           <Kv k="결제수단">{U.card}</Kv>
           <Kv k="1회 한도">{formatKrw(M.per)}</Kv>

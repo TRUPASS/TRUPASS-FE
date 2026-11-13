@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router';
 import { AppFooter } from '@/app/layout/AppFooter';
 import { AppHeader } from '@/app/layout/AppHeader';
 import { routes } from '@/app/routes';
-import { PROMPTS, U } from '@/shared/sample/data';
+import { useMember } from '@/shared/auth/member';
+import { PROMPTS } from '@/shared/sample/data';
 import { Ask, Chips, type AskHandle } from '@/shared/ui/Ask';
 import { BrandSource } from '@/shared/ui/BrandMark';
 import type { BrandKey } from '@/shared/ui/brands';
@@ -18,6 +19,7 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
  */
 export function SearchPage() {
   const navigate = useNavigate();
+  const { nick } = useMember();
   const asks = useRef<(AskHandle | null)[]>([]);
   const last = PROMPTS.length - 1;
 
@@ -30,7 +32,7 @@ export function SearchPage() {
           <div className="lyr" />
           <div className="home-in">
             <div className="home-hd">
-              <h1 className="home-h">{`어디로 떠나볼까요, ${U.nick}님`}</h1>
+              <h1 className="home-h">{`어디로 떠나볼까요, ${nick}님`}</h1>
               <p className="home-p">
                 문장 세 개를 적고 엔터를 누르면 항공권 · 숙소 · 여행 장소를 한 번에 찾습니다.
               </p>

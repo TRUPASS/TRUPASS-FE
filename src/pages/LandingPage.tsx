@@ -8,6 +8,7 @@ import { LandingFooter } from '@/features/landing/LandingFooter';
 import { startLandingScroll, type LandingScroll } from '@/features/landing/scroll';
 import { Services } from '@/features/landing/Services';
 import { Stats } from '@/features/landing/Stats';
+import { useSignedInUser } from '@/shared/auth/member';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { PROMPTS } from '@/shared/sample/data';
 import { Button } from '@/shared/ui/Button';
@@ -21,6 +22,8 @@ export function LandingPage() {
   useBodyClass('lp');
   const { hash } = useLocation();
   const leave = useLeave();
+  // 로그인한 채로 오면 로그인 화면을 거치지 않는다 (로그인 없이 보는 설정에서는 로그인 상태가 늘 없다)
+  const signedIn = useSignedInUser() !== null;
   const scroll = useRef<LandingScroll | null>(null);
 
   useEffect(() => {
@@ -46,9 +49,15 @@ export function LandingPage() {
       <title>문장 세 개로 찾는 여행 | Trupass</title>
       {/* 오른쪽 위에 늘 떠 있는 알약 두 개 */}
       <div className="lp-top">
-        <Button size="sm" to={routes.login}>
-          로그인
-        </Button>
+        {signedIn ? (
+          <Button size="sm" to={routes.search}>
+            새 검색
+          </Button>
+        ) : (
+          <Button size="sm" to={routes.login}>
+            로그인
+          </Button>
+        )}
         <Button
           size="sm"
           arrow
@@ -66,7 +75,11 @@ export function LandingPage() {
         <Stats />
         <HowTo onNext={() => toStage(0)} />
         <Services
-          onSubmit={(i) => (i < PROMPTS.length - 1 ? toStage(i + 1) : leave(routes.login))}
+          onSubmit={(i) =>
+            i < PROMPTS.length - 1
+              ? toStage(i + 1)
+              : leave(signedIn ? routes.searching : routes.login)
+          }
         />
       </main>
       <LandingFooter

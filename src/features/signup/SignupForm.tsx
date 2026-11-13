@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { routes } from '@/app/routes';
+import { afterLogin } from '@/features/auth/next';
 import { U } from '@/shared/sample/data';
 import { Button } from '@/shared/ui/Button';
 import { Checkbox, OptionTile, Radio } from '@/shared/ui/Check';
@@ -26,13 +26,20 @@ const TERMS = [
 const YEARS = Array.from({ length: 2008 - 1940 + 1 }, (_, i) => `${2008 - i}년`);
 const NICK_MAX = 12;
 
+interface SignupFormProps {
+  /** 로그인한 Google 계정의 이메일 (고칠 수 없다) */
+  email: string;
+  /** 닉네임 칸에 처음 채워 둘 값 */
+  nickname: string;
+}
+
 /**
  * 회원 정보 입력 폼. 입력 순서: 이메일(확인) → 닉네임 → 출생 연도 → 성별(선택) → 여행 관심사 → 약관.
- * 칸은 전부 실제 input · select · checkbox · radio 다. 필수 약관에 동의해야 넘어간다.
+ * 칸은 전부 실제 input · select · checkbox · radio 다. 닉네임(2~12자)과 필수 약관을 채워야 넘어간다.
  */
-export function SignupForm() {
+export function SignupForm({ email, nickname }: SignupFormProps) {
   const navigate = useNavigate();
-  const [nick, setNick] = useState(U.nick);
+  const [nick, setNick] = useState(nickname);
   const [interests, setInterests] = useState(['문화 · 예술', '건축 · 도시 산책']);
   const [agreed, setAgreed] = useState(TERMS.map((t) => t.required));
   const full = interests.length >= MAX_INTERESTS;
@@ -42,7 +49,9 @@ export function SignupForm() {
       className="pnl su-form"
       onSubmit={(e) => {
         e.preventDefault();
-        void navigate(routes.searching);
+        // 백엔드에 회원 정보(닉네임 · 출생 연도 · 성별 · 관심사 · 약관 동의)를 받는 API 가 아직 없어 서버로 보내지 않는다.
+        // 가입 자체는 Google 로그인 때 백엔드가 이미 마쳤다. API 가 생기면 여기서 보내고, 실패하면 넘어가지 않는다 (README 의 "로그인")
+        void navigate(afterLogin());
       }}
     >
       <div className="pnl-b g24">
@@ -50,7 +59,7 @@ export function SignupForm() {
           <Input
             id="su-mail"
             type="email"
-            value={U.mail}
+            value={email}
             readOnly
             hinted
             after={<span className="t-xs c3 fn">Google 계정</span>}
@@ -61,6 +70,8 @@ export function SignupForm() {
             <Input
               id="su-nick"
               value={nick}
+              required
+              minLength={2}
               maxLength={NICK_MAX}
               autoComplete="nickname"
               hinted

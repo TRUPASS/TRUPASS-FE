@@ -1,6 +1,7 @@
 import { routes } from '@/app/routes';
 import { formatKrw } from '@/shared/lib/format';
-import { MANDATE as M, PAY, REQ, U, V1, type Leg } from '@/shared/sample/data';
+import { useMember } from '@/shared/auth/member';
+import { MANDATE as M, PAY, REQ, V1, type Leg } from '@/shared/sample/data';
 import { Button } from '@/shared/ui/Button';
 import { Icon } from '@/shared/ui/Icon';
 import { Kv, Status } from '@/shared/ui/Status';
@@ -30,6 +31,7 @@ function CompleteResult() {
 
 /** 이메일 발송: 영수증과 확정서를 가입 때 등록한 이메일로 보냈음을 문서별로 보여 준다 */
 function CompleteEmail() {
+  const { email } = useMember();
   return (
     <section className="pnl">
       <div className="pnl-h jb">
@@ -41,7 +43,7 @@ function CompleteEmail() {
       </div>
       <div className="pnl-b g4">
         <p className="t-md">
-          영수증과 예약 확정서를 <b>{U.mail}</b> 주소로 보냈습니다.
+          영수증과 예약 확정서를 <b>{email}</b> 주소로 보냈습니다.
         </p>
         <p className="t-sm c3">
           가입할 때 등록한 이메일입니다. 메일이 보이지 않으면 스팸함을 확인해 주세요.
