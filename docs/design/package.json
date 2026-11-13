@@ -1,0 +1,23 @@
+{
+  "name": "trupass-design",
+  "private": true,
+  "description": "Trupass 화면 설계 소스(정적 사이트)와 피그마 반영 도구",
+  "type": "module",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "serve": "python3 -m http.server 4173 --directory dist",
+    "deploy": "node src/build.mjs && python3 tools/deploy-vercel.py",
+    "render": "node tools/render.mjs",
+    "test:flow": "node src/build.mjs && node tools/flow-test.mjs",
+    "shots": "node tools/make-shots.mjs && node src/build.mjs",
+    "sheets": "python3 tools/contact-sheets.py",
+    "figma:extract": "node tools/figma/run-extract.mjs",
+    "figma:svg": "node tools/figma/run-svg.mjs --boards --verify",
+    "figma:sim": "node tools/figma/sim.mjs",
+    "figma:plugin": "node tools/figma/to-plugin.mjs && node tools/figma/mock-run.mjs",
+    "figma": "npm run build && npm run render && npm run figma:extract && npm run figma:svg && npm run figma:sim && npm run figma:plugin"
+  },
+  "devDependencies": {
+    "playwright": "^1.50.0"
+  }
+}
