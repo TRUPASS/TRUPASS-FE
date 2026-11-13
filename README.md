@@ -4,7 +4,8 @@ Trupass — "말 한 번으로 떠나고, 결제는 서명 한 번" AI 여행 �
 
 > **화면**은 디자인까지 입혀져 있고, 지금은 예시 데이터로 채워져 있습니다
 > (랜딩 → 로그인 → 회원 정보 → 검색 → 결과 → 장소 → 결제 → 내 여행).
-> **API 연동**은 뼈대가 따로 있습니다 (OpenAPI 타입 생성, MSW Mock, 요청 → 패키지 → 승인 → 진행 상태).
+> **Google 로그인**은 백엔드와 연동되어 있습니다 (아래 [로그인 (Google)](#로그인-google)).
+> **그 밖의 API 연동**은 뼈대가 따로 있습니다 (OpenAPI 타입 생성, MSW Mock, 요청 → 패키지 → 승인 → 진행 상태).
 > 디자인된 화면에 API 를 붙이면서 뼈대 페이지를 하나씩 합쳐 갑니다. 실제 패스키·토스 연동은 아직 없습니다.
 
 ## 5분 온보딩
@@ -26,11 +27,12 @@ pnpm install
 cp .env.example .env.local
 ```
 
-| 키                     | 설명                                                                               |
-| ---------------------- | ---------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL`    | 백엔드(Spring Boot) 주소. 기본 `http://localhost:8080`                             |
-| `VITE_USE_MOCK`        | `true` 면 MSW 가 API 를 가로채 Mock 응답을 돌려줍니다                              |
-| `VITE_TOSS_CLIENT_KEY` | 토스페이먼츠 **클라이언트 키**(공개 키). **시크릿 키는 절대 FE 에 넣지 않습니다.** |
+| 키                      | 설명                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL`     | 백엔드(Spring Boot) 주소. 기본 `http://localhost:8080`                                                                                |
+| `VITE_USE_MOCK`         | `true` 면 MSW 가 API 를 가로채 Mock 응답을 돌려줍니다 (로그인 포함)                                                                   |
+| `VITE_GOOGLE_CLIENT_ID` | Google 로그인 버튼의 OAuth 클라이언트 ID(공개 값). 백엔드 `GOOGLE_OAUTH_CLIENT_IDS` 와 같은 값. 비우면 로그인 없이 화면만 이어 봅니다 |
+| `VITE_TOSS_CLIENT_KEY`  | 토스페이먼츠 **클라이언트 키**(공개 키). **시크릿 키는 절대 FE 에 넣지 않습니다.**                                                    |
 
 `VITE_` 로 시작하는 값은 빌드 결과물(브라우저)에 그대로 노출됩니다. 비밀 값은 넣지 마세요.
 
@@ -173,19 +175,66 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 | 화면 설계 · Tablet 834   | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-8084  |
 | 화면 설계 · Mobile 390   | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-14032 |
 
+## 로그인 (Google)
+
+백엔드(TRUPASS-BE `core`)의 Google 로그인에 맞춰 연동되어 있습니다. 비밀번호는 없고, 처음 로그인하면 그 자리에서 가입됩니다.
+
+```
+로그인 화면 ── Google 로그인 버튼(Google Identity Services) ──▶ ID 토큰
+            ── POST /auth/google {idToken} ──▶ access token(30분) + refresh token(14일) + user + newUser
+newUser = true  → 회원 정보 입력(/signup) → 검색
+newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/search/progress), 없으면 새 검색(/search)
+```
+
+### 로그인 방식 (환경 변수로 정해진다)
+
+| 설정                         | 로그인 버튼                        | 쓰임                                            |
+| ---------------------------- | ---------------------------------- | ----------------------------------------------- |
+| `VITE_GOOGLE_CLIENT_ID` 있음 | Google 의 공식 버튼(iframe)        | 실제 백엔드와 연동                              |
+| `VITE_USE_MOCK=true`         | 디자인의 버튼 → Mock API(MSW)      | 백엔드 없이 개발. 계정은 `traveler@example.com` |
+| 둘 다 없음                   | 디자인의 버튼 → 회원 정보 입력으로 | 로그인 없이 화면만 확인 (지금 Vercel 배포)      |
+
+`VITE_USE_MOCK=true` 가 먼저입니다. Mock 모드에서 처음 로그인하면 가입한 것으로, 그다음부터는 이미 가입한 계정으로 동작합니다(브라우저 저장소에 기억. 개발자 도구에서 `tp.mock.users` 를 지우면 처음으로 돌아갑니다).
+
+### 실제 백엔드와 연결하기
+
+1. Google Cloud Console → API 및 서비스 → 사용자 인증 정보 → **OAuth 2.0 클라이언트 ID(웹 애플리케이션)** 를 백엔드와 같은 것으로 씁니다.
+   **승인된 JavaScript 원본**에 FE 주소를 모두 넣습니다: `http://localhost:5173`, `https://trupass.online`, `https://www.trupass.online` 등.
+   (Google 은 원본을 정확히 맞춰 보므로 매번 주소가 바뀌는 Vercel 미리보기 주소에서는 버튼이 동작하지 않습니다.)
+2. FE `.env.local`(또는 Vercel 환경 변수): `VITE_GOOGLE_CLIENT_ID=<클라이언트 ID>`, `VITE_API_BASE_URL=<백엔드 주소>`, `VITE_USE_MOCK=false`
+3. 백엔드: `GOOGLE_OAUTH_CLIENT_IDS=<같은 클라이언트 ID>`, 운영에서는 `TRUPASS_CORS_ALLOWED_ORIGINS` 에 FE 주소를 넣습니다(로컬은 `http://localhost:5173` 이 기본으로 열려 있습니다).
+
+### 토큰과 로그인 상태
+
+- 토큰 쌍과 사용자는 `localStorage` 의 `tp.auth` 에 둡니다 (`src/shared/auth/session.ts`). 탭을 닫았다 열어도 로그인이 이어지고, 다른 탭의 로그인 · 로그아웃을 따라갑니다.
+- API 호출(`apiClient`)은 `Authorization: Bearer {accessToken}` 을 자동으로 붙입니다 (`src/shared/auth/authFetch.ts`).
+  access token 이 만료되면(또는 401 을 받으면) `POST /auth/refresh` 로 새 쌍을 받아 같은 요청을 한 번 더 보냅니다.
+  refresh token 은 한 번만 쓸 수 있어서(다시 쓰면 백엔드가 그 사람의 토큰을 모두 폐기한다) 동시에 여러 요청이 만료돼도 한 번만 바꾸고, 다른 탭과는 Web Locks 로 차례를 맞춥니다.
+- refresh token 까지 거절되면 로그인 상태를 지웁니다. 앱을 열 때 `GET /users/me` 로 로그인이 유효한지 확인하고 이름 · 사진을 최신으로 맞춥니다 (`src/app/SessionSync.tsx`).
+- 로그아웃은 상단 바의 계정 메뉴(모바일은 메뉴 단추)와 회원 정보 입력 화면의 [로그아웃]에 있습니다. `POST /auth/logout` 으로 refresh token 을 폐기합니다.
+- 로그인해야 볼 수 있는 화면은 지금 회원 정보 입력 하나입니다(`RequireSession`). 검색 · 결제 화면은 아직 예시 데이터라 막지 않았고, API 를 붙일 때 같은 컴포넌트로 감쌉니다.
+
+### 백엔드에 아직 없는 것
+
+- **회원 정보(닉네임 · 출생 연도 · 성별 · 관심사 · 약관 동의)를 받는 API 가 없습니다.** 지금은 회원 정보 입력 화면에서 확인만 하고 서버로 보내지 않습니다(`SignupForm` 의 제출 부분).
+  예를 들어 `PATCH /users/me {nickname, birthYear, gender, interests[], agreements}` 가 생기면 그곳에서 보내면 됩니다.
+- **회원 정보를 입력했는지 알 수 있는 값이 없습니다.** `newUser` 는 처음 로그인한 그 한 번만 `true` 라서, 회원 정보 입력을 마치지 않고 나가면 다시 그 화면으로 오지 않습니다.
+  `GET /users/me` 에 `profileCompleted` 같은 값이 생기면 그것으로 회원 정보 입력에 보낼지 정하는 것이 맞습니다.
+
 ## 테스트
 
 - `pnpm test` — Vitest 로 단위 · 컴포넌트 테스트를 돌립니다. CI 에서도 돕니다.
-- `pnpm test:flow` — 앱을 빌드해 미리보기 서버로 띄우고, Playwright 로 랜딩부터 결제 완료 · 내 여행까지 실제 브라우저에서 눌러 봅니다
+- `pnpm test:flow` — 앱을 Google 로그인을 켠 설정으로 빌드(`dist-flow`)해 미리보기 서버로 띄우고, Playwright 로 랜딩부터 Google 로그인 · 회원 정보 입력 · 결제 완료 · 내 여행까지 실제 브라우저에서 눌러 봅니다.
+  Google 과 백엔드는 검사 스크립트가 브라우저 안에서 대신 응답합니다(`scripts/flow/`: 백엔드 코드와 같은 규칙. 처음 가입, 이미 가입한 계정, 거절, 토큰 재발급, 로그아웃)
   (마우스 · 키보드 · 터치 · 움직임 줄이기). 1분 반쯤 걸리고 CI 에는 넣지 않았습니다. 화면의 동작을 고쳤다면 올리기 전에 돌려 주세요.
   처음 한 번은 브라우저를 받아야 합니다: `pnpm exec playwright install chromium`
-  이미 떠 있는 서버를 검사하려면 `node scripts/flow-test.mjs --base=http://localhost:5173` 처럼 주소를 줍니다.
+  이미 떠 있는 서버를 검사하려면 `node scripts/flow-test.mjs --base=http://localhost:5173` 처럼 주소를 줍니다. 그 서버도 `scripts/flow-test.mjs` 의 `FLOW_ENV` 와 같은 환경 변수로 띄운 것이어야 합니다.
 
 ## API 타입
 
 API 타입은 손으로 쓰지 않고 OpenAPI 스펙에서 **생성**합니다.
 
-- 지금은 백엔드가 없어 `openapi/trupass.yaml` 에 최소 초안 스펙을 둡니다.
+- 지금은 `openapi/trupass.yaml` 에 스펙을 둡니다. 로그인 · 사용자(`/auth/*`, `/users/me`)는 백엔드 코드에 맞춰 적었고, 나머지(`/api/...`)는 FE 가 먼저 쓴 초안입니다(백엔드에는 아직 없고, 백엔드 경로에는 `/api` 가 붙지 않습니다).
 - 백엔드가 준비되면 `pnpm gen:api --remote` 로 생성하고, 필요하면 `openapi/trupass.yaml` 을 백엔드 스펙으로 교체합니다.
 - 호출은 `src/shared/api/client.ts` 의 `apiClient`(openapi-fetch)로 하고, 쿼리 훅은 `src/shared/api/queries/` 에 둡니다.
 - 스펙을 바꾸면 `src/mocks/handlers.ts` 의 Mock 도 함께 맞춰주세요.
@@ -199,14 +248,15 @@ API 타입은 손으로 쓰지 않고 OpenAPI 스펙에서 **생성**합니다.
 
 ```
 src/
-├── app/        # App, router, routes, providers(QueryClient)
+├── app/        # App, router, routes, providers(QueryClient), SessionSync(앱을 열 때 로그인 확인)
 │   └── layout/ # DesignLayout(디자인된 화면의 틀), AppHeader, AppFooter, 화면 전환
 ├── pages/      # 라우트 단위 페이지 (조립만 합니다)
 ├── features/   # 기능별 컴포넌트·훅
-│               #   화면: landing, signup, search, results, places, pay, trips, styleguide
+│               #   화면: landing, auth(Google 로그인 · 계정 메뉴), signup, search, results, places, pay, trips, styleguide
 │               #   API 뼈대: chat, packages, approval, checkout
 ├── shared/
-│   ├── api/    # client.ts, schema.d.ts(생성물), queries/
+│   ├── api/    # client.ts, auth.ts(로그인 · 로그아웃 · 내 정보), schema.d.ts(생성물), queries/
+│   ├── auth/   # 로그인 상태(session), 토큰을 붙이고 바꾸는 fetch(authFetch), 로그인 방식(mode)
 │   ├── lib/    # env, format, cx, prompts(적어 둔 검색 문장), passkey(스텁), toss(스텁)
 │   ├── sample/ # 화면을 채우는 예시 데이터
 │   └── ui/     # 공용 컴포넌트
@@ -216,6 +266,7 @@ src/
 └── test/       # Vitest setup, MSW node server
 scripts/
 ├── flow-test.mjs  # 흐름 검사 (pnpm test:flow)
+├── flow/          # 흐름 검사가 쓰는 가짜 Google 로그인 스크립트와 가짜 백엔드
 ├── gen-api.mjs    # API 타입 생성 (pnpm gen:api)
 └── logo/          # 로고 원본과 로고 · 파비콘 생성 스크립트
 ```
@@ -227,8 +278,8 @@ Vercel GitHub 연동으로 배포합니다 (CI 워크플로에는 포함하지 �
 1. Vercel 대시보드 → **Add New → Project** → `TRUPASS/TRUPASS-FE` 저장소 Import
 2. Framework Preset: **Vite** (Install `pnpm install`, Build `pnpm build`, Output `dist`).
    프리셋은 `vercel.json` 의 `framework` 로도 고정해 두어, 대시보드 설정이 비어 있어도 `dist` 를 찾습니다.
-3. **Settings → Environment Variables** 에 `VITE_API_BASE_URL`, `VITE_USE_MOCK`, `VITE_TOSS_CLIENT_KEY` 등록
-   (Preview 환경은 `VITE_USE_MOCK=true` 로 두면 백엔드 없이도 프리뷰 확인 가능)
+3. **Settings → Environment Variables** 에 `VITE_API_BASE_URL`, `VITE_USE_MOCK`, `VITE_GOOGLE_CLIENT_ID`, `VITE_TOSS_CLIENT_KEY` 등록
+   (Preview 환경은 `VITE_USE_MOCK=true` 로 두면 백엔드 없이도 프리뷰 확인 가능. 지금은 하나도 등록되어 있지 않아 로그인 없이 화면만 이어 봅니다)
 4. **Settings → General → Node.js Version** 을 26.x 로 설정
 5. 이후 PR 마다 프리뷰 URL 이 생성되고 `main` 머지 시 프로덕션에 배포됩니다.
 
