@@ -1,12 +1,13 @@
 import type { MouseEventHandler } from 'react';
 import { Link } from 'react-router';
+import { cx } from '@/shared/lib/cx';
 import { LOGO } from './logoPaths';
 
 /** 색 조합: 흰 바탕은 남색 + 하늘색, inv 는 사진 · 색 면 위의 흰색, duo 는 남색 면 위의 흰색 + 하늘색 */
 export type LogoVariant = 'default' | 'inv' | 'duo';
 
 const width = (size: number, w: number) => Math.round(((size * w) / LOGO.h) * 10) / 10;
-const variantClass = (v: LogoVariant) => (v === 'default' ? '' : v === 'duo' ? ' inv duo' : ' inv');
+const variantClass = (v: LogoVariant) => (v === 'default' ? null : v === 'duo' ? 'inv duo' : 'inv');
 
 /** 마크만. size 는 높이(px)이고 폭은 비율대로 정해진다. */
 export function LogoMark({
@@ -18,7 +19,7 @@ export function LogoMark({
 }) {
   return (
     <svg
-      className={`mark${variantClass(variant)}`}
+      className={cx('mark', variantClass(variant))}
       width={width(size, LOGO.mw)}
       height={size}
       viewBox={`0 0 ${LOGO.mw} ${LOGO.h}`}
@@ -68,7 +69,12 @@ export function Logo({
   onClick,
 }: LogoProps) {
   return (
-    <Link className={`logo${variantClass(variant)}`} to={to} aria-label={label} onClick={onClick}>
+    <Link
+      className={cx('logo', variantClass(variant))}
+      to={to}
+      aria-label={label}
+      onClick={onClick}
+    >
       <LogoMark size={size} />
       <Wordmark size={size} />
     </Link>

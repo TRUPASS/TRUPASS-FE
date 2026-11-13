@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { cx } from '@/shared/lib/cx';
 import { Button } from './Button';
 import { Icon } from './Icon';
 
@@ -88,7 +89,7 @@ export function Dock({
   return (
     <div
       ref={root}
-      className={`dock${state.up ? 'up' : ''}${state.moved ? (state.up ? 'lift' : 'drop') : ''}`}
+      className={cx('dock', state.up && 'up', state.moved && (state.up ? 'lift' : 'drop'))}
       // 마우스로 가리킬 때만 따라 올라온다 (터치는 누른 것으로만 판단한다)
       onPointerEnter={(e) => {
         if (e.pointerType !== 'mouse') return;

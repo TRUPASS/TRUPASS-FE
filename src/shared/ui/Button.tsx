@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, MouseEventHandler, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
@@ -14,17 +14,14 @@ interface Look {
   iconSize?: number;
   /** 끝에 동그란 화살표를 붙인다. true 면 오른쪽 위를 가리키는 화살표, 아이콘 이름을 주면 그 아이콘 */
   arrow?: boolean | IconName;
+  onClick?: MouseEventHandler<HTMLElement>;
   children?: ReactNode;
 }
-type AsLink = Look & { to: string } & Omit<
-    ComponentProps<typeof Link>,
-    'to' | 'className' | 'children'
-  >;
-type AsAnchor = Look & { href: string } & Omit<
-    ComponentProps<'a'>,
-    'href' | 'className' | 'children'
-  >;
-type AsButton = Look & Omit<ComponentProps<'button'>, 'className' | 'children'>;
+// 모양을 정하는 속성과 클릭 핸들러는 위에서 받고, 나머지는 실제로 그려지는 요소의 속성을 그대로 넘긴다
+type Own = 'className' | 'children' | 'onClick';
+type AsLink = Look & { to: string } & Omit<ComponentProps<typeof Link>, 'to' | Own>;
+type AsAnchor = Look & { href: string } & Omit<ComponentProps<'a'>, 'href' | Own>;
+type AsButton = Look & Omit<ComponentProps<'button'>, Own>;
 
 /**
  * 버튼. `to` 를 주면 그 화면으로 가는 링크, `href` 를 주면 일반 링크, 둘 다 없으면 button 이다.
@@ -73,12 +70,10 @@ interface IconLook {
   size?: 'sm' | 'lg';
   className?: string;
   iconSize?: number;
+  onClick?: MouseEventHandler<HTMLElement>;
 }
-type IconAsLink = IconLook & { to: string } & Omit<
-    ComponentProps<typeof Link>,
-    'to' | 'className' | 'children'
-  >;
-type IconAsButton = IconLook & Omit<ComponentProps<'button'>, 'className' | 'children'>;
+type IconAsLink = IconLook & { to: string } & Omit<ComponentProps<typeof Link>, 'to' | Own>;
+type IconAsButton = IconLook & Omit<ComponentProps<'button'>, Own>;
 
 /** 아이콘만 있는 버튼 */
 export function IconButton(props: IconAsLink | IconAsButton) {
