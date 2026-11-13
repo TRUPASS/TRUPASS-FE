@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { toSvg, toBoard } from './to-svg.mjs';
 import { chromium, BP } from '../render.mjs';
 import { pixelDiff } from './pixel-diff.mjs';
+import { LOGO } from '../../src/lib/logo.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const build = join(root, '.figma-build');
@@ -56,6 +57,38 @@ if (args.includes('--boards')) {
   }
   const fd = join(build, 'tree/d/00-foundations.json');
   if (existsSync(fd)) { const svg = toSvg(load('d', '00-foundations'), assets, build); writeFileSync(join(dir, `Trupass 디자인 기준 ${BOARD.ver}.svg`), svg); console.log(`board foundations: ${(svg.length / 1048576).toFixed(2)} MB`); }
+}
+
+// 로고 보드: 화면에 쓰는 것과 같은 경로(src/lib/logo.mjs)로 색 조합 세 가지, 마크 크기, 파비콘, 두 색을 한 장에 놓는다
+function logoBoard(title, sub) {
+  const NAVY = '#1a1a5c', SKY = '#2285cf', INK = '#1c1f5a', BLUE = '#2b8fd9', WHITE = '#ffffff';
+  const text = (x, y, str, size, wt, fill = '#4f565f') => `<text font-family="Gothic A1" font-size="${size}" font-weight="${wt}" fill="${fill}" xml:space="preserve"><tspan x="${x}" y="${y}">${str}</tspan></text>`;
+  const r1 = v => Math.round(v * 10) / 10;
+  // 높이 h 로 그린 로고 · 마크 (왼쪽 위가 x, y). word 가 false 면 마크만
+  const draw = (x, y, h, a, b, word = true) => {
+    const vw = word ? LOGO.w : LOGO.mw;
+    return `<svg x="${r1(x)}" y="${r1(y)}" width="${r1(h * vw / LOGO.h)}" height="${h}" viewBox="0 0 ${vw} ${LOGO.h}"><path fill="${a}" d="${LOGO.a}${word ? LOGO.t : ''}"/><path fill="${b}" d="${LOGO.b}"/></svg>`;
+  };
+  const TW = 480, TH = 220, GAP = 40, PAD = 120;
+  const tile = (i, row, fill, label, inner) => {
+    const x = PAD + i * (TW + GAP), y = 240 + row * (TH + 110);
+    return `<g><rect x="${x}" y="${y}" width="${TW}" height="${TH}" rx="24" fill="${fill}"${fill === WHITE ? ' stroke="#dfe2ec"' : ''}/>${inner(x, y)}${text(x, y + TH + 38, label, 20, 500)}</g>`;
+  };
+  const lockup = (a, b) => (x, y) => draw(x + (TW - 64 * LOGO.w / LOGO.h) / 2, y + (TH - 64) / 2, 64, a, b);
+  const MARKS = [96, 48, 32, 16], mwOf = h => h * LOGO.mw / LOGO.h;
+  const marks = (x, y) => { let cx = x + (TW - MARKS.reduce((a, h) => a + mwOf(h), 0) - 32 * (MARKS.length - 1)) / 2; return MARKS.map(h => { const g = draw(cx, y + (TH - h) / 2, h, NAVY, SKY, false); cx += mwOf(h) + 32; return g; }).join(''); };
+  const icons = (x, y) => { let cx = x + (TW - 96 - 48 - 32 - 16 - 40 * 3) / 2; return [96, 48, 32, 16].map(sz => { const mw = sz * 0.94, mh = mw * LOGO.h / LOGO.mw; const g = `<rect x="${cx}" y="${r1(y + (TH - sz) / 2)}" width="${sz}" height="${sz}" rx="${r1(sz * 0.18)}" fill="${WHITE}" stroke="#dfe2ec"/>` + draw(cx + (sz - mw) / 2, y + (TH - mh) / 2, r1(mh), NAVY, SKY, false); cx += sz + 40; return g; }).join(''); };
+  const chips = (x, y) => [[NAVY, '남색 #1A1A5C'], [SKY, '하늘색 #2285CF']].map(([c, n], i) => `<rect x="${x + 48 + i * 200}" y="${y + 44}" width="168" height="96" rx="16" fill="${c}"/>` + text(x + 48 + i * 200, y + 176, n, 18, 500, INK)).join('');
+  const body = tile(0, 0, WHITE, '흰 바탕: 남색 + 하늘색', lockup(NAVY, SKY)) + tile(1, 0, INK, '남색 면: 흰색 + 하늘색', lockup(WHITE, SKY)) + tile(2, 0, BLUE, '사진 · 색 면: 흰색', lockup(WHITE, WHITE))
+    + tile(0, 1, WHITE, `마크 (높이 ${MARKS.join(' · ')})`, marks) + tile(1, 1, WHITE, '파비콘 (96 · 48 · 32 · 16)', icons) + tile(2, 1, WHITE, '색', chips);
+  const W = PAD * 2 + TW * 3 + GAP * 2, H = 240 + TH * 2 + 110 + 38 + PAD;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#eef0f6"/>${text(PAD, 104, title, 44, 600, INK)}${text(PAD, 152, sub, 22, 400)}${body}</svg>\n`;
+}
+if (args.includes('--boards')) {
+  const name = `Trupass 로고 ${BOARD.ver}`;
+  const svg = logoBoard(name, `${BOARD.date} · 팀이 만든 로고를 벡터로 옮긴 것. 화면과 같은 도형이며 파일은 docs/design/assets/logo 에 있다.`);
+  writeFileSync(join(build, 'boards', name + '.svg'), svg);
+  console.log(`board logo: ${(svg.length / 1024).toFixed(1)} KB`);
 }
 
 if (verify) {

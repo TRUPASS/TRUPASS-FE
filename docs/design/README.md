@@ -180,16 +180,18 @@ npm run test:flow           # 랜딩부터 결제 완료 · 내 여행까지 실
 
 ### 팀 공유용 임시배포
 
-`dist/`를 깃 연동 없이 Vercel에 그대로 올린다. 토큰은 vercel.com의 Account Settings > Tokens 에서 만든다.
+`dist/`를 빌드 없이 Vercel에 그대로 올린다. 토큰은 vercel.com의 Account Settings > Tokens 에서 만든다.
 
 ```bash
 node src/build.mjs
-VERCEL_TOKEN=<토큰> python3 tools/deploy-vercel.py --name trupass-preview --team <팀 id 또는 slug> --public
+VERCEL_TOKEN=<토큰> python3 tools/deploy-vercel.py --name <Vercel 프로젝트 이름> --team <팀 id 또는 slug>
 ```
 
 - 첫 주소(`/`)는 랜딩으로 보내고, 모든 응답에 `X-Robots-Tag: noindex`를 붙여 검색에 잡히지 않게 한다.
+- 그 이름의 프로젝트가 없으면 올리지 않고 멈춘다. 새로 만들 때만 `--create`를 붙인다. Vercel에서 프로젝트 이름을 바꾼 뒤 예전 이름으로 올리면 같은 이름의 프로젝트가 하나 더 생기기 때문이다.
+- 빌드 설정(Framework Preset)이 있는 프로젝트에는 올리지 않는다. 깃 저장소와 연결된 프로젝트에 올리면, 깃 배포가 성공하는 순간 그 배포가 이 배포를 대신한다.
 - `--public`은 프로젝트의 배포 보호(Vercel 로그인 요구)를 끈다. 주소를 아는 사람은 누구나 볼 수 있다.
-- 지금 올라가 있는 임시배포: https://trupass-preview.vercel.app — 내리려면 Vercel에서 `trupass-preview` 프로젝트를 지운다.
+- 지금 올라가 있는 곳: https://trupass-preview.vercel.app (Vercel 프로젝트 이름은 `trupass`).
 
 배경 사진과 지구본 데이터를 다시 만들 때는 `tools/make-bg.py`(원본 사진 폴더 필요)와 `tools/gen-geo.mjs`를 쓴다. 원본 출처는 `assets/CREDITS.md`에 있다.
 
@@ -204,24 +206,24 @@ python3 tools/fetch-airline-logos.py                     # assets/brands/*.svg (
 
 ## 피그마 반영 상태
 
-피그마 파일에는 **지금 배포된 사이트(4차) 기준 보드**가 올라가 있다. 폭마다 한 장이고, 첫 줄은 랜딩이 스크롤을 따라 지나는 자리 10곳, 둘째 줄은 로그인부터 내 여행까지다.
+피그마 파일에는 **지금 배포된 사이트(새 로고) 기준 보드 v5**가 올라가 있다. 화면 보드는 폭마다 한 장이고, 첫 줄은 랜딩이 스크롤을 따라 지나는 자리 10곳, 둘째 줄은 로그인부터 내 여행까지다. 로고 보드에는 색 조합 세 가지와 마크 크기, 파비콘, 두 색이 있다.
 
 | 보드 | 링크 |
 | --- | --- |
-| Trupass 디자인 기준 v4 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-161 |
-| Trupass 화면 설계 v4 · Desktop 1440 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-1933 |
-| Trupass 화면 설계 v4 · Tablet 834 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-8183 |
-| Trupass 화면 설계 v4 · Mobile 390 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=93-14131 |
-| Trupass 로고 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=42-161 |
+| Trupass 로고 v5 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-2 |
+| Trupass 디자인 기준 v5 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-65 |
+| Trupass 화면 설계 v5 · Desktop 1440 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-1834 |
+| Trupass 화면 설계 v5 · Tablet 834 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-8084 |
+| Trupass 화면 설계 v5 · Mobile 390 | https://www.figma.com/design/zew1dl0LBSUY6N2QHFZmUT/Trupass?node-id=143-14032 |
 
-같은 페이지에 예전 보드(리디자인 1차 · v2)가 그대로 남아 있다. 아래의 올리는 경로로는 이미 있는 노드를 고치거나 지울 수 없어서, 필요 없으면 피그마에서 직접 지운다.
+같은 페이지에 예전 보드(리디자인 1차 · v2 · v4와 예전 로고 보드)가 그대로 남아 있고, 거기에는 예전 로고가 들어 있다. 아래의 올리는 경로로는 이미 있는 노드를 고치거나 지울 수 없어서, 필요 없으면 피그마에서 직접 지운다.
 
 ### 보드를 만들고 올리는 순서
 
 ```bash
 npm run build && npm run render     # dist/ 와 preview/{d,t,m}/*.png (검증에서 견주는 그림)
 npm run figma:extract               # 화면 → 노드 트리 (.figma-build/tree), 구운 배경 · 지구본 그림 (.figma-build/raster)
-npm run figma:svg                   # 트리 → SVG, 보드 4장 (.figma-build/boards), 화면 렌더와 화소 비교
+npm run figma:svg                   # 트리 → SVG, 화면 · 디자인 기준 · 로고 보드 5장 (.figma-build/boards), 화면 렌더와 화소 비교
 ```
 
 - 추출(`tools/figma/extract.mjs`)은 화면을 실제 브라우저로 열어 요소의 자리 · 색 · 글자를 잰다. 랜딩은 정해 둔 스크롤 자리마다 한 장씩 뽑는다. 좌표는 1배율 화면에서 재고, 굽는 그림만 2배율로 뜬다.
