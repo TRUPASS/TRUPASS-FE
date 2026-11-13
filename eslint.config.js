@@ -8,7 +8,13 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   {
-    ignores: ['dist', 'coverage', 'public/mockServiceWorker.js', 'src/shared/api/schema.d.ts'],
+    ignores: [
+      'dist',
+      'dist-flow',
+      'coverage',
+      'public/mockServiceWorker.js',
+      'src/shared/api/schema.d.ts',
+    ],
   },
   {
     files: ['**/*.{ts,tsx}'],

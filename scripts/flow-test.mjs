@@ -1,29 +1,45 @@
-// 빌드한 앱을 실제 브라우저로 열어 랜딩부터 결제 완료 · 내 여행까지 눌러 본다 (움직임을 켠 채로).
+// 앱을 빌드해 실제 브라우저로 열고 랜딩부터 Google 로그인 · 회원 정보 입력 · 결제 완료 · 내 여행까지 눌러 본다 (움직임을 켠 채로).
 // 마우스 · 키보드 · 터치 · 움직임 줄이기 네 가지 환경을 본다. 실패가 하나라도 있으면 종료 코드 1.
 //
-//   pnpm test:flow                              # 빌드한 뒤 미리보기 서버를 띄워 검사한다
-//   node scripts/flow-test.mjs --base=<주소>     # 이미 떠 있는 서버(예: pnpm dev)를 검사한다
+//   pnpm test:flow                              # 흐름 검사용으로 빌드(dist-flow)한 뒤 미리보기 서버를 띄워 검사한다
+//   node scripts/flow-test.mjs --base=<주소>     # 이미 떠 있는 서버를 검사한다 (아래 FLOW_ENV 와 같은 설정으로 띄운 것)
 //
+// Google 로그인은 진짜 Google 과 백엔드 대신 이 스크립트가 브라우저 안에서 응답한다 (scripts/flow/).
 // 브라우저가 없으면 먼저 `pnpm exec playwright install chromium` 을 한 번 실행한다.
 import { chromium } from 'playwright';
 import * as vite from 'vite';
+import { createFakeBackend } from './flow/fake-backend.mjs';
+import { FAKE_GSI } from './flow/fake-google.mjs';
 
 const arg = (k) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || '').slice(k.length + 3);
 
-// 빌드 결과(dist)를 미리보기 서버로 띄우고 주소를 돌려준다
+// 흐름 검사용 빌드 설정: Google 로그인을 켜고, 백엔드 주소는 가짜 백엔드가 가로챌 곳으로 둔다.
+// 이미 있는 환경 변수가 .env 파일보다 먼저이므로, 개발자의 .env.local 과 상관없이 같은 빌드가 나온다.
+const FLOW_ENV = {
+  VITE_USE_MOCK: 'false',
+  VITE_API_BASE_URL: 'http://localhost:8080',
+  VITE_GOOGLE_CLIENT_ID: 'flow-test.apps.googleusercontent.com',
+};
+const OUT_DIR = 'dist-flow';
+
+// 빌드하고 미리보기 서버로 띄워 주소를 돌려준다
 async function startPreview(port = 4319) {
+  Object.assign(process.env, FLOW_ENV);
+  await vite.build({ logLevel: 'error', build: { outDir: OUT_DIR, emptyOutDir: true } });
   try {
     const preview = await vite.preview({
       logLevel: 'error',
+      build: { outDir: OUT_DIR },
       preview: { port, strictPort: true, host: '127.0.0.1' },
     });
     return { base: `http://127.0.0.1:${port}`, stop: () => preview.close() };
   } catch (error) {
-    throw new Error('미리보기 서버가 뜨지 않았다. 먼저 pnpm build 를 실행한다.', { cause: error });
+    throw new Error(`미리보기 서버가 ${port} 포트에 뜨지 않았다.`, { cause: error });
   }
 }
 
 const server = arg('base') ? { base: arg('base'), stop() {} } : await startPreview();
+const backend = createFakeBackend();
 const url = (path) => server.base + path;
 const browser = await chromium.launch();
 const errs = [];
@@ -34,6 +50,11 @@ const ok = (name, cond, extra = '') => {
 };
 const open = async (opts) => {
   const ctx = await browser.newContext(opts);
+  // Google 로그인 스크립트와 백엔드 대신 응답한다 (컨텍스트마다 저장소는 따로, 가짜 백엔드의 가입 기록은 함께 쓴다)
+  await ctx.route('https://accounts.google.com/gsi/client', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE_GSI }),
+  );
+  await ctx.route(`${FLOW_ENV.VITE_API_BASE_URL}/**`, (route) => backend.handle(route));
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message));
   return { ctx, page };
@@ -185,14 +206,42 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     rc[0].includes('부산에서 오사카') && rc[2].includes('유니버설'),
     JSON.stringify(rc),
   );
+  await page.waitForSelector('.auth-gsi .fake-gsi', { timeout: 4000 }).catch(() => {});
+  const gsi = await page.evaluate(() => ({
+    slots: document.querySelectorAll('.auth-card .auth-gsi').length,
+    buttons: document.querySelectorAll('.auth-card a, .auth-card button').length,
+    init: window.__gsi && window.__gsi.initialize,
+    look: window.__gsi && window.__gsi.renderButton.at(-1),
+  }));
   ok(
-    '로그인: 버튼은 Google 계정으로 계속하기 하나다',
-    (await page.evaluate(
-      () => document.querySelectorAll('.auth-card a, .auth-card button').length,
-    )) === 1,
+    '로그인: Google 의 로그인 버튼 하나만 그린다 (계속하기 · 둥근 모양 · 한국어)',
+    gsi.slots === 1 &&
+      gsi.buttons === 1 &&
+      gsi.init.length === 1 &&
+      gsi.init[0].client_id === FLOW_ENV.VITE_GOOGLE_CLIENT_ID &&
+      gsi.look.text === 'continue_with' &&
+      gsi.look.shape === 'pill' &&
+      gsi.look.locale === 'ko',
+    JSON.stringify(gsi),
   );
-  await go(page, '**/signup', () => page.click('.gbtn'), '.su-form');
-  ok('Google 계정으로 계속하기 → 회원 정보 입력', at(page, '/signup'));
+  await go(page, '**/signup', () => page.click('.auth-gsi .fake-gsi'), '.su-form');
+  ok(
+    'Google 계정으로 계속하기 → 처음 온 계정이라 백엔드가 가입시키고 회원 정보 입력으로 간다',
+    at(page, '/signup') && backend.calls.includes('POST /auth/google'),
+    backend.calls.join(', '),
+  );
+  const filled = await page.evaluate(() => ({
+    mail: document.querySelector('#su-mail').value,
+    nick: document.querySelector('#su-nick').value,
+    header: document.querySelector('.hdr').textContent,
+  }));
+  ok(
+    '회원 정보 입력: 로그인한 Google 계정의 이메일과 이름으로 채운다',
+    filled.mail === 'traveler@example.com' &&
+      filled.nick === '여행자' &&
+      filled.header.includes('traveler@example.com'),
+    JSON.stringify(filled),
+  );
   await page.waitForTimeout(1400);
   const ALL = '.su-form .pnl-b.g10 > .chk';
   const term = (i) => page.locator('.su-form .term .chk').nth(i);
@@ -604,6 +653,115 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   ok(
     '새 검색: 엔터로 다음 문장 칸에 커서가 간다',
     (await page.evaluate(() => document.activeElement && document.activeElement.name)) === 'stay',
+  );
+  await ctx.close();
+}
+
+/* 6) Google 로그인 연동: 로그인이 필요한 화면 · 거절 · 이미 가입한 계정 · 토큰 재발급 · 로그아웃 */
+{
+  const { ctx, page } = await open(D);
+  const stored = async () =>
+    JSON.parse((await page.evaluate(() => localStorage.getItem('tp.auth'))) || 'null');
+  // 가짜 백엔드가 n 개의 요청을 더 받을 때까지 (최대 3초) 기다린다
+  const settle = async (from, n) => {
+    for (let i = 0; i < 30 && backend.calls.length < from + n; i++) await page.waitForTimeout(100);
+    await page.waitForTimeout(150);
+    return backend.calls.slice(from);
+  };
+
+  await page.goto(url('/signup'));
+  await page.waitForURL('**/login', { timeout: 4000 }).catch(() => {});
+  ok('로그인하지 않고 회원 정보 입력을 열면 로그인 화면으로 간다', at(page, '/login'));
+
+  await page.waitForSelector('.auth-gsi .fake-gsi', { timeout: 4000 }).catch(() => {});
+  await page.evaluate(() => {
+    window.__googleAccount = 'unverified';
+  });
+  await page.click('.auth-gsi .fake-gsi');
+  const refused = await page
+    .waitForSelector('.auth-go [role="alert"]', { timeout: 4000 })
+    .then((el) => el.textContent())
+    .catch(() => '');
+  ok(
+    '백엔드가 거절하면(이메일 미인증) 이유를 보여 주고 로그인 화면에 남는다',
+    at(page, '/login') && /이메일 인증/.test(refused) && (await stored()) === null,
+    refused,
+  );
+
+  await page.evaluate(() => {
+    window.__googleAccount = 'traveler';
+  });
+  await go(page, '**/search', () => page.click('.auth-gsi .fake-gsi'), '.ask');
+  ok(
+    '이미 가입한 계정은 회원 정보 입력을 건너뛰고, 적어 둔 문장이 없으니 새 검색으로 간다',
+    at(page, '/search'),
+  );
+  await page.waitForSelector('.hdr .me', { timeout: 4000 }).catch(() => {});
+  const me = await page.evaluate(() => document.querySelector('.hdr .me')?.textContent ?? '');
+  ok('상단 바에 로그인한 사람의 이름이 보인다', me.includes('여행자님'), me);
+
+  await page.goto(url('/login'));
+  await page.waitForURL('**/search', { timeout: 4000 }).catch(() => {});
+  ok('이미 로그인한 채로 로그인 화면을 열면 바로 다음 화면으로 간다', at(page, '/search'));
+
+  await page.goto(url('/'));
+  await page.waitForSelector('.lp-top a', { timeout: 4000 }).catch(() => {});
+  const top = await page.evaluate(() =>
+    [...document.querySelectorAll('.lp-top a')].map((a) => a.textContent.trim()).join(' | '),
+  );
+  ok('로그인한 채로 랜딩에 오면 [로그인] 대신 [새 검색]이 보인다', top.startsWith('새 검색'), top);
+
+  // 30분이 지나 access token 이 만료된 뒤 다시 열면: 401 → refresh token 으로 새 쌍 → 다시 묻는다
+  await page.goto(url('/search'));
+  await page.waitForSelector('.hdr .me', { timeout: 4000 }).catch(() => {});
+  await settle(backend.calls.length, 1);
+  const before = await stored();
+  backend.expireAccessTokens();
+  const mark = backend.calls.length;
+  await page.reload();
+  const seq = await settle(mark, 3);
+  const after = await stored();
+  ok(
+    'access token 이 만료되면 refresh token 으로 새 쌍을 받아 같은 요청을 다시 보낸다',
+    seq.join(', ') === 'GET /users/me (토큰), POST /auth/refresh, GET /users/me (토큰)' &&
+      after?.refreshToken !== before.refreshToken &&
+      backend.isRevoked(before.refreshToken),
+    seq.join(' → '),
+  );
+
+  await page.click('.hdr .me');
+  const menu = await page
+    .waitForSelector('.me-menu', { timeout: 2000 })
+    .then((el) => el.textContent())
+    .catch(() => '');
+  await go(
+    page,
+    (u) => u.pathname === '/',
+    () => page.click('.me-menu .me-it'),
+    '.lp-top',
+  );
+  await settle(backend.calls.length, 1);
+  ok(
+    '계정 메뉴의 로그아웃: refresh token 을 폐기하고 이 기기의 로그인을 지운 뒤 랜딩으로 간다',
+    menu.includes('traveler@example.com') &&
+      at(page, '/') &&
+      backend.isRevoked(after.refreshToken) &&
+      (await stored()) === null,
+    menu,
+  );
+
+  // 다른 기기에서 폐기됐거나 14일이 지나 refresh token 도 쓸 수 없으면: 로그인이 풀린다
+  await page.goto(url('/login'));
+  await page.waitForSelector('.auth-gsi .fake-gsi', { timeout: 4000 }).catch(() => {});
+  await go(page, '**/search', () => page.click('.auth-gsi .fake-gsi'), '.ask');
+  backend.expireAccessTokens();
+  backend.revokeAll();
+  await page.reload();
+  await page.waitForSelector('.hdr a[href="/login"]', { timeout: 4000 }).catch(() => {});
+  ok(
+    'refresh token 까지 쓸 수 없으면 로그인이 풀리고 상단 바에 [로그인]이 보인다',
+    (await stored()) === null &&
+      (await page.evaluate(() => !!document.querySelector('.hdr a[href="/login"]'))),
   );
   await ctx.close();
 }

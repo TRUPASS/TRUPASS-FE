@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest",
-    "test:flow": "pnpm build && node scripts/flow-test.mjs",
+    "test:flow": "node scripts/flow-test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:api": "node scripts/gen-api.mjs"
