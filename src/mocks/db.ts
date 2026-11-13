@@ -1,4 +1,5 @@
 import type { MockScenario } from './fixtures/checkout';
+import type { SavedProfile } from './fixtures/profile';
 
 interface MockCheckout {
   packageId: string;
@@ -14,6 +15,8 @@ export interface MockUser {
   email: string;
   name: string;
   createdAt: string;
+  /** 회원 정보 입력에서 저장한 값. 입력을 마치기 전에는 없다 (예전에 저장해 둔 Mock 사용자에도 없다) */
+  profile?: SavedProfile;
 }
 
 /** 브라우저 탭(또는 테스트) 메모리에만 있는 Mock 상태. 새로고침하면 초기화된다. */
@@ -78,6 +81,15 @@ export const mockDb = {
   },
   findUser(userId: number) {
     return allUsers().find((u) => u.userId === userId);
+  },
+  /** 회원 정보를 저장한다 (처음이면 회원 정보 입력을 마친 것이 된다). 백엔드 UserService.updateProfile 과 같다 */
+  saveProfile(userId: number, profile: SavedProfile): MockUser | undefined {
+    const list = allUsers();
+    const user = list.find((u) => u.userId === userId);
+    if (!user) return undefined;
+    user.profile = profile;
+    saveUsers(list);
+    return user;
   },
   /** refresh token 을 한 번 쓴다. 이미 쓴 것이면 false */
   useRefreshToken(token: string): boolean {

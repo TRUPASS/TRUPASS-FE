@@ -5,13 +5,21 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppHeader } from '@/app/layout/AppHeader';
 import { routes } from '@/app/routes';
 import { SignupPage } from '@/pages/SignupPage';
-import { session, sessionFrom } from '@/shared/auth/session';
+import { session, sessionFrom, type SessionUser } from '@/shared/auth/session';
 import { server } from '@/test/server';
 
 vi.mock('@/shared/auth/mode', () => ({ authMode: 'google' }));
 
-const USER = { userId: 3, email: 'harim@example.com', name: '김하림', pictureUrl: null };
-function signIn() {
+// 막 가입해서 회원 정보 입력 전인 사람
+const USER = {
+  userId: 3,
+  email: 'harim@example.com',
+  name: '김하림',
+  pictureUrl: null,
+  nickname: null,
+  profileCompleted: false,
+};
+function signIn(user: SessionUser = USER) {
   session.set(
     sessionFrom(
       {
@@ -20,7 +28,7 @@ function signIn() {
         refreshToken: 'refresh-3',
         refreshTokenExpiresIn: 1_209_600,
       },
-      USER,
+      user,
     ),
   );
 }
@@ -31,6 +39,7 @@ function renderAt(path: string) {
       { path: routes.landing, element: <p>랜딩</p> },
       { path: routes.login, element: <p>로그인 화면</p> },
       { path: routes.search, element: <AppHeader on="새 검색" /> },
+      { path: routes.searching, element: <p>검색 중 화면</p> },
       { path: routes.signup, element: <SignupPage /> },
     ],
     { initialEntries: [path] },
@@ -82,6 +91,21 @@ describe('계정 메뉴 · 로그인이 필요한 화면', () => {
   it('회원 정보 입력은 로그인해야 볼 수 있다', () => {
     renderAt(routes.signup);
     expect(screen.getByText('로그인 화면')).toBeInTheDocument();
+  });
+
+  it('회원 정보 입력을 마쳤으면 상단 바에 Google 이름 대신 닉네임을 보여 준다', () => {
+    signIn({ ...USER, nickname: '도쿄여행자', profileCompleted: true });
+    renderAt(routes.search);
+
+    expect(screen.getByRole('button', { name: '도쿄여행자님 계정 메뉴' })).toBeInTheDocument();
+  });
+
+  it('회원 정보 입력을 이미 마쳤으면 회원 정보 입력 화면을 열어도 검색으로 보낸다', () => {
+    signIn({ ...USER, nickname: '도쿄여행자', profileCompleted: true });
+    renderAt(routes.signup);
+
+    expect(screen.queryByLabelText('닉네임')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '도쿄여행자님 계정 메뉴' })).toBeInTheDocument();
   });
 
   it('회원 정보 입력은 로그인한 Google 계정의 이메일과 이름을 채워 둔다', () => {

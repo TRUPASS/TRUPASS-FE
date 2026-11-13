@@ -283,15 +283,28 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     tiles.on === 3 && tiles.locked === 5,
     JSON.stringify(tiles),
   );
-  await page.fill('#su-nick', '여행자');
+  await page.fill('#su-nick', '도쿄여행자');
   await page.waitForTimeout(60);
   ok(
     '닉네임: 글자 수를 센다',
     (await page.evaluate(() => document.querySelector('.inp:has(#su-nick) .num').textContent)) ===
-      '3 / 12',
+      '5 / 12',
   );
   await go(page, '**/search/progress', () => page.click('.su-form button[type="submit"]'));
   ok('가입 → 검색 중', at(page, '/search/progress'));
+  const saved = backend.profileOf('traveler');
+  ok(
+    '가입: 회원 정보를 백엔드에 저장한다 (화면 값 → 백엔드 값, 고르지 않은 성별 · 선택 약관은 보내지 않는다)',
+    backend.calls.includes('PUT /users/me/profile (토큰)') &&
+      saved?.nickname === '도쿄여행자' &&
+      saved.birthYear === 1994 &&
+      saved.gender === null &&
+      [...saved.interests].sort().join() === 'ARCHITECTURE,CULTURE,FOOD' &&
+      saved.agreements.termsOfService &&
+      saved.agreements.privacyCollection &&
+      !saved.agreements.marketing,
+    JSON.stringify(saved),
+  );
   const stages = [];
   const t0 = Date.now();
   for (let i = 0; i < 44 && at(page, '/search/progress'); i++) {
@@ -688,17 +701,52 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     refused,
   );
 
+  // 가입만 하고 회원 정보 입력을 마치지 않은 계정
+  await page.evaluate(() => {
+    window.__googleAccount = 'newbie';
+  });
+  await go(page, '**/signup', () => page.click('.auth-gsi .fake-gsi'), '.su-form');
+  ok('처음 온 계정은 회원 정보 입력으로 간다', at(page, '/signup'));
+  await page.goto(url('/search'));
+  await page.waitForURL('**/signup', { timeout: 4000 }).catch(() => {});
+  await page.waitForSelector('.su-form', { timeout: 4000 }).catch(() => {});
+  ok(
+    '회원 정보 입력을 마치지 않고 회원 화면(새 검색)을 열면 회원 정보 입력으로 돌아온다',
+    at(page, '/signup') && backend.profileOf('newbie') === undefined,
+  );
+  await go(
+    page,
+    (u) => u.pathname === '/',
+    () => page.click('.hdr button:has-text("로그아웃")'),
+    '.lp-top',
+  );
+  // 화면을 먼저 옮긴 뒤 로그인 상태를 지우므로(useLogout), 지워질 때까지 기다린다
+  await page
+    .waitForFunction(() => localStorage.getItem('tp.auth') === null, null, { timeout: 3000 })
+    .catch(() => {});
+  ok(
+    '회원 정보 입력 화면의 [로그아웃]으로 나간다',
+    at(page, '/') && (await stored()) === null,
+    page.url(),
+  );
+  await page.goto(url('/login'));
+  await page.waitForSelector('.auth-gsi .fake-gsi', { timeout: 4000 }).catch(() => {});
+
   await page.evaluate(() => {
     window.__googleAccount = 'traveler';
   });
   await go(page, '**/search', () => page.click('.auth-gsi .fake-gsi'), '.ask');
   ok(
-    '이미 가입한 계정은 회원 정보 입력을 건너뛰고, 적어 둔 문장이 없으니 새 검색으로 간다',
+    '회원 정보 입력을 마친 계정은 건너뛰고, 적어 둔 문장이 없으니 새 검색으로 간다',
     at(page, '/search'),
   );
   await page.waitForSelector('.hdr .me', { timeout: 4000 }).catch(() => {});
   const me = await page.evaluate(() => document.querySelector('.hdr .me')?.textContent ?? '');
-  ok('상단 바에 로그인한 사람의 이름이 보인다', me.includes('여행자님'), me);
+  ok(
+    '상단 바에 Google 이름 대신 회원 정보 입력에서 정한 닉네임이 보인다',
+    me.includes('도쿄여행자님'),
+    me,
+  );
 
   await page.goto(url('/login'));
   await page.waitForURL('**/search', { timeout: 4000 }).catch(() => {});

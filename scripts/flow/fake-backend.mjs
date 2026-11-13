@@ -3,12 +3,15 @@
 //   POST /auth/refresh — refresh token 은 한 번만 쓴다. 이미 쓴 것이 오면 그 사람의 것을 모두 폐기한다 (RefreshTokenService)
 //   POST /auth/logout  — refresh token 폐기
 //   GET  /users/me     — 토큰이 없으면 COMMON401, 틀렸거나 만료됐으면 COMMON401_1
+//   PUT  /users/me/profile — 회원 정보 입력: 닉네임(앞뒤 공백 제거 후 2~12자) · 출생 연도(1900~올해) · 필수 약관 (UserService)
 // 응답은 모두 {isSuccess, code, message, result} 형식이고, 다른 출처(origin)에서 부르므로 CORS 머리글을 붙인다.
 
 // 가짜 ID 토큰 'fake:<이름>' 이 가리키는 Google 계정
 const ACCOUNTS = {
   traveler: { email: 'traveler@example.com', name: '여행자', emailVerified: true },
   unverified: { email: 'unverified@example.com', name: '미인증', emailVerified: false },
+  // 가입만 하고 회원 정보 입력을 마치지 않고 나가는 계정
+  newbie: { email: 'newbie@example.com', name: '새내기', emailVerified: true },
 };
 
 export function createFakeBackend() {
@@ -38,8 +41,22 @@ export function createFakeBackend() {
     email: u.email,
     name: u.name,
     pictureUrl: null,
+    nickname: u.profile?.nickname ?? null,
+    birthYear: u.profile?.birthYear ?? null,
+    gender: u.profile?.gender ?? null,
+    interests: u.profile?.interests ?? [],
+    agreements: u.profile?.agreements ?? {
+      termsOfService: false,
+      privacyCollection: false,
+      marketing: false,
+    },
+    profileCompleted: Boolean(u.profile),
     createdAt: u.createdAt,
   });
+  const signedIn = (bearer) => {
+    const userId = access.get(bearer);
+    return userId ? [...users.values()].find((u) => u.userId === userId) : undefined;
+  };
 
   async function handle(route) {
     const req = route.request();
@@ -109,10 +126,38 @@ export function createFakeBackend() {
       }
       case 'GET /users/me': {
         if (!bearer) return fail(401, 'COMMON401', '인증이 필요합니다.');
-        const userId = access.get(bearer);
-        if (!userId)
-          return fail(401, 'COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.');
-        return ok(me([...users.values()].find((u) => u.userId === userId)));
+        const user = signedIn(bearer);
+        if (!user) return fail(401, 'COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.');
+        return ok(me(user));
+      }
+      case 'PUT /users/me/profile': {
+        if (!bearer) return fail(401, 'COMMON401', '인증이 필요합니다.');
+        const user = signedIn(bearer);
+        if (!user) return fail(401, 'COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.');
+        const nickname = typeof body.nickname === 'string' ? body.nickname.trim() : '';
+        const year = new Date().getUTCFullYear();
+        const valid =
+          nickname.length >= 2 &&
+          nickname.length <= 12 &&
+          Number.isInteger(body.birthYear) &&
+          body.birthYear >= 1900 &&
+          body.birthYear <= year &&
+          (body.interests ?? []).length <= 3 &&
+          body.agreements?.termsOfService === true &&
+          body.agreements?.privacyCollection === true;
+        if (!valid) return fail(400, 'COMMON400_1', '입력값이 올바르지 않습니다.');
+        user.profile = {
+          nickname,
+          birthYear: body.birthYear,
+          gender: body.gender ?? null,
+          interests: body.interests ?? [],
+          agreements: {
+            termsOfService: true,
+            privacyCollection: true,
+            marketing: body.agreements.marketing === true,
+          },
+        };
+        return ok(me(user));
       }
       default:
         return fail(404, 'COMMON404', '요청한 리소스를 찾을 수 없습니다.');
@@ -132,6 +177,10 @@ export function createFakeBackend() {
     },
     isRevoked(token) {
       return refresh.get(token)?.revoked === true;
+    },
+    /** 계정 이름('traveler' 등)으로 저장된 회원 정보. 입력 전이면 undefined */
+    profileOf(name) {
+      return users.get(name)?.profile;
     },
   };
 }

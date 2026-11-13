@@ -91,8 +91,30 @@ describe('SignupForm', () => {
     await userEvent.click(submit);
     expect(screen.queryByText('검색 중 화면')).not.toBeInTheDocument();
 
-    await userEvent.click(box('(필수) 개인정보 수집 · 이용'));
+    await userEvent.click(box('(필수) Trupass 이용약관'));
     await userEvent.click(submit);
     expect(await screen.findByText('검색 중 화면')).toBeInTheDocument();
+  });
+
+  it('약관은 처음에 하나도 체크되어 있지 않고, 성별은 "선택 안 함"이다', () => {
+    renderForm();
+
+    for (const name of [
+      '(필수) Trupass 이용약관',
+      '(필수) 개인정보 수집 · 이용',
+      '(선택) 여행 혜택 · 알림 수신',
+    ]) {
+      expect(box(name)).not.toBeChecked();
+    }
+    expect(screen.getByRole('radio', { name: '선택 안 함' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '여성' })).not.toBeChecked();
+  });
+
+  it('출생 연도는 올해부터 1900년까지 고른다', () => {
+    renderForm();
+    const years = screen.getAllByRole<HTMLOptionElement>('option').map((o) => o.value);
+
+    expect(years[0]).toBe(`${new Date().getUTCFullYear()}년`);
+    expect(years.at(-1)).toBe('1900년');
   });
 });

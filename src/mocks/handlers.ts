@@ -5,6 +5,7 @@ import { mockDb, type MockUser } from './db';
 import { ACCESS_TTL_S, REFRESH_TTL_S, accountFromIdToken, failure, ok } from './fixtures/auth';
 import { buildCheckoutSnapshot, parseMockScenario, type MockScenario } from './fixtures/checkout';
 import { packageOptionsFixture } from './fixtures/packages';
+import { INTEREST_ORDER, checkProfile } from './fixtures/profile';
 
 // baseUrl(호스트)에 상관없이 매칭되도록 `*` 를 앞에 둔다.
 const api = (path: string) => `*${path}`;
@@ -35,16 +36,44 @@ function readToken(token: string, kind: 'access' | 'refresh'): number | null {
   return Number.isInteger(id) ? id : null;
 }
 
+/** GET /users/me 와 로그인 응답의 user. 회원 정보 입력 전에는 닉네임 등이 null 이고 profileCompleted 가 false 다 */
 function me(user: MockUser) {
+  const p = user.profile;
   return {
     userId: user.userId,
     email: user.email,
     name: user.name,
+    pictureUrl: null,
+    nickname: p?.nickname ?? null,
+    birthYear: p?.birthYear ?? null,
+    gender: p?.gender ?? null,
+    interests: p
+      ? [...p.interests].sort((a, b) => INTEREST_ORDER.indexOf(a) - INTEREST_ORDER.indexOf(b))
+      : [],
+    agreements: p?.agreements ?? {
+      termsOfService: false,
+      privacyCollection: false,
+      marketing: false,
+    },
+    profileCompleted: p !== undefined,
     createdAt: user.createdAt,
   };
 }
 
 const json = (body: JsonBodyType, status = 200) => HttpResponse.json(body, { status });
+
+/** Authorization 의 access token 으로 로그인한 사람을 찾는다. 없거나 틀리면 백엔드와 같은 401 · 404 응답을 돌려준다 */
+function signedIn(request: Request): MockUser | Response {
+  const header = request.headers.get('Authorization') ?? '';
+  if (!header.startsWith('Bearer ')) {
+    return json(failure('COMMON401', '인증이 필요합니다.'), 401);
+  }
+  const userId = readToken(header.slice('Bearer '.length), 'access');
+  if (userId === null) {
+    return json(failure('COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.'), 401);
+  }
+  return mockDb.findUser(userId) ?? json(failure('USER404_1', '사용자를 찾을 수 없습니다.'), 404);
+}
 
 export function createHandlers({ forceScenario }: { forceScenario?: MockScenario } = {}) {
   return [
@@ -85,17 +114,22 @@ export function createHandlers({ forceScenario }: { forceScenario?: MockScenario
     }),
 
     http.get(api('/users/me'), ({ request }) => {
-      const header = request.headers.get('Authorization') ?? '';
-      if (!header.startsWith('Bearer ')) {
-        return json(failure('COMMON401', '인증이 필요합니다.'), 401);
-      }
-      const userId = readToken(header.slice('Bearer '.length), 'access');
-      if (userId === null) {
-        return json(failure('COMMON401_1', 'access token이 올바르지 않거나 만료됐습니다.'), 401);
-      }
-      const user = mockDb.findUser(userId);
-      if (!user) return json(failure('USER404_1', '사용자를 찾을 수 없습니다.'), 404);
+      const user = signedIn(request);
+      if (user instanceof Response) return user;
       return json(ok(me(user)));
+    }),
+
+    // ── 회원 정보 입력 · 수정 (백엔드 UserController 와 같은 규칙) ──
+    http.put(api('/users/me/profile'), async ({ request }) => {
+      const user = signedIn(request);
+      if (user instanceof Response) return user;
+      const checked = checkProfile(await request.json().catch(() => null));
+      if (!checked.ok) {
+        return json(failure(checked.code, checked.message, checked.fields), checked.status);
+      }
+      await delay();
+      const saved = mockDb.saveProfile(user.userId, checked.profile) ?? user;
+      return json(ok(me(saved)));
     }),
 
     http.post(api('/api/trip-requests'), async ({ request }) => {

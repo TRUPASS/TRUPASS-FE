@@ -22,7 +22,8 @@ paths:
       summary: Google 로그인
       description: >-
         FE 가 Google Identity Services 로 받은 ID 토큰(credential)을 보내면 검증 후 Trupass 토큰을 발급한다.
-        처음이면 가입되고 newUser 가 true 다.
+        처음이면 가입되고 newUser 가 true 다. user.profileCompleted 가 false 면(처음 가입했거나 회원 정보 입력을
+        마치지 않고 나간 경우) 회원 정보 입력(PUT /users/me/profile)으로 보낸다.
       security: []
       requestBody:
         required: true
@@ -94,7 +95,7 @@ paths:
       tags: [users]
       operationId: getMe
       summary: 내 정보
-      description: 'Authorization: Bearer {accessToken} 필요'
+      description: 'Authorization: Bearer {accessToken} 필요. profileCompleted 가 false 면 회원 정보 입력을 아직 마치지 않았다.'
       responses:
         '200':
           description: 로그인한 사용자
@@ -104,6 +105,33 @@ paths:
                 $ref: '#/components/schemas/ApiResponseMe'
         default:
           description: COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /users/me/profile:
+    put:
+      tags: [users]
+      operationId: updateProfile
+      summary: 회원 정보 입력·수정
+      description: >-
+        회원 정보 입력 화면(/signup)의 닉네임 · 출생 연도 · 성별 · 여행 관심사 · 약관 동의를 저장한다. 처음 저장하면
+        profileCompleted 가 true 가 된다. 설정에서 고칠 때도 같은 형식으로 전체를 보낸다(같은 값을 다시 보내도 결과가 같다).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          description: 저장한 뒤의 내 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMe'
+        default:
+          description: 'COMMON400_1(칸이 틀림. result 에 {칸: 메시지}) · COMMON400(없는 값) · USER400_1(출생 연도가 올해보다 뒤) · COMMON401 · COMMON401_1 · USER404_1'
           content:
             application/json:
               schema:
@@ -262,9 +290,93 @@ components:
         pictureUrl:
           type: string
           description: Google 계정의 프로필 사진 주소
+        nickname:
+          type: string
+          nullable: true
+          description: 닉네임. 회원 정보 입력 전에는 null
+        birthYear:
+          type: integer
+          format: int32
+          nullable: true
+          description: 출생 연도. 회원 정보 입력 전에는 null
+        gender:
+          $ref: '#/components/schemas/Gender'
+        interests:
+          type: array
+          description: 여행 관심사(0~3개)
+          items:
+            $ref: '#/components/schemas/TravelInterest'
+        agreements:
+          $ref: '#/components/schemas/AgreementStatus'
+        profileCompleted:
+          type: boolean
+          description: 회원 정보 입력을 마쳤는가. false 면 회원 정보 입력(/signup)으로 보낸다
         createdAt:
           type: string
           format: date-time
+    Gender:
+      type: string
+      nullable: true
+      description: '성별. FEMALE 여성 · MALE 남성. "선택 안 함"은 null'
+      enum: [FEMALE, MALE, null]
+    TravelInterest:
+      type: string
+      description: >-
+        여행 관심사. FOOD 미식 · 맛집, SIGHTSEEING 관광 · 명소, SHOPPING 쇼핑, RELAXATION 휴양 · 온천,
+        CULTURE 문화 · 예술, ARCHITECTURE 건축 · 도시 산책, NATURE 자연 · 야외 활동, THEME_PARK 테마파크 · 체험
+      enum: [FOOD, SIGHTSEEING, SHOPPING, RELAXATION, CULTURE, ARCHITECTURE, NATURE, THEME_PARK]
+    Profile:
+      type: object
+      description: 회원 정보 입력·수정. 이메일은 Google 계정의 것이라 받지 않는다.
+      required: [nickname, birthYear, agreements]
+      properties:
+        nickname:
+          type: string
+          description: 닉네임. 앞뒤 공백은 서버가 지운다. 2~12자, 제어 문자 불가
+          minLength: 2
+          maxLength: 12
+          example: 도쿄여행자
+        birthYear:
+          type: integer
+          format: int32
+          description: 출생 연도. 1900년부터 올해(UTC)까지
+          minimum: 1900
+          example: 1994
+        gender:
+          $ref: '#/components/schemas/Gender'
+        interests:
+          type: array
+          description: 여행 관심사. 0~3개. 빠뜨리면 빈 목록으로 본다
+          maxItems: 3
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TravelInterest'
+        agreements:
+          $ref: '#/components/schemas/Agreements'
+    Agreements:
+      type: object
+      description: 약관 동의. termsOfService · privacyCollection 은 true 여야 한다
+      required: [termsOfService, privacyCollection]
+      properties:
+        termsOfService:
+          type: boolean
+          description: (필수) Trupass 이용약관
+        privacyCollection:
+          type: boolean
+          description: (필수) 개인정보 수집 · 이용
+        marketing:
+          type: boolean
+          description: (선택) 여행 혜택 · 알림 수신. 보내지 않으면 false
+    AgreementStatus:
+      type: object
+      description: 약관 동의 여부. 요청(Agreements)과 같은 모양이다
+      properties:
+        termsOfService:
+          type: boolean
+        privacyCollection:
+          type: boolean
+        marketing:
+          type: boolean
     Login:
       type: object
       properties:
@@ -274,7 +386,7 @@ components:
           $ref: '#/components/schemas/Me'
         newUser:
           type: boolean
-          description: 이번 로그인으로 가입했으면 true
+          description: 이번 로그인으로 가입했으면 true. 회원 정보 입력으로 보낼지는 user.profileCompleted 로 정한다
     ApiResponseLogin:
       type: object
       properties:

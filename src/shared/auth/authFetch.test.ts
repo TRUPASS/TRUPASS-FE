@@ -4,7 +4,14 @@ import { env } from '@/shared/lib/env';
 import { server } from '@/test/server';
 import { session, sessionFrom, type Session } from './session';
 
-const USER = { userId: 7, email: 'traveler@example.com', name: '여행자', pictureUrl: null };
+const USER = {
+  userId: 7,
+  email: 'traveler@example.com',
+  name: '여행자',
+  pictureUrl: null,
+  nickname: '여행자',
+  profileCompleted: true,
+};
 const ok = (result: unknown) =>
   HttpResponse.json({ isSuccess: true, code: 'COMMON200', message: '성공했습니다.', result });
 const fail = (status: number, code: string) =>

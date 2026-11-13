@@ -2,9 +2,9 @@ import { U } from '@/shared/sample/data';
 import { authMode } from './mode';
 import { useSession, type SessionUser } from './session';
 
-/** 화면에 부를 이름: Google 계정의 이름, 없으면 이메일의 @ 앞 */
+/** 화면에 부를 이름: 회원 정보 입력에서 정한 닉네임, 없으면 Google 계정의 이름, 그것도 없으면 이메일의 @ 앞 */
 export function displayName(user: SessionUser): string {
-  return user.name?.trim() || user.email.split('@')[0] || user.email;
+  return user.nickname?.trim() || user.name?.trim() || user.email.split('@')[0] || user.email;
 }
 
 /**
@@ -18,9 +18,9 @@ export function useSignedInUser(): SessionUser | null {
 
 /** 화면에 보일 회원: 로그인했으면 그 사람, 아니면(로그인 없이 화면만 볼 때 등) 예시 회원 */
 export function useMember(): {
-  /** "OO님"처럼 부르는 이름 */
+  /** "OO님"처럼 부르는 이름 (닉네임이 먼저) */
   nick: string;
-  /** 권한 증명서처럼 이름을 적는 곳 */
+  /** 권한 증명서처럼 이름을 적는 곳 (Google 계정의 이름이 먼저) */
   name: string;
   email: string;
 } {

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '@/app/routes';
 import { mockDb } from '@/mocks/db';
+import { COMPLETED_PROFILE } from '@/mocks/fixtures/profile';
 import { LoginPage } from '@/pages/LoginPage';
 import { session, sessionFrom } from '@/shared/auth/session';
 import { prompts } from '@/shared/lib/prompts';
@@ -38,6 +39,29 @@ function renderLogin() {
   return router;
 }
 const googleButton = () => screen.findByRole('button', { name: 'Google 계정으로 계속하기' });
+/** Mock API 에 '여행자' 계정을 가입시키고, 회원 정보 입력까지 마쳐 둔다 */
+function signedUpTraveler() {
+  const { user } = mockDb.signIn({
+    sub: 'traveler',
+    email: 'traveler@example.com',
+    name: '여행자',
+  });
+  mockDb.saveProfile(user.userId, COMPLETED_PROFILE);
+}
+const tokens = {
+  accessToken: 'a',
+  accessTokenExpiresIn: 1800,
+  refreshToken: 'r',
+  refreshTokenExpiresIn: 1_209_600,
+};
+const traveler = {
+  userId: 1,
+  email: 'traveler@example.com',
+  name: '여행자',
+  pictureUrl: null,
+  nickname: '여행자',
+  profileCompleted: true,
+};
 
 describe('Google 로그인 (google 모드)', () => {
   it('Google 의 공식 버튼을 "Google 계정으로 계속하기" 모양으로 그린다', async () => {
@@ -58,16 +82,27 @@ describe('Google 로그인 (google 모드)', () => {
     expect(session.get()?.user).toMatchObject({ email: 'traveler@example.com', name: '여행자' });
   });
 
-  it('이미 가입한 계정은 회원 정보 입력을 건너뛰고, 적어 둔 문장이 없으면 새 검색으로 간다', async () => {
-    mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
+  it('회원 정보 입력을 마친 계정은 건너뛰고, 적어 둔 문장이 없으면 새 검색으로 간다', async () => {
+    signedUpTraveler();
     renderLogin();
     await userEvent.click(await googleButton());
 
     expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
   });
 
-  it('이미 가입한 계정이고 랜딩에서 적어 둔 문장이 있으면 바로 검색한다', async () => {
+  it('가입만 하고 회원 정보 입력을 마치지 않은 계정은 다시 로그인해도 회원 정보 입력으로 간다', async () => {
     mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
+    renderLogin();
+    await userEvent.click(await googleButton());
+
+    expect(
+      await screen.findByText('회원 정보 입력 화면', {}, { timeout: 2000 }),
+    ).toBeInTheDocument();
+    expect(session.get()?.user.profileCompleted).toBe(false);
+  });
+
+  it('회원 정보 입력을 마친 계정이고 랜딩에서 적어 둔 문장이 있으면 바로 검색한다', async () => {
+    signedUpTraveler();
     prompts.put('flight', '크리스마스 전에 부산에서 오사카');
     renderLogin();
     await userEvent.click(await googleButton());
@@ -88,19 +123,16 @@ describe('Google 로그인 (google 모드)', () => {
   });
 
   it('이미 로그인한 채로 오면 바로 다음 화면으로 보낸다', async () => {
-    session.set(
-      sessionFrom(
-        {
-          accessToken: 'a',
-          accessTokenExpiresIn: 1800,
-          refreshToken: 'r',
-          refreshTokenExpiresIn: 1_209_600,
-        },
-        { userId: 1, email: 'traveler@example.com', name: '여행자', pictureUrl: null },
-      ),
-    );
+    session.set(sessionFrom(tokens, traveler));
     renderLogin();
 
     expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+  });
+
+  it('로그인은 했지만 회원 정보 입력을 마치지 않은 채로 오면 회원 정보 입력으로 보낸다', async () => {
+    session.set(sessionFrom(tokens, { ...traveler, nickname: null, profileCompleted: false }));
+    renderLogin();
+
+    expect(await screen.findByText('회원 정보 입력 화면')).toBeInTheDocument();
   });
 });

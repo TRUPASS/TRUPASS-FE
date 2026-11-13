@@ -8,6 +8,10 @@ export interface SessionUser {
   name: string | null;
   /** Google 계정의 프로필 사진 주소. 없을 수 있다 */
   pictureUrl: string | null;
+  /** 회원 정보 입력에서 정한 닉네임. 입력 전에는 없다 */
+  nickname: string | null;
+  /** 회원 정보 입력을 마쳤는가. false 면 회원 정보 입력(/signup)으로 보낸다 */
+  profileCompleted: boolean;
 }
 
 /** 로그인 상태: 백엔드가 준 토큰 쌍과 사용자 */
@@ -30,7 +34,10 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 const isText = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
 const isTime = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
-/** 저장해 둔 값이 지금 형식과 맞는지 본다. 맞지 않으면(예전 형식, 손상) 없는 것으로 본다. */
+/**
+ * 저장해 둔 값이 지금 형식과 맞는지 본다. 맞지 않으면(손상) 없는 것으로 본다.
+ * 회원 정보 입력 전에 저장한 값(닉네임 · 입력 여부가 없음)은 입력 전으로 읽는다. 앱을 열면 SessionSync 가 최신으로 맞춘다.
+ */
 export function parseSessionUser(v: unknown): SessionUser | null {
   if (!isRecord(v) || !isTime(v.userId) || !isText(v.email)) return null;
   return {
@@ -38,6 +45,8 @@ export function parseSessionUser(v: unknown): SessionUser | null {
     email: v.email,
     name: isText(v.name) ? v.name : null,
     pictureUrl: isText(v.pictureUrl) ? v.pictureUrl : null,
+    nickname: isText(v.nickname) ? v.nickname : null,
+    profileCompleted: v.profileCompleted === true,
   };
 }
 

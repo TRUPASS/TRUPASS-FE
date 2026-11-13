@@ -177,14 +177,16 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 
 ## 로그인 (Google)
 
-백엔드(TRUPASS-BE `core`)의 Google 로그인에 맞춰 연동되어 있습니다. 비밀번호는 없고, 처음 로그인하면 그 자리에서 가입됩니다.
+백엔드(TRUPASS-BE `core`)의 Google 로그인과 회원 정보 입력에 맞춰 연동되어 있습니다. 비밀번호는 없고, 처음 로그인하면 그 자리에서 가입되며 회원 정보 입력을 한 번 거칩니다.
 
 ```
 로그인 화면 ── Google 로그인 버튼(Google Identity Services) ──▶ ID 토큰
-            ── POST /auth/google {idToken} ──▶ access token(30분) + refresh token(14일) + user + newUser
-newUser = true  → 회원 정보 입력(/signup) → 검색
-newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/search/progress), 없으면 새 검색(/search)
+            ── POST /auth/google {idToken} ──▶ access token(30분) + refresh token(14일) + user(profileCompleted 포함) + newUser
+user.profileCompleted = false → 회원 정보 입력(/signup) ── PUT /users/me/profile ──▶ 저장 → 검색
+user.profileCompleted = true  → 랜딩에서 적어 둔 문장이 있으면 검색 중(/search/progress), 없으면 새 검색(/search)
 ```
+
+다음 화면은 `newUser` 가 아니라 `user.profileCompleted` 로 정합니다(`src/features/auth/next.ts`). `newUser` 는 처음 로그인한 그 한 번만 `true` 라서, 회원 정보 입력을 마치지 않고 나갔다가 다시 온 사람을 놓치기 때문입니다.
 
 ### 로그인 방식 (환경 변수로 정해진다)
 
@@ -194,7 +196,7 @@ newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/sear
 | `VITE_USE_MOCK=true`         | 디자인의 버튼 → Mock API(MSW)      | 백엔드 없이 개발. 계정은 `traveler@example.com` |
 | 둘 다 없음                   | 디자인의 버튼 → 회원 정보 입력으로 | 로그인 없이 화면만 확인 (지금 Vercel 배포)      |
 
-`VITE_USE_MOCK=true` 가 먼저입니다. Mock 모드에서 처음 로그인하면 가입한 것으로, 그다음부터는 이미 가입한 계정으로 동작합니다(브라우저 저장소에 기억. 개발자 도구에서 `tp.mock.users` 를 지우면 처음으로 돌아갑니다).
+`VITE_USE_MOCK=true` 가 먼저입니다. Mock 모드에서 처음 로그인하면 가입한 것으로, 회원 정보 입력을 마친 뒤로는 이미 가입한 계정으로 동작합니다(브라우저 저장소에 기억. 개발자 도구에서 `tp.mock.users` 를 지우면 처음으로 돌아갑니다). Mock API 는 회원 정보를 백엔드와 같은 규칙으로 검사합니다(`src/mocks/fixtures/profile.ts`).
 
 ### 실제 백엔드와 연결하기
 
@@ -210,16 +212,26 @@ newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/sear
 - API 호출(`apiClient`)은 `Authorization: Bearer {accessToken}` 을 자동으로 붙입니다 (`src/shared/auth/authFetch.ts`).
   access token 이 만료되면(또는 401 을 받으면) `POST /auth/refresh` 로 새 쌍을 받아 같은 요청을 한 번 더 보냅니다.
   refresh token 은 한 번만 쓸 수 있어서(다시 쓰면 백엔드가 그 사람의 토큰을 모두 폐기한다) 동시에 여러 요청이 만료돼도 한 번만 바꾸고, 다른 탭과는 Web Locks 로 차례를 맞춥니다.
-- refresh token 까지 거절되면 로그인 상태를 지웁니다. 앱을 열 때 `GET /users/me` 로 로그인이 유효한지 확인하고 이름 · 사진을 최신으로 맞춥니다 (`src/app/SessionSync.tsx`).
+- refresh token 까지 거절되면 로그인 상태를 지웁니다. 앱을 열 때 `GET /users/me` 로 로그인이 유효한지 확인하고 이름 · 사진 · 닉네임을 최신으로 맞춥니다 (`src/app/SessionSync.tsx`).
+  이때 회원 정보 입력을 마치지 않았는데 회원 화면(검색 · 결제 · 내 여행 등)에 있으면 회원 정보 입력으로, 마쳤는데 회원 정보 입력에 있으면 검색으로 옮깁니다.
+- 화면에 부르는 이름("OO님", 계정 메뉴)은 회원 정보 입력에서 정한 닉네임이 먼저이고, 없으면 Google 계정의 이름입니다. 권한 증명서처럼 이름을 적는 곳은 Google 계정의 이름을 씁니다 (`src/shared/auth/member.ts`).
 - 로그아웃은 상단 바의 계정 메뉴(모바일은 메뉴 단추)와 회원 정보 입력 화면의 [로그아웃]에 있습니다. `POST /auth/logout` 으로 refresh token 을 폐기합니다.
 - 로그인해야 볼 수 있는 화면은 지금 회원 정보 입력 하나입니다(`RequireSession`). 검색 · 결제 화면은 아직 예시 데이터라 막지 않았고, API 를 붙일 때 같은 컴포넌트로 감쌉니다.
 
-### 백엔드에 아직 없는 것
+### 회원 정보 입력 (`PUT /users/me/profile`)
 
-- **회원 정보(닉네임 · 출생 연도 · 성별 · 관심사 · 약관 동의)를 받는 API 가 없습니다.** 지금은 회원 정보 입력 화면에서 확인만 하고 서버로 보내지 않습니다(`SignupForm` 의 제출 부분).
-  예를 들어 `PATCH /users/me {nickname, birthYear, gender, interests[], agreements}` 가 생기면 그곳에서 보내면 됩니다.
-- **회원 정보를 입력했는지 알 수 있는 값이 없습니다.** `newUser` 는 처음 로그인한 그 한 번만 `true` 라서, 회원 정보 입력을 마치지 않고 나가면 다시 그 화면으로 오지 않습니다.
-  `GET /users/me` 에 `profileCompleted` 같은 값이 생기면 그것으로 회원 정보 입력에 보낼지 정하는 것이 맞습니다.
+회원 정보 입력 화면(`src/features/signup/SignupForm.tsx`)은 화면의 값을 백엔드 값으로 바꿔 보냅니다. 서버가 거절하면 이유(칸별 메시지)를 보여 주고 화면에 남습니다.
+
+| 칸                     | 보내는 값    | 규칙 (백엔드)                                                                                                                                                                                             |
+| ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 닉네임                 | `nickname`   | 앞뒤 공백을 지우고 2~12자, 제어 문자 불가                                                                                                                                                                 |
+| 출생 연도              | `birthYear`  | `"1994년"` → `1994`. 1900년 ~ 올해(UTC)                                                                                                                                                                   |
+| 성별 (선택)            | `gender`     | 여성 `FEMALE` · 남성 `MALE` · 선택 안 함 `null` (처음 값은 선택 안 함)                                                                                                                                    |
+| 여행 관심사 (최대 3개) | `interests`  | 미식 · 맛집 `FOOD`, 관광 · 명소 `SIGHTSEEING`, 쇼핑 `SHOPPING`, 휴양 · 온천 `RELAXATION`, 문화 · 예술 `CULTURE`, 건축 · 도시 산책 `ARCHITECTURE`, 자연 · 야외 활동 `NATURE`, 테마파크 · 체험 `THEME_PARK` |
+| 약관                   | `agreements` | `termsOfService` · `privacyCollection` 은 필수(true), `marketing` 은 선택. 백엔드가 동의 시각을 기록하므로 처음에는 하나도 체크하지 않습니다                                                              |
+
+- 로그인 없이 화면만 보는 설정(둘 다 없음)에서는 서버에 보내지 않고 넘어갑니다.
+- 같은 API 로 설정 화면에서 고칠 수 있습니다(전체를 다시 보냅니다). 설정 화면은 아직 없습니다.
 
 ## 테스트
 

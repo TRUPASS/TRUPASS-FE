@@ -1,7 +1,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { accessExpired, session, sessionFrom, useSession } from './session';
 
-const USER = { userId: 1, email: 'traveler@example.com', name: '여행자', pictureUrl: null };
+const USER = {
+  userId: 1,
+  email: 'traveler@example.com',
+  name: '여행자',
+  pictureUrl: null,
+  nickname: '여행자',
+  profileCompleted: true,
+};
 const tokens = {
   accessToken: 'a',
   accessTokenExpiresIn: 1800,
