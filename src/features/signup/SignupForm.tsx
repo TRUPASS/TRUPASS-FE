@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { afterLogin } from '@/features/auth/next';
 import { saveProfile, type ProfileInput } from '@/shared/api/auth';
 import type { Schemas } from '@/shared/api/client';
 import { authMode } from '@/shared/auth/mode';
+import { session } from '@/shared/auth/session';
 import { U } from '@/shared/sample/data';
 import { Button } from '@/shared/ui/Button';
 import { Checkbox, OptionTile, Radio } from '@/shared/ui/Check';
 import { Field, Input, Select } from '@/shared/ui/Field';
 import { profileErrorMessage } from './messages';
+import { NICK_MAX } from './nickname';
 
-type Interest = Schemas['TravelInterest'];
-type Gender = Schemas['Gender'];
+// 백엔드 스펙(/v3/api-docs)은 enum 을 Profile 안에 펼쳐 두므로 이름 붙은 스키마 대신 Profile 에서 꺼낸다
+type Interest = NonNullable<ProfileInput['interests']>[number];
+type Gender = Exclude<ProfileInput['gender'], undefined>;
 type TermKey = keyof Schemas['Agreements'];
 
 // 화면에 보이는 문구와 백엔드가 받는 값 (PUT /users/me/profile)
@@ -46,7 +49,13 @@ const NO_AGREEMENT: Record<TermKey, boolean> = {
 // 백엔드는 1900년부터 올해(UTC 기준)까지 받는다
 const THIS_YEAR = new Date().getUTCFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 1900 + 1 }, (_, i) => `${THIS_YEAR - i}년`);
-const NICK_MAX = 12;
+/**
+ * 출생 연도 · 관심사의 처음 값. 로그인 없이 화면만 보는 설정(off, 디자인 확인용)에서는 예시 값으로 채우고,
+ * 실제로 저장하는 설정에서는 비워 둔다(사람이 고르지 않은 예시 값을 회원 정보로 저장하지 않는다).
+ */
+const SAMPLE = authMode === 'off';
+const FIRST_BIRTH = SAMPLE ? `${U.birth}년` : '';
+const FIRST_INTERESTS: Interest[] = SAMPLE ? ['CULTURE', 'ARCHITECTURE'] : [];
 
 interface SignupFormProps {
   /** 로그인한 Google 계정의 이메일 (고칠 수 없다) */
@@ -64,13 +73,21 @@ interface SignupFormProps {
 export function SignupForm({ email, nickname }: SignupFormProps) {
   const navigate = useNavigate();
   const [nick, setNick] = useState(nickname);
-  const [birth, setBirth] = useState(`${U.birth}년`);
+  const [birth, setBirth] = useState(FIRST_BIRTH);
   const [gender, setGender] = useState<Gender>(null);
-  const [interests, setInterests] = useState<Interest[]>(['CULTURE', 'ARCHITECTURE']);
+  const [interests, setInterests] = useState<Interest[]>(FIRST_INTERESTS);
   const [agreed, setAgreed] = useState(NO_AGREEMENT);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const full = interests.length >= MAX_INTERESTS;
+  // 저장을 기다리는 사이 화면을 떠났으면(로그아웃 · 로고 등) 응답이 와도 검색으로 끌고 가지 않는다
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   async function submit() {
     setError('');
@@ -84,8 +101,11 @@ export function SignupForm({ email, nickname }: SignupFormProps) {
       };
       setSaving(true);
       try {
-        await saveProfile(profile);
+        const saved = await saveProfile(profile);
+        // 기다리는 사이 화면을 떠났거나 로그아웃 · 다른 계정으로 바뀌었으면 여기서 멈춘다
+        if (!mounted.current || session.get()?.user.userId !== saved.userId) return;
       } catch (e) {
+        if (!mounted.current) return;
         setError(profileErrorMessage(e));
         setSaving(false);
         return;
@@ -132,6 +152,8 @@ export function SignupForm({ email, nickname }: SignupFormProps) {
             <Select
               id="su-birth"
               options={YEARS}
+              placeholder="선택해 주세요"
+              required
               value={birth}
               onChange={(e) => setBirth(e.target.value)}
               hinted
@@ -223,8 +245,13 @@ export function SignupForm({ email, nickname }: SignupFormProps) {
           </p>
         </div>
       )}
+      {/* 저장 중 알림은 화면 크기와 상관없이 스크린리더가 읽는다 (아래 안내 문구는 데스크톱에서만 보인다) */}
+      <p className="vh" role="status">
+        {saving ? '회원 정보를 저장하는 중입니다.' : ''}
+      </p>
       <div className="pnl-f">
-        <span className="t-sm c3 dt-only" aria-live="polite">
+        {/* 눈으로 보는 안내(데스크톱). 스크린리더는 위의 role=status 가 알린다 */}
+        <span className="t-sm c3 dt-only" aria-hidden={saving}>
           {saving
             ? '회원 정보를 저장하는 중입니다.'
             : '가입을 마치면 적어 둔 조건으로 바로 검색합니다.'}

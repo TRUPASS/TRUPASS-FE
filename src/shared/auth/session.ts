@@ -85,8 +85,23 @@ function save(next: Session | null) {
 }
 
 let cache: Session | null | undefined;
+/** 로그인한 사람(로그인 여부 포함)의 정보가 바뀔 때마다 오른다. 토큰만 바뀌거나 같은 내용을 다시 읽으면 그대로다 */
+let revision = 0;
+/** 이 탭에서 서버로 확인한 사용자 정보의 버전. revision 과 같으면 지금 정보는 확인된 것이다 */
+let confirmedRevision = -1;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((fn) => fn());
+const userOf = (s: Session | null | undefined) => JSON.stringify(s?.user ?? null);
+function swap(next: Session | null, confirmed = false) {
+  if (userOf(cache) !== userOf(next)) revision += 1;
+  cache = next;
+  if (confirmed) confirmedRevision = revision;
+}
+
+/** confirmed: 서버 응답으로 받은 사용자 정보다 (로그인, 회원 정보 저장, 앱을 연 뒤 GET /users/me) */
+interface Write {
+  confirmed?: boolean;
+}
 
 export const session = {
   /** 지금 로그인 상태 */
@@ -98,25 +113,39 @@ export const session = {
   reload(): Session | null {
     const next = load();
     if (next?.refreshToken !== cache?.refreshToken || next?.user.userId !== cache?.user.userId) {
-      cache = next;
+      swap(next);
       notify();
     }
     return cache ?? null;
   },
-  set(next: Session) {
-    cache = next;
+  set(next: Session, { confirmed = false }: Write = {}) {
+    swap(next, confirmed);
     save(next);
     notify();
   },
   /** 로그인한 사람의 정보만 바꾼다 (로그아웃 상태면 아무것도 하지 않는다) */
-  setUser(user: SessionUser) {
+  setUser(user: SessionUser, write: Write = {}) {
     const current = session.get();
-    if (current) session.set({ ...current, user });
+    if (current) session.set({ ...current, user }, write);
   },
   clear() {
-    cache = null;
+    swap(null);
     save(null);
     notify();
+  },
+  /**
+   * 로그인한 사람의 정보 버전. 요청을 보낸 뒤 이 값이 바뀌었으면 그사이 더 새로운 정보(예: 회원 정보 저장, 다른 탭의 로그아웃)가 들어온 것이다.
+   * 늦게 온 응답으로 새 정보를 덮지 않을 때 쓴다 (SessionSync)
+   */
+  revision(): number {
+    return revision;
+  },
+  /**
+   * 지금 사용자 정보를 이 탭에서 서버로 확인했는가. 기기에 남아 있던 값(앱을 막 열었을 때, 다른 탭이 바꿨을 때)은 낡았을 수 있어 false 다.
+   * 낡은 값으로 화면을 막지 않을 때 쓴다 (DesignLayout 의 회원 화면 가드)
+   */
+  confirmed(): boolean {
+    return cache != null && confirmedRevision === revision;
   },
   subscribe(fn: () => void) {
     listeners.add(fn);
@@ -129,7 +158,7 @@ export const session = {
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key !== KEY && e.key !== null) return;
-    cache = load();
+    swap(load());
     notify();
   });
 }

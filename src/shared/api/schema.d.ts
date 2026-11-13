@@ -78,7 +78,11 @@ export interface paths {
         get: operations["getMe"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * 회원 탈퇴
+         * @description 개인정보(이메일 · 이름 · 사진 · 닉네임 · 출생 연도 · 성별 · 관심사)를 지우고 약관 동의를 모두 거두며, 이 회원의 refresh token 을 모두 폐기한다. FE 는 성공하면 이 기기의 로그인 상태도 지운다. 이미 발급한 access token 으로 오는 요청은 USER401_1 로 거절한다. 같은 Google 계정으로 다시 로그인하면 새 회원으로 가입된다. (FE 에 아직 탈퇴 화면은 없다)
+         */
+        delete: operations["withdraw"];
         options?: never;
         head?: never;
         patch?: never;
@@ -235,25 +239,19 @@ export interface components {
              * @description 출생 연도. 회원 정보 입력 전에는 null
              */
             birthYear?: number | null;
-            gender?: components["schemas"]["Gender"];
+            /**
+             * @description 성별. FEMALE 여성 · MALE 남성. "선택 안 함"이면 null
+             * @enum {string|null}
+             */
+            gender?: "FEMALE" | "MALE" | null;
             /** @description 여행 관심사(0~3개) */
-            interests?: components["schemas"]["TravelInterest"][];
+            interests?: ("FOOD" | "SIGHTSEEING" | "SHOPPING" | "RELAXATION" | "CULTURE" | "ARCHITECTURE" | "NATURE" | "THEME_PARK")[];
             agreements?: components["schemas"]["AgreementStatus"];
             /** @description 회원 정보 입력을 마쳤는가. false 면 회원 정보 입력(/signup)으로 보낸다 */
             profileCompleted?: boolean;
             /** Format: date-time */
             createdAt?: string;
         };
-        /**
-         * @description 성별. FEMALE 여성 · MALE 남성. "선택 안 함"은 null
-         * @enum {string|null}
-         */
-        Gender: "FEMALE" | "MALE" | null;
-        /**
-         * @description 여행 관심사. FOOD 미식 · 맛집, SIGHTSEEING 관광 · 명소, SHOPPING 쇼핑, RELAXATION 휴양 · 온천, CULTURE 문화 · 예술, ARCHITECTURE 건축 · 도시 산책, NATURE 자연 · 야외 활동, THEME_PARK 테마파크 · 체험
-         * @enum {string}
-         */
-        TravelInterest: "FOOD" | "SIGHTSEEING" | "SHOPPING" | "RELAXATION" | "CULTURE" | "ARCHITECTURE" | "NATURE" | "THEME_PARK";
         /** @description 회원 정보 입력·수정. 이메일은 Google 계정의 것이라 받지 않는다. */
         Profile: {
             /**
@@ -267,9 +265,13 @@ export interface components {
              * @example 1994
              */
             birthYear: number;
-            gender?: components["schemas"]["Gender"];
+            /**
+             * @description 성별. FEMALE 여성 · MALE 남성. "선택 안 함"이면 null
+             * @enum {string|null}
+             */
+            gender?: "FEMALE" | "MALE" | null;
             /** @description 여행 관심사. 0~3개. 빠뜨리면 빈 목록으로 본다 */
-            interests?: components["schemas"]["TravelInterest"][];
+            interests?: ("FOOD" | "SIGHTSEEING" | "SHOPPING" | "RELAXATION" | "CULTURE" | "ARCHITECTURE" | "NATURE" | "THEME_PARK")[];
             agreements: components["schemas"]["Agreements"];
         };
         /** @description 약관 동의. termsOfService · privacyCollection 은 true 여야 한다 */
@@ -281,11 +283,16 @@ export interface components {
             /** @description (선택) 여행 혜택 · 알림 수신. 보내지 않으면 false */
             marketing?: boolean;
         };
-        /** @description 약관 동의 여부. 요청(Agreements)과 같은 모양이다 */
+        /** @description 약관 동의 여부. 요청(Agreements)과 같은 모양에 마케팅 수신 동의 시각을 더했다 */
         AgreementStatus: {
             termsOfService?: boolean;
             privacyCollection?: boolean;
             marketing?: boolean;
+            /**
+             * Format: date-time
+             * @description 지금 유지 중인 마케팅(여행 혜택 · 알림) 수신 동의를 한 시각. 동의하지 않았으면 null
+             */
+            marketingAgreedAt?: string | null;
         };
         Login: {
             tokens?: components["schemas"]["Tokens"];
@@ -508,7 +515,36 @@ export interface operations {
                     "application/json": components["schemas"]["ApiResponseMe"];
                 };
             };
-            /** @description COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1 */
+            /** @description COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER401_1(탈퇴한 계정) · USER404_1 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 탈퇴함 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+            /** @description COMMON401 · COMMON401_1 · USER401_1(이미 탈퇴함) · USER404_1 */
             default: {
                 headers: {
                     [name: string]: unknown;
@@ -541,7 +577,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApiResponseMe"];
                 };
             };
-            /** @description COMMON400_1(칸이 틀림. result 에 {칸: 메시지}) · COMMON400(없는 값) · USER400_1(출생 연도가 올해보다 뒤) · COMMON401 · COMMON401_1 · USER404_1 */
+            /** @description COMMON400_1(칸이 틀림. result 에 {칸: 메시지}) · COMMON400(없는 값) · USER400_1(출생 연도가 올해보다 뒤) · COMMON401 · COMMON401_1 · USER401_1(탈퇴한 계정) · USER404_1 */
             default: {
                 headers: {
                     [name: string]: unknown;

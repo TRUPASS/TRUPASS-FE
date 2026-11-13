@@ -272,8 +272,18 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   );
   await term(0).click();
   await page.waitForTimeout(80);
-  await page.click('.tiles .opt:nth-child(1)');
-  await page.waitForTimeout(80);
+  ok(
+    '실제로 저장하는 설정에서는 예시 값 없이 시작한다 (출생 연도 비어 있음, 관심사 없음)',
+    await page.evaluate(
+      () =>
+        document.querySelector('#su-birth').value === '' &&
+        [...document.querySelectorAll('.tiles input')].every((b) => !b.checked),
+    ),
+  );
+  for (const n of [1, 2, 3]) {
+    await page.click(`.tiles .opt:nth-child(${n})`);
+    await page.waitForTimeout(60);
+  }
   const tiles = await page.evaluate(() => {
     const b = [...document.querySelectorAll('.tiles input')];
     return { on: b.filter((x) => x.checked).length, locked: b.filter((x) => x.disabled).length };
@@ -284,6 +294,7 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     JSON.stringify(tiles),
   );
   await page.fill('#su-nick', '도쿄여행자');
+  await page.selectOption('#su-birth', '1994년');
   await page.waitForTimeout(60);
   ok(
     '닉네임: 글자 수를 센다',
@@ -299,7 +310,7 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
       saved?.nickname === '도쿄여행자' &&
       saved.birthYear === 1994 &&
       saved.gender === null &&
-      [...saved.interests].sort().join() === 'ARCHITECTURE,CULTURE,FOOD' &&
+      [...saved.interests].sort().join() === 'FOOD,SHOPPING,SIGHTSEEING' &&
       saved.agreements.termsOfService &&
       saved.agreements.privacyCollection &&
       !saved.agreements.marketing,

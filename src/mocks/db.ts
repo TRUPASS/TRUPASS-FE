@@ -48,6 +48,13 @@ function saveUsers(users: MockUser[]) {
 let users: MockUser[] | null = null;
 const allUsers = () => (users ??= loadUsers());
 
+// 탭마다 Mock API 가 따로 돈다. 다른 탭이 가입 · 회원 정보를 저장하면 다음에 다시 읽게 한다
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === USERS_KEY || e.key === null) users = null;
+  });
+}
+
 export const mockDb = {
   nextId(prefix: string) {
     sequence += 1;
@@ -82,12 +89,22 @@ export const mockDb = {
   findUser(userId: number) {
     return allUsers().find((u) => u.userId === userId);
   },
-  /** 회원 정보를 저장한다 (처음이면 회원 정보 입력을 마친 것이 된다). 백엔드 UserService.updateProfile 과 같다 */
-  saveProfile(userId: number, profile: SavedProfile): MockUser | undefined {
+  /**
+   * 회원 정보를 저장한다 (처음이면 회원 정보 입력을 마친 것이 된다). 백엔드 UserService.updateProfile 과 같다.
+   * 마케팅 수신은 이미 동의해 둔 것이면 처음 동의한 시각을 그대로 두고, 거두면 지운다.
+   */
+  saveProfile(
+    userId: number,
+    profile: Omit<SavedProfile, 'marketingAgreedAt'>,
+  ): MockUser | undefined {
     const list = allUsers();
     const user = list.find((u) => u.userId === userId);
     if (!user) return undefined;
-    user.profile = profile;
+    const before = user.profile?.marketingAgreedAt ?? null;
+    const marketingAgreedAt = profile.agreements.marketing
+      ? (before ?? new Date().toISOString())
+      : null;
+    user.profile = { ...profile, marketingAgreedAt };
     saveUsers(list);
     return user;
   },

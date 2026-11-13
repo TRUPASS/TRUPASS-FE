@@ -43,13 +43,16 @@ export function Input({
 interface SelectProps extends Omit<ComponentProps<'select'>, 'className' | 'children'> {
   options: readonly string[];
   hinted?: boolean;
+  /** 아무것도 고르지 않았을 때 보이는 맨 앞 칸(값은 빈 문자열). required 와 함께 쓰면 고르기 전에는 넘어가지 않는다 */
+  placeholder?: string;
 }
 
 /** 고르는 칸(select) */
-export function Select({ options, hinted, id, ...rest }: SelectProps) {
+export function Select({ options, hinted, placeholder, id, ...rest }: SelectProps) {
   return (
     <div className="inp">
       <select id={id} aria-describedby={hinted && id ? `${id}-h` : undefined} {...rest}>
+        {placeholder !== undefined && <option value="">{placeholder}</option>}
         {options.map((v) => (
           <option key={v}>{v}</option>
         ))}

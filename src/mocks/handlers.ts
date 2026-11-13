@@ -50,10 +50,11 @@ function me(user: MockUser) {
     interests: p
       ? [...p.interests].sort((a, b) => INTEREST_ORDER.indexOf(a) - INTEREST_ORDER.indexOf(b))
       : [],
-    agreements: p?.agreements ?? {
-      termsOfService: false,
-      privacyCollection: false,
-      marketing: false,
+    agreements: {
+      termsOfService: p?.agreements.termsOfService ?? false,
+      privacyCollection: p?.agreements.privacyCollection ?? false,
+      marketing: p?.agreements.marketing ?? false,
+      marketingAgreedAt: p?.marketingAgreedAt ?? null,
     },
     profileCompleted: p !== undefined,
     createdAt: user.createdAt,

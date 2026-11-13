@@ -4,15 +4,13 @@ import { AppFooter } from '@/app/layout/AppFooter';
 import { AppHeader } from '@/app/layout/AppHeader';
 import { afterLogin } from '@/features/auth/next';
 import { RequireSession } from '@/features/auth/RequireSession';
+import { prefillNickname } from '@/features/signup/nickname';
 import { SignupForm } from '@/features/signup/SignupForm';
 import { useSignedInUser } from '@/shared/auth/member';
 import { authMode } from '@/shared/auth/mode';
 import { session } from '@/shared/auth/session';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { U } from '@/shared/sample/data';
-
-/** 닉네임 칸의 최대 글자 수 */
-const NICK_MAX = 12;
 
 /**
  * 회원 정보 입력. Google 계정으로 처음 가입했을 때(또는 입력을 마치지 않고 나갔다가 다시 왔을 때) 거친다.
@@ -30,9 +28,7 @@ export function SignupPage() {
   );
   if (done) return <Navigate to={afterLogin()} replace />;
   const mail = user?.email ?? U.mail;
-  const nick = Array.from(user ? (user.nickname ?? user.name ?? '') : U.nick)
-    .slice(0, NICK_MAX)
-    .join('');
+  const nick = user ? prefillNickname(user.nickname ?? user.name ?? '') : U.nick;
   return (
     <RequireSession>
       <title>회원 정보 입력 | Trupass</title>
@@ -46,7 +42,8 @@ export function SignupPage() {
               있습니다.
             </p>
           </div>
-          <SignupForm email={mail} nickname={nick} />
+          {/* 다른 탭에서 계정이 바뀌면 폼을 새로 연다 (이전 계정의 입력 · 저장 중 상태를 넘기지 않는다) */}
+          <SignupForm key={user?.userId ?? 'sample'} email={mail} nickname={nick} />
         </div>
       </main>
       <AppFooter />

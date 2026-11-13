@@ -15,14 +15,16 @@ export function SessionSync() {
   useEffect(() => {
     if (authMode === 'off' || userId === undefined) return;
     let gone = false;
-    const asked = session.get()?.user;
+    const asked = session.revision();
     fetchMe().then(
       (user) => {
         if (gone || user.userId !== userId) return;
-        // 기다리는 사이 더 새로운 값이 들어왔으면(예: 회원 정보 저장) 늦게 온 이 응답은 버린다
-        if (session.get()?.user !== asked) return;
-        session.setUser(user);
-        const to = profileRedirect(user, router.state.location.pathname);
+        // 기다리는 사이 더 새로운 정보가 들어왔으면(예: 회원 정보 저장) 늦게 온 이 응답으로 덮지 않는다
+        if (session.revision() === asked) session.setUser(user, { confirmed: true });
+        // 옮길지는 지금 가장 새로운 정보로 정한다
+        const current = session.get()?.user;
+        if (current?.userId !== userId) return;
+        const to = profileRedirect(current, router.state.location.pathname);
         if (to) void router.navigate(to, { replace: true });
       },
       () => {

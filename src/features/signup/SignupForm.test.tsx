@@ -5,6 +5,10 @@ import { routes } from '@/app/routes';
 import { prompts } from '@/shared/lib/prompts';
 import { SignupForm } from './SignupForm';
 
+// 로그인 없이 화면만 보는 설정(디자인 확인용): 서버에 보내지 않고, 출생 연도 · 관심사는 예시 값으로 채운다.
+// 실제로 저장하는 설정은 SignupSubmit.test 가 맡는다. 여기서 모드를 고정해 .env.local 에 따라 결과가 바뀌지 않게 한다
+vi.mock('@/shared/auth/mode', () => ({ authMode: 'off' }));
+
 function renderForm(nickname = 'OO') {
   const router = createMemoryRouter(
     [
@@ -112,8 +116,10 @@ describe('SignupForm', () => {
 
   it('출생 연도는 올해부터 1900년까지 고른다', () => {
     renderForm();
-    const years = screen.getAllByRole<HTMLOptionElement>('option').map((o) => o.value);
+    const options = screen.getAllByRole<HTMLOptionElement>('option').map((o) => o.value);
+    const years = options.filter(Boolean);
 
+    expect(options[0]).toBe(''); // "선택해 주세요"
     expect(years[0]).toBe(`${new Date().getUTCFullYear()}년`);
     expect(years.at(-1)).toBe('1900년');
   });

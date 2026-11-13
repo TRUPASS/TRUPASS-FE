@@ -1,5 +1,9 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { Outlet, ScrollRestoration, useLocation } from 'react-router';
+import { Navigate, Outlet, ScrollRestoration, useLocation } from 'react-router';
+import { routes } from '@/app/routes';
+import { profileRedirect } from '@/features/auth/next';
+import { useSignedInUser } from '@/shared/auth/member';
+import { session } from '@/shared/auth/session';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { SCROLL_KEY } from './scrollMemory';
 import { needsVeil, useLeave } from './useLeave';
@@ -9,10 +13,20 @@ import { needsVeil, useLeave } from './useLeave';
  * - body 에 .tp 를 붙여 디자인 시스템의 바탕 규칙(styles/tokens.css)을 건다.
  * - 화면을 넘길 때의 구름 장막(.veil)을 깔아 둔다. 평소에는 보이지 않는다.
  * - 화면이 바뀌면 새 화면의 이름을 스크린리더에 알린다. 주소만 바뀌는 앱에서는 브라우저가 새 화면을 읽어 주지 않는다.
+ * - 회원 정보 입력을 마치지 않은 사람이 회원 화면(검색 · 결제 · 내 여행 등)으로 오면 회원 정보 입력으로 보낸다.
+ *   로그인 화면을 거치지 않는 앱 안의 이동(랜딩의 [새 검색], 세 번째 문장 엔터 등)도 여기서 막는다.
  */
 export function DesignLayout() {
   useBodyClass('tp');
   const { pathname, search } = useLocation();
+  const user = useSignedInUser();
+  // 기기에 남아 있던 값은 낡았을 수 있어(다른 기기에서 입력을 마친 경우 등) 이 탭에서 서버로 확인한 정보일 때만 막는다.
+  // 앱을 막 열었을 때는 SessionSync 가 서버에 물어본 뒤 옮긴다
+  const needsProfile =
+    user !== null &&
+    !user.profileCompleted &&
+    session.confirmed() &&
+    profileRedirect(user, pathname) === routes.signup;
   const leave = useLeave();
   const say = useRef<HTMLParagraphElement>(null);
   const shown = useRef(pathname + search);
@@ -47,7 +61,7 @@ export function DesignLayout() {
   return (
     <>
       <p ref={say} className="vh" role="status" />
-      <Outlet />
+      {needsProfile ? <Navigate to={routes.signup} replace /> : <Outlet />}
       <div className="veil" aria-hidden="true">
         <i />
       </div>

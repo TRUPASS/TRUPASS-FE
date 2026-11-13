@@ -21,7 +21,7 @@ export async function loginWithGoogle(
   const res = await apiClient.POST('/auth/google', { body: { idToken } });
   const login = parseLogin(unwrapResult(res));
   if (!login) throw malformed(res.response, res.data);
-  session.set(sessionFrom(login.tokens, login.user));
+  session.set(sessionFrom(login.tokens, login.user), { confirmed: true });
   return { newUser: login.newUser, user: login.user };
 }
 
@@ -34,7 +34,7 @@ export async function saveProfile(profile: ProfileInput): Promise<SessionUser> {
   const user = parseSessionUser(unwrapResult(res));
   if (!user) throw malformed(res.response, res.data);
   // 기다리는 사이 로그아웃했거나 다른 계정으로 바뀌었으면 로그인 상태는 건드리지 않는다
-  if (session.get()?.user.userId === user.userId) session.setUser(user);
+  if (session.get()?.user.userId === user.userId) session.setUser(user, { confirmed: true });
   return user;
 }
 
