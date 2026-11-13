@@ -5,3 +5,7 @@
 @import './styles/tokens.css' layer(components);
 @import './styles/components.css' layer(components);
 @import './styles/screens.css' layer(components);
+
+/* 디자인 시스템에도 .grow 가 있다(flex: 1 1 0). Tailwind 가 같은 이름의 유틸리티를 만들면 층 순서 때문에
+   디자인 쪽의 덮어쓰기(예: .pbox-f .hint { flex: none })를 이겨 버리므로, 이 이름은 Tailwind 가 만들지 않게 한다. */
+@source not inline('grow');

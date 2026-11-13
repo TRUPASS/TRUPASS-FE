@@ -30,7 +30,7 @@ export function SearchPage() {
           <div className="lyr" />
           <div className="home-in">
             <div className="home-hd">
-              <h1 className="home-h">어디로 떠나볼까요, {U.nick}님</h1>
+              <h1 className="home-h">{`어디로 떠나볼까요, ${U.nick}님`}</h1>
               <p className="home-p">
                 문장 세 개를 적고 엔터를 누르면 항공권 · 숙소 · 여행 장소를 한 번에 찾습니다.
               </p>

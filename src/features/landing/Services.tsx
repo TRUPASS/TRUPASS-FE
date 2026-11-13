@@ -93,7 +93,7 @@ export function Services({ onSubmit }: ServicesProps) {
                       {pad2(i + 1)}
                     </b>
                   ))}
-                  <em>/ {pad2(PROMPTS.length)}</em>
+                  <em>{`/ ${pad2(PROMPTS.length)}`}</em>
                 </span>
                 <span className="svc-bar">
                   <i />

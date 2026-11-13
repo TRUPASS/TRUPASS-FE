@@ -55,10 +55,22 @@ export function BrandSource({ name }: { name: BrandKey }) {
 
 export type AirlineKey = keyof typeof airlines;
 
-/** 항공사 로고. 이름은 옆에 글자로 따로 적으므로 대체 글은 비운다. */
+/**
+ * 항공사 로고. 이름은 옆에 글자로 따로 적으므로 대체 글은 비운다.
+ * 높이는 정해 둔 화면 크기로 못 박는다. 그림의 비율대로 다시 잡히면(16 → 16.03) 그 아래 줄들이 소수점만큼 밀린다.
+ */
 export function AirlineLogo({ name }: { name: AirlineKey }) {
   const a = airlines[name];
-  return <img className="al" src={asset(`brands/${name}.svg`)} width={a.w} height={a.h} alt="" />;
+  return (
+    <img
+      className="al"
+      src={asset(`brands/${name}.svg`)}
+      width={a.w}
+      height={a.h}
+      alt=""
+      style={{ height: a.h }}
+    />
+  );
 }
 
 /** Google 버튼용 G 마크 (Google 브랜드 가이드의 표준 4색 마크) */

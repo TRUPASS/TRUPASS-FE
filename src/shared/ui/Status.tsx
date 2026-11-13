@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react';
+import { cx } from '@/shared/lib/cx';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
 
-/** 상태: 글자 색으로 구분한다. 점은 진행 중(run)에만 붙는다. */
+/** 상태: 글자 색으로 구분한다. tone 이 없으면 기본 글자색(대기)이다. 점은 진행 중(run)에만 붙는다. */
 export function Status({
   tone,
   children,
 }: {
-  tone: 'ok' | 'warn' | 'bad' | 'run' | 'idle';
+  tone?: 'ok' | 'warn' | 'bad' | 'run';
   children: ReactNode;
 }) {
   return (
-    <span className={`st ${tone}`}>
+    <span className={cx('st', tone)}>
       {tone === 'run' && <span className="d" />}
       <span>{children}</span>
     </span>

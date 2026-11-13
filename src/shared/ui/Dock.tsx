@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { cx } from '@/shared/lib/cx';
 import { Button } from './Button';
@@ -17,8 +25,8 @@ interface DockProps {
   hint?: ReactNode;
   /** 눌러서 채우는 예시 문장 */
   examples?: readonly string[];
-  /** [다시 검색]을 누르면 갈 곳 */
-  to: string;
+  /** [다시 검색]을 누르면 갈 곳. 없으면 넘어가지 않는 버튼으로 둔다 (보기용) */
+  to?: string;
 }
 
 /**
@@ -43,7 +51,15 @@ export function Dock({
   const root = useRef<HTMLDivElement>(null);
   const head = useRef<HTMLButtonElement>(null);
   const area = useRef<HTMLTextAreaElement>(null);
-  const live = useRef({ hover: false, pinned: false, timer: 0, text: startText, up: startUp });
+  // hover: 마우스가 올라와 있어 내리지 않는다, inside: 마우스가 독 위에 있다고 알고 있다, pinned: 누르거나 적어서 올렸다
+  const live = useRef({
+    hover: false,
+    inside: false,
+    pinned: false,
+    timer: 0,
+    text: startText,
+    up: startUp,
+  });
   const has = text.trim().length > 0;
 
   useEffect(() => {
@@ -58,7 +74,8 @@ export function Dock({
   const set = (up: boolean) => {
     live.current.up = up;
     if (!up) live.current.pinned = false;
-    setState({ up, moved: true });
+    // 내려가 있는 동안 입력 상자는 화면에 없어 커서를 둘 수 없다. 올린 바로 다음에 커서를 두므로 화면에 반영하고 돌아온다
+    flushSync(() => setState({ up, moved: true }));
   };
   const raise = () => {
     clearTimeout(live.current.timer);
@@ -82,25 +99,38 @@ export function Dock({
     setText(value.slice(0, MAX));
     area.current?.focus();
   };
-  const submit = () => {
-    if (has) navigate(to);
+  // 마우스로 가리킬 때만 따라 올라온다 (터치는 누른 것으로만 판단한다)
+  const enter = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    live.current.inside = true;
+    live.current.hover = true;
+    raise();
   };
+  const leave = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    live.current.inside = false;
+    live.current.hover = false;
+    arm();
+  };
+  const submit = () => {
+    if (has && to) navigate(to);
+  };
+  const send = {
+    kind: has ? 'pri' : undefined,
+    after: 'renew',
+    'aria-disabled': has ? undefined : true,
+  } as const;
 
   return (
     <div
       ref={root}
       className={cx('dock', state.up && 'up', state.moved && (state.up ? 'lift' : 'drop'))}
-      // 마우스로 가리킬 때만 따라 올라온다 (터치는 누른 것으로만 판단한다)
-      onPointerEnter={(e) => {
-        if (e.pointerType !== 'mouse') return;
-        live.current.hover = true;
-        raise();
+      onPointerEnter={enter}
+      // 화면이 바뀌면서 독이 마우스 밑에서 새로 그려지면 들어왔다는 신호가 오지 않는다. 그때는 첫 움직임을 들어온 것으로 본다
+      onPointerMove={(e) => {
+        if (!live.current.inside) enter(e);
       }}
-      onPointerLeave={(e) => {
-        if (e.pointerType !== 'mouse') return;
-        live.current.hover = false;
-        arm();
-      }}
+      onPointerLeave={leave}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) arm();
       }}
@@ -127,7 +157,7 @@ export function Dock({
         <span className="dock-ph t-sm grow">{placeholder}</span>
         <span className="dock-de t-sm c2 grow">
           바꾸고 싶은 점을 문장으로 적어 주세요.
-          <span className="dt-only"> {desc || '조건을 반영해 다시 검색합니다.'}</span>
+          <span className="dt-only">{` ${desc || '조건을 반영해 다시 검색합니다.'}`}</span>
         </span>
         <Icon name="chevron--up" size={16} className="c3 i-up" />
         <Icon name="chevron--down" size={16} className="c3 i-dn" />
@@ -158,23 +188,23 @@ export function Dock({
               }
             }}
           />
-          <div className={hint ? 'pbox-f' : 'pbox-f je'}>
+          <div className={cx('pbox-f', !hint && 'je')}>
             {hint && <span className="hint grow">{hint}</span>}
             <div className="row g12 fn pbox-a">
-              <span className="t-xs c3 num">
-                {text.length} / {MAX}
-              </span>
-              <Button
-                kind={has ? 'pri' : undefined}
-                after="renew"
-                to={to}
-                aria-disabled={has ? undefined : true}
-                onClick={(e: MouseEvent) => {
-                  if (!has) e.preventDefault();
-                }}
-              >
-                다시 검색
-              </Button>
+              <span className="t-xs c3 num">{`${text.length} / ${MAX}`}</span>
+              {to ? (
+                <Button
+                  {...send}
+                  to={to}
+                  onClick={(e: MouseEvent) => {
+                    if (!has) e.preventDefault();
+                  }}
+                >
+                  다시 검색
+                </Button>
+              ) : (
+                <Button {...send}>다시 검색</Button>
+              )}
             </div>
           </div>
         </div>

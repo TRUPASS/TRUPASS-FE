@@ -75,11 +75,11 @@ export function SearchingPage() {
         <div className="srch-lg">
           <span className="lg-c">
             <i className="from" />
-            {ROUTE.from.name} 출발
+            {`${ROUTE.from.name} 출발`}
           </span>
           <span className="lg-c">
             <i className="to" />
-            {ROUTE.to.name} 도착
+            {`${ROUTE.to.name} 도착`}
           </span>
         </div>
         {/* 장면이 바뀌면 그 문구를 스크린리더에 알린다 */}

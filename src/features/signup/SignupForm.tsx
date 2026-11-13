@@ -65,11 +65,7 @@ export function SignupForm() {
               autoComplete="nickname"
               hinted
               onChange={(e) => setNick(e.target.value)}
-              after={
-                <span className="t-xs c3 fn num">
-                  {nick.length} / {NICK_MAX}
-                </span>
-              }
+              after={<span className="t-xs c3 fn num">{`${nick.length} / ${NICK_MAX}`}</span>}
             />
           </Field>
           <Field label="출생 연도" htmlFor="su-birth" hint="연령대에 맞는 추천에 사용합니다.">
