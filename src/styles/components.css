@@ -510,7 +510,7 @@ input:disabled:checked + .box {
 
 /* 화면을 넘길 때의 구름 장막. 모든 화면에 깔려 있고 평소에는 보이지 않는다(움직임을 끈 환경에서도 보이지 않는다).
    - 들어올 때(body.veil-in): 흰 구름에 덮인 채 시작해 구름이 위아래로 갈라지며 걷힌다.
-   - 나갈 때(html.leaving): 구름이 위아래에서 모여들어 화면을 덮고, 그 뒤 다음 화면으로 넘어간다 (src/js/site.js). */
+   - 나갈 때(html.leaving): 구름이 위아래에서 모여들어 화면을 덮고, 그 뒤 다음 화면으로 넘어간다 (app/layout/useLeave.ts). */
 .veil {
   position: fixed;
   z-index: 90;

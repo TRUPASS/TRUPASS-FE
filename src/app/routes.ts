@@ -1,7 +1,7 @@
 import { generatePath } from 'react-router';
 
 export const routes = {
-  // 디자인을 옮긴 화면 (예시 데이터로 채워져 있다)
+  // 디자인된 화면 (예시 데이터로 채워져 있다)
   landing: '/',
   login: '/login',
   signup: '/signup',
