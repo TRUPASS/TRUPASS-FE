@@ -2,7 +2,7 @@
 //   하늘(구름이 가까워진다) → 숫자 → 이용 방법(좌우로 넘기는 상자) → 항공 · 숙소 · 체험 문장 입력 → 푸터.
 //   세 번째 문장에서 엔터를 누르면 02 로그인으로 넘어간다. 움직임은 src/js/site.js 가 스크롤 위치(--p)로 만든다.
 //   스크립트가 꺼져 있으면 연출 없이 같은 내용이 위에서 아래로 그대로 보인다 (screens.css 의 .js 범위 참고).
-import { page, logo, mark, btn, ibtn, ic, ask, chips, brandMark, brandName } from '../lib/ui.mjs';
+import { page, logo, btn, ibtn, ic, ask, chips, brandMark, brandName } from '../lib/ui.mjs';
 import { PROMPTS, STATS, HOW } from '../lib/data.mjs';
 
 const pad2 = n => String(n).padStart(2, '0');
@@ -12,7 +12,7 @@ const top = () => `<div class="lp-top" data-n="TopBar">${btn('로그인', { size
 
 const hero = () => `<section class="lp-hero" data-sec="hero" data-n="Hero"><div class="hold"><div class="win" data-n="Window">
 <div class="lyr sky" data-n="Sky"></div><div class="lyr mid" data-n="CloudSea"></div><div class="lyr deck" data-n="CloudDeck"></div><div class="lyr haze" data-n="Haze"></div>
-<div class="hero-logo" data-n="Logo">${logo(30, { href: '#' })}</div>
+<div class="hero-logo" data-n="Logo">${logo(28, { inv: 1, href: '#' })}</div>
 <div class="hero-hint" aria-hidden="true" data-n="ScrollHint"><span>스크롤을 내려 여행을 시작하세요</span><i></i></div>
 <div class="hero-t" data-n="Title">
   <div class="hero-wm" data-n="Wordmark"><span class="wm-b">TRUPASS</span><span class="wm-s">AI Travel Search</span></div>
@@ -59,7 +59,7 @@ const ftr = () => `<footer class="lp-ftr" data-n="Footer"><div class="ftr-win" d
   <div class="ftr-c" data-n="Guide"><span class="k">안내</span><a href="#how" data-goto="#how">이용 방법</a><span>이용약관</span><span>개인정보 처리방침</span><span>전자금융거래 이용약관</span></div>
   <div class="ftr-c" data-n="Contact"><span class="k">고객센터</span><span class="v num">1600-0000</span><span class="d">평일 09:00 ~ 18:00</span><a href="02-login.html">로그인</a></div>
 </div>
-<div class="ftr-e" data-n="Legal"><a class="logo inv" href="#" aria-label="Trupass 맨 위로">${mark(24)}<span class="wm">Trupass</span></a><span>© 2026 Trupass</span><span class="grow"></span><a class="ul" href="../assets/CREDITS.md">사진 · 지도 · 글꼴 · 회사 마크 출처</a></div>
+<div class="ftr-e" data-n="Legal">${logo(20, { inv: 'duo', href: '#', label: 'Trupass 맨 위로' })}<span>© 2026 Trupass</span><span class="grow"></span><a class="ul" href="../assets/CREDITS.md">사진 · 지도 · 글꼴 · 회사 마크 출처</a></div>
 </div></footer>`;
 
 // 정지 화면을 찍는 자리: [이름, 구간, 구간 안의 위치(0–1)]. tools/render.mjs 가 이 위치로 스크롤해 화면을 찍는다.

@@ -9,3 +9,4 @@ preview/m/
 node_modules/
 .logo-cache/
 figma/plugin/
+__pycache__/

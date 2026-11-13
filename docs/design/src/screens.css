@@ -166,7 +166,6 @@
 .ftr-src { flex-direction: row; flex-wrap: wrap; gap: 8px; }
 .ftr-src .s { display: flex; flex-direction: row; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 10px; border-radius: var(--r-pill); background: var(--n-50); color: var(--n-900); font-size: 13px; line-height: 20px; font-weight: 500; }
 .ftr-e { flex-direction: row; align-items: center; gap: 20px; font-size: 12px; line-height: 18px; color: var(--w-78); }
-.ftr-e .logo .wm { font-size: 18px; }
 
 @media (max-width: 1199px) {
   .hero-cp { width: min(60vw, 520px); margin-right: 2vw; }

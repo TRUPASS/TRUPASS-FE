@@ -2,6 +2,11 @@
 
 목업에 쓴 외부 자료의 출처와 라이선스다. 실제 서비스에서는 연동 API가 주는 자료로 대체한다.
 
+## 로고
+
+- `assets/logo/` — Trupass 로고와 파비콘. 팀이 만든 그림(`source/trupass-logo.webp`)이 원본이며 외부 자료가 아니다.
+  `tools/make-logo.py` 가 원본을 벡터(SVG)로 옮기고 파비콘(svg · ico · png)을 만들었다. 모양과 색은 원본을 따른다.
+
 ## 지도
 
 - `assets/map/*.jpg` — 지도 데이터 © OpenStreetMap contributors (ODbL), 타일 그림 CC BY-SA 2.0.

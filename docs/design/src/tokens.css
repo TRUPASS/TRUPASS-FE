@@ -35,6 +35,8 @@
   --bx-tripdotcom: #287dfa; --bx-expedia: #191e3b; --bx-bookingdotcom: #003a9a; --bx-hotelsdotcom: #ef3346;
   --bx-googlemaps: #4285f4; --bx-tripadvisor: #34e0a1; --bx-tabelog: #f2cc38; --bx-naver: #03c75a;
   --bx-ink: #000000;              /* 옅은 회사 색 바탕 위에 올리는 마크의 색 */
+  /* 로고의 두 색 (assets/logo 의 원본에서 잰 값). 화면의 인디고 · 하늘색과 거의 같지만 로고는 이 값으로 그린다 */
+  --logo-navy: #1a1a5c; --logo-sky: #2285cf;
 
   /* semantic */
   --canvas: var(--n-0);

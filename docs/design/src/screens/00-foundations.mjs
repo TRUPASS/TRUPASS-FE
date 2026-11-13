@@ -43,8 +43,9 @@ export const foundations = screens => ({
   html: () => page({ title: '00 디자인 기준', body: `<main class="fd" data-n="Foundations">
 <div class="g10" data-n="Title"><h1 class="t-display">하늘 · 흰색 · 인디고</h1><p class="t-lg c2 mw720">Trupass 디자인 기준 3차, 2026.11 정리본. 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 색은 사진과 하늘이 맡고, 화면은 넉넉한 모서리와 가는 큰 글자로 부드럽게 정리한다. 화면 소스는 docs/design 에 있다.</p></div>
 
-<section class="fd-sec" data-n="Logo"><div class="fd-h"><h2 class="t-h2">로고</h2><span class="t-sm c3">승인 체크의 긴 획이 이륙 방향으로 이어진다. 워드마크는 한 가지 색으로 쓴다.</span></div>
-<div class="row g16 wrap"><div class="logo-t row g24">${mark(64)}${mark(40)}${mark(24)}${mark(16)}</div><div class="logo-t">${logo(32, { href: '#' })}</div><div class="logo-t on-ink">${logo(32, { inv: 1, href: '#' })}</div><div class="logo-t on-sky">${logo(32, { inv: 1, href: '#' })}</div><div class="logo-t wmk"><span class="wm-b">TRUPASS</span><span class="wm-s">AI Travel Search</span></div></div></section>
+<section class="fd-sec" data-n="Logo"><div class="fd-h"><h2 class="t-h2">로고</h2><span class="t-sm c3">탑승권을 가로지른 길이 화살표로 이어진다. 흰 바탕에서는 남색과 하늘색 두 색, 남색 면에서는 흰색과 하늘색, 사진과 색 면 위에서는 흰색 한 가지로 쓴다. 끝의 가는 글자는 랜딩 첫 화면의 제목에만 쓴다.</span></div>
+<div class="row g16 wrap"><div class="logo-t">${logo(40, { href: '#' })}</div><div class="logo-t on-ink">${logo(32, { inv: 'duo', href: '#' })}</div><div class="logo-t on-sky">${logo(32, { inv: 1, href: '#' })}</div></div>
+<div class="row g16 wrap"><div class="logo-t row g24">${mark(64)}${mark(40)}${mark(24)}${mark(16)}</div><div class="logo-t wmk"><span class="wm-b">TRUPASS</span><span class="wm-s">AI Travel Search</span></div></div></section>
 
 <section class="fd-sec" data-n="Color"><div class="fd-h"><h2 class="t-h2">색</h2><span class="t-sm c3">흰색에서 인디고로 이어지는 중립 한 벌(누런 기 없이 인디고 쪽 톤) + 하늘색 한 벌. 상태색은 글자에만 쓴다. 색 값은 전부 tokens.css 의 토큰 블록에 둔다.</span></div>
 ${ramp('Neutral', R('n'), '흰색 → 인디고 · 화면의 대부분')}${ramp('Sky', R('b'), '강조 · 링크 · 선택 상태')}

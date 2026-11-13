@@ -9,7 +9,7 @@ export const recap = (o = {}) => `<div class="rc${o.cls ? ' ' + o.cls : ''}" dat
 
 const auth = () => `<main class="auth" data-n="Auth">
 <section class="auth-win" data-n="Window"><div class="lyr" data-n="Sky"></div>
-  <div class="auth-top" data-n="Top">${logo(30, { inv: 1 })}</div>
+  <div class="auth-top" data-n="Top">${logo(28, { inv: 1 })}</div>
   <div class="auth-btm" data-n="Bottom"><p class="auth-h">적어 둔 조건으로<br>바로 검색을 시작합니다.</p>${recap()}</div>
 </section>
 <section class="auth-side" data-n="Side"><div class="auth-card" data-n="Card">

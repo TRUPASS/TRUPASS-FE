@@ -12,7 +12,7 @@ const TEXT = {
   done: ['결과를 정리했습니다', '요청에 가까운 순서로 정리해 보여 드립니다.'],
 };
 // 지금 단계의 문구 하나만 보이고 읽힌다. 나머지는 숨겨 둔다(스크린리더에도 읽히지 않는다).
-const body = () => `<header class="srch-top" data-n="Header">${logo(28, { href: '05-home.html' })}<a class="btn txt n sm" href="05-home.html" data-n="Cancel">검색 취소</a></header>
+const body = () => `<header class="srch-top" data-n="Header">${logo(24, { href: '05-home.html' })}<a class="btn txt n sm" href="05-home.html" data-n="Cancel">검색 취소</a></header>
 <main class="srch" data-n="Main">
 <div class="globe" data-n="Globe"><canvas id="globe" width="560" height="560" role="img" aria-label="${ROUTE.from.name}에서 ${ROUTE.to.name}으로 가는 경로를 표시한 지구본"></canvas></div>
 <div class="srch-lg" data-n="Legend"><span class="lg-c"><i class="from"></i>${ROUTE.from.name} 출발</span><span class="lg-c"><i class="to"></i>${ROUTE.to.name} 도착</span></div>

@@ -6,15 +6,14 @@
 .logo, .box, .rad, .st, .st .d, .tag, .step .no, .steps .bar, .av, .src, .pin { display: flex; }
 .is-empty { opacity: .78; }
 
-/* 로고: 승인 체크 마크. 바탕과 획의 색은 --mk-t · --mk-f 로 정한다 */
-.logo { flex-direction: row; align-items: center; gap: 10px; flex: none; }
-.logo .wm { font-size: 21px; line-height: 26px; font-weight: 500; letter-spacing: .01em; color: var(--tx); }
-.logo.inv .wm { color: var(--on-photo); }
-.mark { --mk-t: var(--brand); --mk-f: var(--n-0); }
-.mark.inv, .logo.inv .mark { --mk-t: var(--n-0); --mk-f: var(--brand); }
-.mark rect { fill: var(--mk-t); }
-.mark .s { fill: none; stroke: var(--mk-f); }
-.mark .f { fill: var(--mk-f); }
+/* 로고: 마크(.mark) + 워드마크(.wm). 두 그림은 높이가 같고 워드마크 쪽이 사이 간격까지 품고 있어, 붙여 놓으면 원본의 배치 그대로다.
+   색은 --lg-a(남색 자리) · --lg-b(하늘색 자리)로 정한다: 흰 바탕은 두 색, 사진 · 색 면 위(.inv)는 전부 흰색, 남색 면 위(.duo)는 흰색 + 하늘색 */
+.logo { flex-direction: row; align-items: center; flex: none; }
+.mark, .logo .wm { flex: none; --lg-a: var(--logo-navy); --lg-b: var(--logo-sky); }
+.mark .a, .logo .wm .a { fill: var(--lg-a); }
+.mark .b { fill: var(--lg-b); }
+.mark.inv, .logo.inv .mark, .logo.inv .wm { --lg-a: var(--n-0); --lg-b: var(--n-0); }
+.mark.duo, .logo.duo .mark { --lg-b: var(--logo-sky); }
 /* 회사 마크 (Simple Icons). 색은 각 회사의 색. 옅은 색의 마크는 회사 색 바탕(.t) 위에 검정(.g-d)이나 흰색(.g-l)으로 올린다 */
 .bm { fill: currentColor; }
 .bm .g-l { fill: var(--n-0); }

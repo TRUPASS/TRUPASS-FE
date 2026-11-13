@@ -102,6 +102,29 @@
 | 보낸 뒤 | 엔터 또는 `[다시 검색]`으로 새 결과(v2)로 넘어간다. 비어 있으면 `[다시 검색]`은 꺼져 있다 |
 | 스크립트가 꺼져 있을 때 | 펼친 채로 페이지 끝에 놓인다 |
 
+## 로고와 파비콘
+
+팀이 만든 로고를 쓴다. 탑승권을 가로지른 길이 화살표로 이어지는 마크와 `TRUPASS` 워드마크다. 받은 그림이 2000×432 래스터(webp)라서 `tools/make-logo.py`가 벡터로 옮겼고, 화면과 파비콘은 전부 그 결과물을 쓴다.
+
+| 파일 | 쓰임 |
+| --- | --- |
+| `assets/logo/source/trupass-logo.webp` | 받은 원본. 아래 파일은 전부 여기서 만든다 |
+| `assets/logo/trupass-logo.svg` · `trupass-mark.svg` | 전체 로고 · 마크만. 앱 헤더의 `src/shared/ui/trupass-logo.svg`도 같은 파일이다 |
+| `src/lib/logo.mjs` | 화면에 넣는 경로 자료. `lib/ui.mjs`의 `mark()` · `logo()`가 쓴다 |
+| `assets/logo/favicon.svg` · `favicon.ico` · `apple-touch-icon.png` | 파비콘. 앱의 `public/`에도 같은 파일을 둔다 |
+
+- 색: 남색 `#1a1a5c`, 하늘색 `#2285cf`. 원본에서 잰 값이고 `tokens.css`의 `--logo-navy` · `--logo-sky`에 있다. 흰 바탕에서는 두 색, 남색 면(푸터)에서는 흰색 + 하늘색, 사진과 색 면 위(랜딩 · 로그인)에서는 흰색 한 가지로 쓴다.
+- 놓인 자리: 랜딩의 왼쪽 위와 푸터, 로그인, 앱 화면의 상단 바, 검색 중 화면, `00 디자인 기준`. 모바일 랜딩은 자리가 좁아 마크만 보인다.
+- 파비콘은 마크만 쓴다. SVG 파비콘은 어두운 테마의 탭에서 남색이 흰색으로 바뀐다.
+- 옮긴 정확도: 윤곽선이 원본에서 벗어난 거리가 평균 0.1px, 최대 0.9px이다(원본 폭 2000px 기준). 곧은 변은 직선으로 옮기고, 수평 · 수직에 가까운 변은 딱 맞췄으며, 글자의 밑선과 윗선은 한 높이로 모았다. 최대값은 뭉개져 있던 글자 모서리를 두 변이 만나는 점으로 세운 자리에서 나온다.
+- 랜딩 첫 화면의 큰 `TRUPASS` 글자는 로고가 아니라 화면 제목이라 가는 글자 그대로 두었다.
+
+원본 그림을 바꾸면 다시 만든다(Pillow와 numpy가 필요하다).
+
+```bash
+python3 tools/make-logo.py --app ../..    # assets/logo/*, src/lib/logo.mjs, 앱의 public/ 파비콘과 src/shared/ui/trupass-logo.svg
+```
+
 ## 디자인 기준
 
 - 색: 흰 바탕(`#ffffff`)에 깊은 인디고 글자(`#1c1f5a`), 강조는 하늘색(`#2b8fd9`) 한 가지. 옅은 면과 선은 누런 기 없이 인디고 쪽 중립 톤이다. 색은 사진과 하늘이 맡는다. 상태(완료 · 주의 · 실패)는 글자 색으로 구분하고, 점은 진행 중인 것에만 붙인다. 색 값은 전부 `src/tokens.css`의 토큰 블록에 있다.
@@ -126,12 +149,12 @@ docs/design
 │  ├─ screens.css       화면별 스타일 (랜딩 스크롤 구간 포함)
 │  ├─ js/site.js        스크롤 진행도, 이용 방법 상자, 문장 입력과 화면 이동, 결과 화면의 선택 · 합계, 독
 │  ├─ js/globe.js       06 검색 중 화면의 지구본
-│  ├─ lib/              아이콘(Carbon), 회사 마크(Simple Icons), 마크업 헬퍼, 목업 데이터
+│  ├─ lib/              아이콘(Carbon), 회사 마크(Simple Icons), 로고 경로, 마크업 헬퍼, 목업 데이터
 │  ├─ screens/          화면 하나당 모듈 하나 (parts-*.mjs 는 여러 화면이 함께 쓰는 조각)
 │  └─ build.mjs         dist/ 생성
-├─ assets/              배경 사진 · 지도 · 장소 사진 · 항공사 로고 · 지구본 데이터 · 이용 방법 그림, CREDITS.md
+├─ assets/              로고와 파비콘(logo/) · 배경 사진 · 지도 · 장소 사진 · 항공사 로고 · 지구본 데이터 · 이용 방법 그림, CREDITS.md
 ├─ preview/             폭별 한눈에 보기(JPEG). 화면별 PNG는 렌더로 생성
-└─ tools/               렌더, 흐름 검사, 에셋 가공, 피그마 변환(tools/figma, 아래 "피그마 반영 상태" 참고)
+└─ tools/               렌더, 흐름 검사, 로고 · 에셋 가공, 피그마 변환(tools/figma, 아래 "피그마 반영 상태" 참고)
 ```
 
 ## 실행
@@ -246,8 +269,8 @@ npm run figma:plugin                # figma/plugin/code.js · manifest.json 생�
 - 10 결제 권한 등록은 요청에 없던 화면이다. "회원별로 사전 서명된 증명서와 설정된 권한"이 있으려면 처음 한 번은 등록해야 하므로 첫 결제 직전에 두었다.
 - 검색 결과 없음, 권한 초과, 요금 변동, 재고 마감, 결제 실패 같은 예외 화면은 이번 범위에 없다.
 - Google 로그인 버튼은 실제 구현에서 Google의 공식 버튼 규격을 따라야 한다.
-- 로고와 워드마크는 제안안이다. `src/lib/ui.mjs`의 `mark()` 한 곳만 바꾸면 된다.
+- 로고는 팀이 만든 그림(webp)을 벡터로 옮긴 것이다. 원본 벡터 파일(SVG · AI)이 따로 있으면 그것을 기준으로 `assets/logo/`와 `src/lib/logo.mjs`를 바꾸는 편이 낫다.
 
 ## 출처
 
-배경 사진 · 장소 사진 · 항공사 로고(Wikimedia Commons), 지도(OpenStreetMap), 지구본 데이터(Natural Earth), 아이콘(IBM Carbon), 회사 마크(Simple Icons), 글꼴(Outfit · Gothic A1), 지구본 라이브러리(d3-geo 외)의 출처와 라이선스는 [`assets/CREDITS.md`](assets/CREDITS.md)에 있다.
+로고(팀 제작), 배경 사진 · 장소 사진 · 항공사 로고(Wikimedia Commons), 지도(OpenStreetMap), 지구본 데이터(Natural Earth), 아이콘(IBM Carbon), 회사 마크(Simple Icons), 글꼴(Outfit · Gothic A1), 지구본 라이브러리(d3-geo 외)의 출처와 라이선스는 [`assets/CREDITS.md`](assets/CREDITS.md)에 있다.

@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { ICONS } from './icons.mjs';
 import { BRANDS } from './brands.mjs';
+import { LOGO } from './logo.mjs';
 
 // 항공사 로고의 화면 크기 (tools/fetch-airline-logos.py 가 로고와 함께 만든다)
 const AIRLINES = JSON.parse(readFileSync(new URL('../../assets/brands/airlines.json', import.meta.url), 'utf8'));
@@ -17,11 +18,17 @@ export const ic = (name, size = 16, cls = '') => {
   return `<svg class="ic${cls ? ' ' + cls : ''}" width="${size}" height="${size}" viewBox="0 0 32 32" data-n="icon/${name}" aria-hidden="true">${ICONS[name]}</svg>`;
 };
 
-// 로고: 승인 체크의 긴 획이 이륙 방향으로 이어지고 그 끝에 기체가 놓인다. 워드마크는 한 가지 색. 색은 CSS(.mark)가 정한다.
+// 로고: 탑승권을 가로지른 길이 화살표로 이어지는 마크 + TRUPASS 워드마크. 경로는 lib/logo.mjs (tools/make-logo.py 가 원본 그림에서 옮긴 것).
+// s 는 높이(px)이고 폭은 비율대로 정해진다. 마크와 워드마크는 따로 놓인 그림이라 좁은 자리에서는 워드마크만 숨길 수 있다.
+// 색은 CSS(.mark · .logo)가 정한다: 기본은 남색 + 하늘색, inv 는 사진 · 색 면 위의 흰색, inv: 'duo' 는 남색 면 위의 흰색 + 하늘색.
+const lgw = (s, w) => Math.round(s * w / LOGO.h * 10) / 10;
+const lgc = o => (o.inv ? ' inv' : '') + (o.inv === 'duo' ? ' duo' : '');
 export const mark = (s = 28, o = {}) =>
-  `<svg class="mark${o.inv ? ' inv' : ''}" width="${s}" height="${s}" viewBox="0 0 32 32" data-n="logo/mark" aria-hidden="true"><rect width="32" height="32" rx="10"/><path class="s" d="M7.6 16.6l4.9 5 7.3-8.6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path class="f" d="M26 6l-9 2.5 4.1 2.4 2.4 4.1z"/></svg>`;
-export const logo = (s = 28, o = {}) =>
-  `<a class="logo${o.inv ? ' inv' : ''}" href="${o.href || '01-landing.html'}" aria-label="Trupass 처음 화면" data-n="Logo">${mark(s)}<span class="wm">Trupass</span></a>`;
+  `<svg class="mark${lgc(o)}" width="${lgw(s, LOGO.mw)}" height="${s}" viewBox="0 0 ${LOGO.mw} ${LOGO.h}" data-n="logo/mark" aria-hidden="true"><path class="a" d="${LOGO.a}"/><path class="b" d="${LOGO.b}"/></svg>`;
+const wordmark = s =>
+  `<svg class="wm" width="${lgw(s, LOGO.w - LOGO.mw)}" height="${s}" viewBox="${LOGO.mw} 0 ${Math.round((LOGO.w - LOGO.mw) * 10) / 10} ${LOGO.h}" data-n="logo/wordmark" aria-hidden="true"><path class="a" d="${LOGO.t}"/></svg>`;
+export const logo = (s = 24, o = {}) =>
+  `<a class="logo${lgc(o)}" href="${o.href || '01-landing.html'}" aria-label="${o.label || 'Trupass 처음 화면'}" data-n="Logo">${mark(s)}${wordmark(s)}</a>`;
 
 // Google 버튼용 G 마크 (Google 브랜드 가이드의 표준 4색 마크)
 export const gmark = (s = 18) =>
@@ -107,7 +114,7 @@ export const header = (o = {}) => {
   if (o.kind === 'bare') {
     return `<header class="${cls}" data-n="Header">${logo()}<div class="row g12"><span class="t-sm c3 dt-only">${o.mail || ''}</span><a class="btn txt n sm" href="01-landing.html" data-n="Button">로그아웃</a></div></header>`;
   }
-  return `<header class="${cls}" data-n="Header"><div class="row g32">${logo(28, { href: '05-home.html' })}<nav class="nav dt-only" aria-label="주 메뉴" data-n="Nav">${NAV_IN.map(([l, h]) => `<a class="${l === o.on ? 'on' : ''}"${h ? ` href="${h}"` : ' aria-disabled="true"'}${l === o.on ? ' aria-current="page"' : ''}>${l}</a>`).join('')}</nav></div><div class="row g8">${ibtn('notification', { kind: 'txt n', label: '알림', n: 'Notifications' })}<button type="button" class="me dt-only" aria-label="OO님 계정 메뉴" data-n="Account"><span class="av">O</span><span class="w5">OO님</span>${ic('chevron--down', 16, 'c3')}</button>${ibtn('menu', { kind: 'txt n', cls: 'm-only', label: '메뉴', n: 'Menu' })}</div></header>`;
+  return `<header class="${cls}" data-n="Header"><div class="row g32">${logo(24, { href: '05-home.html' })}<nav class="nav dt-only" aria-label="주 메뉴" data-n="Nav">${NAV_IN.map(([l, h]) => `<a class="${l === o.on ? 'on' : ''}"${h ? ` href="${h}"` : ' aria-disabled="true"'}${l === o.on ? ' aria-current="page"' : ''}>${l}</a>`).join('')}</nav></div><div class="row g8">${ibtn('notification', { kind: 'txt n', label: '알림', n: 'Notifications' })}<button type="button" class="me dt-only" aria-label="OO님 계정 메뉴" data-n="Account"><span class="av">O</span><span class="w5">OO님</span>${ic('chevron--down', 16, 'c3')}</button>${ibtn('menu', { kind: 'txt n', cls: 'm-only', label: '메뉴', n: 'Menu' })}</div></header>`;
 };
 // 푸터 (앱 화면). 회사 이름과 요금이 예시라는 사실을 여기에 한 번 적는다.
 export const footer = (o = {}) =>
@@ -138,6 +145,10 @@ export const chips = (p, cls = '') => `<div class="chips${cls ? ' ' + cls : ''}"
 // title 은 설계용 이름(번호 포함, 피그마 레이어 이름), tab 은 브라우저 탭에 보이는 이름.
 // cls 에 veil-in 을 주면 그 화면은 구름 장막이 걷히며 열린다(로그인 · 회원 정보 입력). 장막(.veil)은 모든 화면에 깔려 있고 평소에는 보이지 않는다.
 // <html class="js"> 는 스크립트가 켜져 있을 때만 붙는다. 스크롤 연출처럼 스크립트가 있어야 풀리는 숨김은 전부 .js 아래에 둔다.
+// 파비콘: 탭에는 SVG(어두운 테마에서 남색이 흰색으로 바뀐다), SVG 를 못 쓰는 곳에는 ico, 홈 화면에 추가할 때는 apple-touch-icon
+export const ICON_LINKS = base => `<link rel="icon" href="${base}favicon.ico" sizes="32x32">
+<link rel="icon" href="${base}assets/logo/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="${base}assets/logo/apple-touch-icon.png">`;
 export const DESC = '여행 조건을 문장 세 개로 적으면 항공권과 숙소, 주변 장소를 한 번에 찾아 주는 Trupass의 화면 시안입니다.';
 export const page = ({ title, tab, cls = '', body, scripts = [], attrs: at = '' }) => `<!doctype html>
 <html lang="ko">
@@ -147,6 +158,7 @@ export const page = ({ title, tab, cls = '', body, scripts = [], attrs: at = '' 
 <title>${tab || title.replace(/^\d+\s*/, '')} | Trupass</title>
 <meta name="description" content="${DESC}">
 <meta name="robots" content="noindex, nofollow">
+${ICON_LINKS('../')}
 <script>document.documentElement.classList.add('js')</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

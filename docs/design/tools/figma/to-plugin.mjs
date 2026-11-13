@@ -8,7 +8,7 @@ import { createTables } from './compact.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../..');
 const build = join(root, '.figma-build');
-const VER = 'v4';
+const VER = 'v5';
 const order = JSON.parse(readFileSync(join(root, 'dist/screens.json'), 'utf8'));
 const T = createTables();
 const load = (bp, key) => JSON.parse(readFileSync(join(build, 'tree', bp, key + '.json'), 'utf8'));

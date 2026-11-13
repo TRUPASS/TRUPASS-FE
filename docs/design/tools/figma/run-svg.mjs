@@ -36,7 +36,7 @@ for (const { bp, key } of jobs) {
 console.log(`svg: ${jobs.length} files, ${(total / 1048576).toFixed(1)} MB`);
 
 // 보드: 폭마다 한 장. 첫 줄은 랜딩의 스크롤 자리, 둘째 줄은 로그인부터 내 여행까지. (피그마에 한 번에 올리는 단위)
-const BOARD = { ver: 'v4', date: '2026.11 4차', site: 'trupass-preview.vercel.app' };
+const BOARD = { ver: 'v5', date: '2026.11 로고 교체', site: 'trupass-preview.vercel.app' };
 if (args.includes('--boards')) {
   const dir = join(build, 'boards');
   rmSync(dir, { recursive: true, force: true });
