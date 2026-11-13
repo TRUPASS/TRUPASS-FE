@@ -19,10 +19,10 @@ interface StageCellProps {
 function StageCell({ label, tone, text, time }: StageCellProps) {
   return (
     <td data-l={label}>
-      <span className="g2">
+      <div className="g2">
         <Status tone={tone}>{text}</Status>
         {time && <span className="t-xs c3 num">{time}</span>}
-      </span>
+      </div>
     </td>
   );
 }
@@ -67,10 +67,10 @@ export function PayProgress() {
         <tbody>
           <tr>
             <th scope="row">
-              <span className="g2">
+              <div className="g2">
                 <span className="t-md w6">{f.air}</span>
                 <span className="t-sm c2">{`항공권 ${f.out.no} / ${f.back.no}, 성인 2명`}</span>
-              </span>
+              </div>
             </th>
             <StageCell label="확보" tone="ok" text="좌석 확보" time={PAY.air.hold} />
             <StageCell label="결제" tone="ok" text="결제 완료" time={PAY.air.pay} />
@@ -79,10 +79,10 @@ export function PayProgress() {
           </tr>
           <tr>
             <th scope="row">
-              <span className="g2">
+              <div className="g2">
                 <span className="t-md w6">{h.name}</span>
                 <span className="t-sm c2">{`숙소 3박, ${h.room} 1실`}</span>
-              </span>
+              </div>
             </th>
             <StageCell label="확보" tone="ok" text="객실 확보" time={PAY.stay.hold} />
             <StageCell label="결제" tone="run" text="결제 중" />
