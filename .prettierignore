@@ -7,3 +7,4 @@ src/shared/api/schema.d.ts
 .github
 .coderabbit.yaml
 src/assets/geo/world.json
+public/CREDITS.md
