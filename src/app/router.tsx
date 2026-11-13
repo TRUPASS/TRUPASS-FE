@@ -20,11 +20,14 @@ import { SignupPage } from '@/pages/SignupPage';
 import { StyleGuidePage } from '@/pages/StyleGuidePage';
 import { TripsPage } from '@/pages/TripsPage';
 import { DesignLayout } from './layout/DesignLayout';
+import { forgetScrollOnFreshVisit } from './layout/scrollMemory';
 import { RootLayout } from './RootLayout';
 import { routes } from './routes';
 
+forgetScrollOnFreshVisit();
+
 export const router = createBrowserRouter([
-  // 디자인을 옮긴 화면: 랜딩부터 결제 완료 · 내 여행까지. 지금은 예시 데이터(shared/sample)로 채워져 있다.
+  // 디자인된 화면: 랜딩부터 결제 완료 · 내 여행까지. 지금은 예시 데이터(shared/sample)로 채워져 있다.
   {
     element: <DesignLayout />,
     children: [
