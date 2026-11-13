@@ -1,0 +1,576 @@
+/* Trupass 디자인 토큰 (하늘 · 흰색 · 인디고)
+   - 색: 흰 바탕에 깊은 인디고 글자, 강조는 하늘색 한 가지. 사진과 하늘이 색을 맡는다. 옅은 면과 선은 누런 기 없이 인디고 쪽 중립 톤.
+   - 글꼴: 라틴 · 숫자는 Outfit, 한글은 Gothic A1. 큰 글자는 가늘게(300), 작은 글자는 보통 굵기.
+   - 모서리: 넉넉하게. 버튼과 표식은 알약형, 입력 14, 카드 24, 창(사진을 담는 틀) 28.
+   - 레이아웃: 화면의 뼈대는 flex(row/column) + gap + padding. 스크롤 연출을 위한 겹침(하늘 · 구름 · 지구본)만 절대 위치를 쓴다.
+   - 색 값은 전부 이 블록에 둔다. 다른 파일에서는 토큰만 쓴다. */
+:root {
+  /* neutral: 흰색에서 인디고로 */
+  --n-0: #ffffff;
+  --n-25: #fbfcfe;
+  --n-50: #f5f6fb;
+  --n-100: #eef0f7;
+  --n-200: #e2e5ef;
+  --n-300: #cfd3e1;
+  --n-400: #a7aabf;
+  --n-450: #8a8eaa;
+  --n-500: #63688d;
+  --n-600: #555a82;
+  --n-700: #373b6c;
+  --n-800: #272b60;
+  --n-900: #1c1f5a;
+  /* sky blue */
+  --b-50: #eef6fd;
+  --b-100: #dcedfa;
+  --b-200: #b8dbf5;
+  --b-300: #86c2ee;
+  --b-400: #4fa6e4;
+  --b-500: #2b8fd9;
+  --b-600: #1971b6;
+  --b-700: #175f99;
+  --b-800: #154c7a;
+  --b-900: #12385a;
+  /* status */
+  --g-50: #ebf8f0;
+  --g-100: #d2efdd;
+  --g-600: #107a4f;
+  --g-700: #0a6240;
+  --y-50: #fff5e3;
+  --y-100: #fde6bd;
+  --y-600: #a06604;
+  --y-700: #824c01;
+  --r-50: #fff1ef;
+  --r-100: #ffdfdc;
+  --r-600: #c02c29;
+  --r-700: #9e1d1c;
+
+  /* 투명도가 있는 색. 끝의 숫자는 불투명도(%). k 는 인디고, d 는 더 짙은 남색(그림자 · 사진 덧씌움), w 는 흰색 */
+  --k-08: rgba(28, 31, 90, 0.08);
+  --k-10: rgba(28, 31, 90, 0.1);
+  --k-12: rgba(28, 31, 90, 0.12);
+  --k-16: rgba(28, 31, 90, 0.16);
+  --k-18: rgba(28, 31, 90, 0.18);
+  --k-22: rgba(28, 31, 90, 0.22);
+  --d-16: rgba(18, 22, 70, 0.16);
+  --d-28: rgba(18, 22, 70, 0.28);
+  --d-35: rgba(18, 22, 70, 0.35);
+  --d-50: rgba(18, 22, 70, 0.5);
+  --w-18: rgba(255, 255, 255, 0.18);
+  --w-22: rgba(255, 255, 255, 0.22);
+  --w-34: rgba(255, 255, 255, 0.34);
+  --w-40: rgba(255, 255, 255, 0.4);
+  --w-50: rgba(255, 255, 255, 0.5);
+  --w-70: rgba(255, 255, 255, 0.7);
+  --w-78: rgba(255, 255, 255, 0.78);
+  --w-86: rgba(255, 255, 255, 0.86);
+  --w-90: rgba(255, 255, 255, 0.9);
+  --w-92: rgba(255, 255, 255, 0.92);
+  /* 사진 위에 흰 글자를 얹기 위한 덧씌움 (위 → 아래) */
+  --scrim-stage: linear-gradient(
+    180deg,
+    rgba(18, 22, 70, 0.52),
+    rgba(18, 22, 70, 0.52) 42%,
+    rgba(18, 22, 70, 0.66)
+  );
+  --scrim-auth: linear-gradient(
+    180deg,
+    rgba(18, 22, 70, 0.34),
+    rgba(18, 22, 70, 0.14) 32%,
+    rgba(18, 22, 70, 0.7)
+  );
+  --scrim-auth-s: linear-gradient(
+    180deg,
+    rgba(18, 22, 70, 0.48),
+    rgba(18, 22, 70, 0.6) 40%,
+    rgba(18, 22, 70, 0.76)
+  ); /* 창이 낮아지는 태블릿 · 모바일: 글이 창 위쪽까지 올라온다 */
+  --scrim-stats: linear-gradient(
+    180deg,
+    rgba(18, 60, 104, 0.7),
+    rgba(21, 76, 122, 0.68) 55%,
+    rgba(21, 76, 122, 0.78)
+  );
+  --mask-fade: linear-gradient(to bottom, transparent 41%, #000 58%);
+
+  /* 화면에 이름을 적는 회사의 마크 색 (Simple Icons 가 싣는 각 회사의 색) */
+  --bx-tripdotcom: #287dfa;
+  --bx-expedia: #191e3b;
+  --bx-bookingdotcom: #003a9a;
+  --bx-hotelsdotcom: #ef3346;
+  --bx-googlemaps: #4285f4;
+  --bx-tripadvisor: #34e0a1;
+  --bx-tabelog: #f2cc38;
+  --bx-naver: #03c75a;
+  --bx-ink: #000000; /* 옅은 회사 색 바탕 위에 올리는 마크의 색 */
+  /* 로고의 두 색 (assets/logo 의 원본에서 잰 값). 화면의 인디고 · 하늘색과 거의 같지만 로고는 이 값으로 그린다 */
+  --logo-navy: #1a1a5c;
+  --logo-sky: #2285cf;
+
+  /* semantic */
+  --canvas: var(--n-0);
+  --surface: var(--n-0);
+  --surface-sub: var(--n-50);
+  --line: var(--k-12);
+  --line-strong: var(--k-22);
+  --edge: var(--n-450); /* 입력 칸 · 체크박스 테두리 (흰 바탕과 3 : 1 이상) */
+  --tx: var(--n-900);
+  --tx-2: var(--n-600);
+  --tx-3: var(--n-500); /* 설명 · 캡션 (흰 바탕 5.4 : 1, 옅은 면 5.0 : 1, 선택된 줄 4.9 : 1) */
+  --tx-ph: var(--n-500); /* 빈 입력 칸의 예시 글 */
+  --on-photo: var(--n-0); /* 사진 · 남색 면 위의 글자 */
+  --brand: var(--n-900); /* 주 버튼 · 선택 표시 */
+  --brand-hover: var(--n-800);
+  --brand-tint: var(--b-50); /* 선택된 줄 */
+  --sky: var(--b-500); /* 강조 */
+  --sky-ink: var(--b-600); /* 하늘색 글자 · 링크 */
+  --ok: var(--g-700);
+  --warn: var(--y-700);
+  --bad: var(--r-700);
+  --focus: var(
+    --n-900
+  ); /* 키보드 초점 테두리. 안팎에 띠(--focus-gap)를 둘러 어떤 배경에서도 보인다. 어두운 면에서는 둘을 뒤집는다 */
+  --focus-gap: var(--n-0);
+
+  --font: 'Outfit', 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --r-xs: 6px;
+  --r-sm: 14px;
+  --r-md: 24px;
+  --r-lg: 28px;
+  --r-pill: 999px;
+  --e1: 0 6px 24px var(--k-08);
+  --e2: 0 24px 64px var(--k-18);
+  --gut: 32px; /* 페이지 좌우 여백 */
+  --frame: 16px; /* 창(사진 틀)과 화면 가장자리 사이 */
+  --pad: 24px; /* 카드 안쪽 여백 */
+  --page: 1240px; /* 앱 화면의 본문 폭. 상단 바와 푸터도 이 폭에 맞춘다 */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 바탕 규칙. 디자인을 옮긴 화면에만 건다: DesignLayout 이 body 에 .tp 를 붙인다.
+   (Tailwind 로 짠 화면은 flex 의 기본 방향이 가로라고 가정하므로, "컨테이너는 전부 세로 flex" 규칙을 전체에 걸 수 없다.)
+   :where 와 중첩은 선택자의 무게를 더하지 않으므로 컴포넌트 규칙과의 우선순위는 그대로다. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+html,
+body {
+  overflow-x: clip;
+}
+body:where(.tp) {
+  font: 400 15px/24px var(--font);
+  color: var(--tx);
+  background: var(--canvas);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  caret-color: var(--sky-ink);
+  accent-color: var(--brand);
+}
+/* React 가 그리는 자리(#root)는 배치에 끼어들지 않게 한다: 화면의 header · main · footer 가 body 의 세로 flex 에 바로 놓인다 */
+body:where(.tp) > #root {
+  display: contents;
+}
+::selection {
+  background: var(--b-200);
+  color: var(--n-900);
+}
+[hidden] {
+  display: none !important;
+}
+:where(.tp) {
+  /* 컨테이너는 전부 세로 flex. 가로 배치는 .row */
+  div,
+  section,
+  header,
+  footer,
+  main,
+  nav,
+  aside,
+  form,
+  ul,
+  ol,
+  li,
+  label,
+  fieldset,
+  article {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  ul,
+  ol {
+    list-style: none;
+  }
+  fieldset {
+    border: 0;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    text-align: inherit;
+  }
+  form {
+    margin: 0;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    outline: 0;
+    min-width: 0;
+    border-radius: 0;
+  }
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  textarea {
+    resize: none;
+  }
+  img {
+    display: block;
+    flex: none;
+    object-fit: cover;
+  }
+  svg {
+    display: block;
+    flex: none;
+  }
+  canvas {
+    display: block;
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    font-weight: 400;
+    font-size: inherit;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  b,
+  strong {
+    font-weight: 600;
+  }
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+  }
+  th {
+    font-weight: 400;
+    text-align: left;
+  }
+  summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+/* 화면에는 보이지 않지만 키보드와 스크린리더에는 있는 것 (실제 체크박스 · 라디오) */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 키보드로 옮겨 다닐 때의 표시: 테두리 안팎에 띠를 둘러 흰 바탕 · 사진 · 남색 면 어디에서나 보인다. 바로 나타난다(전환 없음).
+   - 숨겨 둔 실제 체크박스 · 라디오에 초점이 가면 그 이름표(label) 전체에 표시한다. 고른 표시(사진 테두리 · 채운 상자)와 겹치지 않는다.
+   - 입력 칸은 테두리 상자에 표시한다. 문장 칸과 수정 요청 상자는 글을 적는 칸에 초점이 있을 때만 상자에 표시한다(안의 버튼은 버튼에 따로 표시).
+   - :root 를 앞에 붙여, 그림자를 따로 가진 버튼에서도 띠가 빠지지 않게 한다. 어두운 사진 · 남색 면에서는 --focus 를 흰색으로 뒤집는다. */
+:root :is(a, button, summary, [tabindex]):focus-visible,
+:root .inp:focus-within,
+:root .ask:has(input:focus),
+:root .pbox:has(textarea:focus),
+:root :is(.chk, .opt, .fo-k, .sc):has(input:focus-visible) {
+  --ring-off: 2px;
+  outline: 2px solid var(--focus);
+  outline-offset: var(--ring-off);
+  box-shadow: 0 0 0 calc(var(--ring-off) + 4px) var(--focus-gap);
+}
+:root :is(.chk, .sc):has(input:focus-visible) {
+  --ring-off: 4px;
+}
+/* :has() 를 모르는 브라우저: 상자 · 동그라미에 직접 표시한다 */
+@supports not selector(:has(a)) {
+  input:focus-visible + .box,
+  input:focus-visible + .rad {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px var(--focus-gap);
+  }
+  .ask:focus-within,
+  .pbox:focus-within {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+/* layout */
+.row {
+  flex-direction: row;
+  align-items: center;
+}
+.top {
+  align-items: flex-start;
+}
+.bot {
+  align-items: flex-end;
+}
+.str {
+  align-items: stretch;
+}
+.mid {
+  align-items: center;
+}
+.jb {
+  justify-content: space-between;
+}
+.jc {
+  justify-content: center;
+}
+.je {
+  justify-content: flex-end;
+}
+.grow {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.fn {
+  flex: none;
+}
+.wrap {
+  flex-wrap: wrap;
+}
+.g0 {
+  gap: 0;
+}
+.g2 {
+  gap: 2px;
+}
+.g4 {
+  gap: 4px;
+}
+.g6 {
+  gap: 6px;
+}
+.g8 {
+  gap: 8px;
+}
+.g10 {
+  gap: 10px;
+}
+.g12 {
+  gap: 12px;
+}
+.g16 {
+  gap: 16px;
+}
+.g20 {
+  gap: 20px;
+}
+.g24 {
+  gap: 24px;
+}
+.g32 {
+  gap: 32px;
+}
+.g40 {
+  gap: 40px;
+}
+.g48 {
+  gap: 48px;
+}
+
+/* type scale: 큰 글자는 가늘게 */
+.t-display {
+  font-size: 56px;
+  line-height: 66px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+.t-h1 {
+  font-size: 34px;
+  line-height: 44px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+}
+.t-h2 {
+  font-size: 22px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.t-h3 {
+  font-size: 17px;
+  line-height: 26px;
+  font-weight: 600;
+}
+.t-lg {
+  font-size: 17px;
+  line-height: 28px;
+}
+.t-md {
+  font-size: 15px;
+  line-height: 24px;
+}
+.t-sm {
+  font-size: 13px;
+  line-height: 20px;
+}
+.t-xs {
+  font-size: 12px;
+  line-height: 18px;
+}
+.w3 {
+  font-weight: 300;
+}
+.w4 {
+  font-weight: 400;
+}
+.w5 {
+  font-weight: 500;
+}
+.w6 {
+  font-weight: 600;
+}
+.c1 {
+  color: var(--tx);
+}
+.c2 {
+  color: var(--tx-2);
+}
+.c3 {
+  color: var(--tx-3);
+}
+.cb {
+  color: var(--sky-ink);
+}
+.cok {
+  color: var(--ok);
+}
+.cwarn {
+  color: var(--warn);
+}
+.cbad {
+  color: var(--bad);
+}
+.cw {
+  color: var(--on-photo);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.tr {
+  text-align: right;
+}
+.tc {
+  text-align: center;
+}
+.nw {
+  white-space: nowrap;
+}
+.del {
+  text-decoration: line-through;
+}
+.lnk {
+  color: var(--sky-ink);
+}
+.ul {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* breakpoints: desktop ≥1200 · tablet 768–1199 · mobile ≤767
+   표시 전환 클래스: d-only / t-only / m-only / dt-only(모바일에서 숨김) / tm-only(데스크톱에서 숨김) */
+@media (min-width: 1200px) {
+  .t-only,
+  .m-only,
+  .tm-only {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  :root {
+    --gut: 24px;
+    --frame: 12px;
+  }
+  .d-only,
+  .m-only {
+    display: none !important;
+  }
+  .t-display {
+    font-size: 46px;
+    line-height: 56px;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --gut: 16px;
+    --frame: 8px;
+    --pad: 16px;
+    --r-md: 20px;
+    --r-lg: 22px;
+  }
+  .d-only,
+  .t-only,
+  .dt-only {
+    display: none !important;
+  }
+  .t-display {
+    font-size: 34px;
+    line-height: 44px;
+    letter-spacing: -0.015em;
+  }
+  .t-h1 {
+    font-size: 27px;
+    line-height: 36px;
+  }
+  .t-h2 {
+    font-size: 19px;
+    line-height: 28px;
+  }
+}
+/* 움직임을 줄이도록 설정한 사용자 · 정지 화면 캡처: 전환과 반복 움직임을 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

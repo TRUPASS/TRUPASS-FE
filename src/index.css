@@ -1,1 +1,7 @@
 @import 'tailwindcss';
+
+/* 디자인 시스템: 토큰 → 컴포넌트 → 화면 스타일. Tailwind 의 components 층에 넣는다.
+   preflight(base 층)보다 앞서고, 유틸리티 클래스(utilities 층)에는 진다. */
+@import './styles/tokens.css' layer(components);
+@import './styles/components.css' layer(components);
+@import './styles/screens.css' layer(components);
