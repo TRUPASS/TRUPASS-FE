@@ -1,4 +1,5 @@
 dist
+dist-flow
 coverage
 pnpm-lock.yaml
 pnpm-workspace.yaml
@@ -6,3 +7,5 @@ public/mockServiceWorker.js
 src/shared/api/schema.d.ts
 .github
 .coderabbit.yaml
+src/assets/geo/world.json
+public/CREDITS.md
