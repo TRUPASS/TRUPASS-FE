@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { RouterProvider } from 'react-router/dom';
 import { AppProviders } from './providers';
 import { router } from './router';
@@ -8,6 +9,7 @@ export function App() {
     <AppProviders>
       <SessionSync />
       <RouterProvider router={router} />
+      <Analytics />
     </AppProviders>
   );
 }
