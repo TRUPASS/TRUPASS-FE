@@ -18,7 +18,7 @@ const arg = (k) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || '').sli
 const FLOW_ENV = {
   VITE_USE_MOCK: 'false',
   VITE_API_BASE_URL: 'http://localhost:8080',
-  VITE_GOOGLE_CLIENT_ID: 'flow-test.apps.googleusercontent.com',
+  VITE_GOOGLE_CLIENT_ID: '000000000000-flowtest.apps.googleusercontent.com',
 };
 const OUT_DIR = 'dist-flow';
 

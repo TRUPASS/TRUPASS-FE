@@ -35,6 +35,8 @@ cp .env.example .env.local
 | `VITE_TOSS_CLIENT_KEY`  | 토스페이먼츠 **클라이언트 키**(공개 키). **시크릿 키는 절대 FE 에 넣지 않습니다.**                                                    |
 
 `VITE_` 로 시작하는 값은 빌드 결과물(브라우저)에 그대로 노출됩니다. 비밀 값은 넣지 마세요.
+`pnpm build` 는 환경 변수를 먼저 검사해서, 시크릿(Google client secret `GOCSPX-…`, 토스 시크릿 키 `…_sk_…`)이 들어 있거나
+클라이언트 ID 모양이 틀리면 빌드를 멈춥니다 (`config/env-guard.ts`).
 
 ### 3. 실행
 
@@ -198,11 +200,29 @@ newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/sear
 
 ### 실제 백엔드와 연결하기
 
-1. Google Cloud Console → API 및 서비스 → 사용자 인증 정보 → **OAuth 2.0 클라이언트 ID(웹 애플리케이션)** 를 백엔드와 같은 것으로 씁니다.
-   **승인된 JavaScript 원본**에 FE 주소를 모두 넣습니다: `http://localhost:5173`, `https://trupass.online`, `https://www.trupass.online` 등.
-   (Google 은 원본을 정확히 맞춰 보므로 매번 주소가 바뀌는 Vercel 미리보기 주소에서는 버튼이 동작하지 않습니다.)
-2. FE `.env.local`(또는 Vercel 환경 변수): `VITE_GOOGLE_CLIENT_ID=<클라이언트 ID>`, `VITE_API_BASE_URL=<백엔드 주소>`, `VITE_USE_MOCK=false`
-3. 백엔드: `GOOGLE_OAUTH_CLIENT_IDS=<같은 클라이언트 ID>`, 운영에서는 `TRUPASS_CORS_ALLOWED_ORIGINS` 에 FE 주소를 넣습니다(로컬은 `http://localhost:5173` 이 기본으로 열려 있습니다).
+TRUPASS 용 OAuth 2.0 클라이언트(웹 애플리케이션)는 발급되어 있습니다. 클라이언트 ID 는 팀 비밀 저장소에서 받습니다.
+
+1. Google Cloud Console → API 및 서비스 → 사용자 인증 정보 → 그 클라이언트의 **승인된 JavaScript 원본**에 FE 주소를 모두 넣습니다:
+   `http://localhost:5173`, `https://trupass.online`, `https://www.trupass.online`.
+   **승인된 리디렉션 URI 는 비워 둬도 됩니다** (팝업으로 ID 토큰만 받는 방식이라 쓰지 않습니다).
+   Google 은 원본을 정확히 맞춰 보므로 매번 주소가 바뀌는 Vercel 미리보기 주소에서는 버튼이 동작하지 않습니다.
+   원본을 바꾼 뒤 반영되기까지 몇 분 걸릴 수 있습니다.
+2. **OAuth 동의 화면**이 "테스트" 상태면 **테스트 사용자로 등록한 Google 계정만** 로그인됩니다. 팀원 계정을 등록하거나, 공개할 때 "프로덕션으로 게시"합니다.
+3. FE `.env.local`: `VITE_GOOGLE_CLIENT_ID=<클라이언트 ID>`, `VITE_API_BASE_URL=http://localhost:8080`, `VITE_USE_MOCK=false` (Vercel 은 아래 [배포](#배포-vercel))
+4. 백엔드: `GOOGLE_OAUTH_CLIENT_IDS=<같은 클라이언트 ID>`, 운영에서는 `TRUPASS_CORS_ALLOWED_ORIGINS` 에 FE 주소를 넣습니다(로컬은 `http://localhost:5173` 이 기본으로 열려 있습니다).
+
+> **client secret 은 FE · 백엔드 어디에도 쓰지 않습니다.** 이 방식은 브라우저가 Google 에서 받은 ID 토큰을 백엔드가 클라이언트 ID 로 검증할 뿐이라 secret 이 필요 없습니다.
+> secret 은 팀 비밀 저장소에만 두고, `.env`, Vercel 환경 변수, 저장소, 이슈 · PR 에 올리지 않습니다. 잘못 올렸다면 Console 에서 새로 발급(교체)합니다.
+
+로그인이 안 될 때:
+
+| 증상                                              | 원인                                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Google 창에 `origin_mismatch` / 버튼 대신 오류    | 지금 주소가 승인된 JavaScript 원본에 없음 (`www` 유무 · 포트까지 같아야 함)          |
+| Google 창에 "액세스 차단됨: 앱이 테스트 중"       | OAuth 동의 화면 테스트 사용자에 그 계정이 없음                                       |
+| 계정을 고른 뒤 "서버에 연결하지 못했습니다"       | `VITE_API_BASE_URL` 이 틀렸거나, 백엔드가 꺼져 있거나, 백엔드 CORS 에 FE 주소가 없음 |
+| "Google 계정을 확인하지 못했습니다" (`AUTH401_1`) | 백엔드 `GOOGLE_OAUTH_CLIENT_IDS` 가 FE 의 클라이언트 ID 와 다름                      |
+| "서버에 로그인 설정이 없습니다" (`AUTH500_1`)     | 백엔드에 `GOOGLE_OAUTH_CLIENT_IDS` 가 비어 있음                                      |
 
 ### 토큰과 로그인 상태
 
@@ -278,8 +298,18 @@ Vercel GitHub 연동으로 배포합니다 (CI 워크플로에는 포함하지 �
 1. Vercel 대시보드 → **Add New → Project** → `TRUPASS/TRUPASS-FE` 저장소 Import
 2. Framework Preset: **Vite** (Install `pnpm install`, Build `pnpm build`, Output `dist`).
    프리셋은 `vercel.json` 의 `framework` 로도 고정해 두어, 대시보드 설정이 비어 있어도 `dist` 를 찾습니다.
-3. **Settings → Environment Variables** 에 `VITE_API_BASE_URL`, `VITE_USE_MOCK`, `VITE_GOOGLE_CLIENT_ID`, `VITE_TOSS_CLIENT_KEY` 등록
-   (Preview 환경은 `VITE_USE_MOCK=true` 로 두면 백엔드 없이도 프리뷰 확인 가능. 지금은 하나도 등록되어 있지 않아 로그인 없이 화면만 이어 봅니다)
+3. **Settings → Environment Variables** 에 환경별로 등록합니다. 값을 바꾼 뒤에는 **다시 배포(Redeploy)** 해야 반영됩니다(빌드할 때 들어가는 값).
+
+   | 키                      | Production                                  | Preview                   |
+   | ----------------------- | ------------------------------------------- | ------------------------- |
+   | `VITE_GOOGLE_CLIENT_ID` | 클라이언트 ID — **운영 백엔드가 생긴 뒤에** | 넣지 않음                 |
+   | `VITE_API_BASE_URL`     | 운영 백엔드 주소 (`https://…`)              | 넣지 않음                 |
+   | `VITE_USE_MOCK`         | `false`                                     | `true`                    |
+   | `VITE_TOSS_CLIENT_KEY`  | 토스 클라이언트 키                          | 토스 테스트 클라이언트 키 |
+   - Preview 는 Mock 로그인으로 백엔드 없이 확인합니다 (미리보기 주소에서는 Google 버튼이 동작하지 않음).
+   - Production 에 `VITE_GOOGLE_CLIENT_ID` 만 넣고 `VITE_API_BASE_URL` 이 없거나 localhost · http 이면 **빌드가 실패**합니다.
+     실패한 빌드는 배포되지 않으니 이전 배포가 그대로 남습니다. 운영 백엔드가 아직 없으면 Production 은 비워 두세요(로그인 없이 화면만 이어 봄).
+
 4. **Settings → General → Node.js Version** 을 26.x 로 설정
 5. 이후 PR 마다 프리뷰 URL 이 생성되고 `main` 머지 시 프로덕션에 배포됩니다.
 
