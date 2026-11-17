@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Google 로그인
+         * @description FE 가 Google Identity Services 로 받은 ID 토큰(credential)을 보내면 검증 후 Trupass 토큰을 발급한다. 처음이면 가입되고 newUser 가 true 다.
+         */
+        post: operations["loginWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 토큰 재발급
+         * @description refresh token 은 한 번만 쓸 수 있고, 새 토큰 쌍을 돌려준다. 이미 쓴 것을 다시 보내면 그 사용자의 refresh token 이 모두 폐기된다.
+         */
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 로그아웃
+         * @description refresh token 을 폐기한다. access token 은 만료될 때까지 유효하다.
+         */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 정보
+         * @description Authorization: Bearer {accessToken} 필요
+         */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trip-requests": {
         parameters: {
             query?: never;
@@ -93,6 +173,83 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        GoogleLogin: {
+            /** @description Google Identity Services 가 준 credential (ID 토큰) */
+            idToken: string;
+        };
+        Refresh: {
+            refreshToken: string;
+        };
+        Logout: {
+            refreshToken: string;
+        };
+        /** @description API 호출은 Authorization: Bearer {accessToken}. 만료되면 POST /auth/refresh 로 새 쌍을 받는다(refresh token 도 바뀐다). */
+        Tokens: {
+            /** @example Bearer */
+            tokenType?: string;
+            accessToken?: string;
+            /**
+             * Format: int64
+             * @description access token 유효 시간(초)
+             */
+            accessTokenExpiresIn?: number;
+            refreshToken?: string;
+            /**
+             * Format: int64
+             * @description refresh token 유효 시간(초)
+             */
+            refreshTokenExpiresIn?: number;
+        };
+        Me: {
+            /** Format: int64 */
+            userId?: number;
+            email?: string;
+            /** @description Google 계정의 이름 */
+            name?: string;
+            /** @description Google 계정의 프로필 사진 주소 */
+            pictureUrl?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        Login: {
+            tokens?: components["schemas"]["Tokens"];
+            user?: components["schemas"]["Me"];
+            /** @description 이번 로그인으로 가입했으면 true */
+            newUser?: boolean;
+        };
+        ApiResponseLogin: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["Login"];
+        };
+        ApiResponseTokens: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["Tokens"];
+        };
+        ApiResponseMe: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["Me"];
+        };
+        ApiResponseVoid: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+        };
+        /** @description 실패 응답. code 는 에러 코드(예: AUTH401_1), result 는 입력값 오류일 때 필드별 메시지다. */
+        ApiErrorResponse: {
+            /** @example false */
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: {
+                [key: string]: unknown;
+            };
+        };
         CreateTripRequestBody: {
             /** @example 다음 달에 오사카 2박 3일 다녀오고 싶어 */
             message: string;
@@ -167,6 +324,125 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    loginWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLogin"];
+            };
+        };
+        responses: {
+            /** @description 로그인됨 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseLogin"];
+                };
+            };
+            /** @description AUTH401_1(ID 토큰 검증 실패) · AUTH401_2(이메일 미인증) · AUTH500_1(서버 설정 없음) · AUTH502_1(Google 연결 실패) · COMMON400_1 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Refresh"];
+            };
+        };
+        responses: {
+            /** @description 새 토큰 쌍 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseTokens"];
+                };
+            };
+            /** @description AUTH401_3(refresh token 이 틀렸거나 만료됨) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Logout"];
+            };
+        };
+        responses: {
+            /** @description 로그아웃됨 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 로그인한 사용자 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseMe"];
+                };
+            };
+            /** @description COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     createTripRequest: {
         parameters: {
             query?: never;

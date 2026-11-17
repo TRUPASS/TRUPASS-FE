@@ -4,6 +4,7 @@ node_modules/
 # build
 dist/
 dist-ssr/
+dist-flow/
 *.tsbuildinfo
 coverage/
 
@@ -25,3 +26,6 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+
+# python (scripts/logo)
+__pycache__/

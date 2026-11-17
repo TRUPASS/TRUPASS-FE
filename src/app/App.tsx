@@ -1,11 +1,17 @@
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { RouterProvider } from 'react-router/dom';
 import { AppProviders } from './providers';
 import { router } from './router';
+import { SessionSync } from './SessionSync';
 
 export function App() {
   return (
     <AppProviders>
+      <SessionSync />
       <RouterProvider router={router} />
+      <Analytics />
+      <SpeedInsights />
     </AppProviders>
   );
 }

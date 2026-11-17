@@ -7,3 +7,12 @@ const krwFormatter = new Intl.NumberFormat('ko-KR');
 export function formatKrw(amount: number): string {
   return `${krwFormatter.format(amount)}원`;
 }
+
+/**
+ * 차액 표시용 포맷. 부호를 붙인다.
+ * @example formatKrwDiff(-12000) // "−12,000원"
+ */
+export function formatKrwDiff(amount: number): string {
+  const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
+  return `${sign}${krwFormatter.format(Math.abs(amount))}원`;
+}

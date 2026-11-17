@@ -8,9 +8,106 @@ info:
 servers:
   - url: http://localhost:8080
 tags:
+  - name: auth
+  - name: users
   - name: trip-requests
   - name: checkouts
 paths:
+  # 로그인 · 사용자: 백엔드(core)에 구현된 그대로 옮겼다 (AuthController, UserController).
+  # 응답은 모두 공통 형식 {isSuccess, code, message, result} 이다. 백엔드처럼 응답 필드는 필수로 표시하지 않는다.
+  /auth/google:
+    post:
+      tags: [auth]
+      operationId: loginWithGoogle
+      summary: Google 로그인
+      description: >-
+        FE 가 Google Identity Services 로 받은 ID 토큰(credential)을 보내면 검증 후 Trupass 토큰을 발급한다.
+        처음이면 가입되고 newUser 가 true 다.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLogin'
+      responses:
+        '200':
+          description: 로그인됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLogin'
+        default:
+          description: 'AUTH401_1(ID 토큰 검증 실패) · AUTH401_2(이메일 미인증) · AUTH500_1(서버 설정 없음) · AUTH502_1(Google 연결 실패) · COMMON400_1'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refresh
+      summary: 토큰 재발급
+      description: refresh token 은 한 번만 쓸 수 있고, 새 토큰 쌍을 돌려준다. 이미 쓴 것을 다시 보내면 그 사용자의 refresh token 이 모두 폐기된다.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh'
+      responses:
+        '200':
+          description: 새 토큰 쌍
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseTokens'
+        default:
+          description: AUTH401_3(refresh token 이 틀렸거나 만료됨)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: 로그아웃
+      description: refresh token 을 폐기한다. access token 은 만료될 때까지 유효하다.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+      responses:
+        '200':
+          description: 로그아웃됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+  /users/me:
+    get:
+      tags: [users]
+      operationId: getMe
+      summary: 내 정보
+      description: 'Authorization: Bearer {accessToken} 필요'
+      responses:
+        '200':
+          description: 로그인한 사용자
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMe'
+        default:
+          description: COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
   /api/trip-requests:
     post:
       tags: [trip-requests]
@@ -94,6 +191,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CheckoutStatusResponse'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   parameters:
     RequestId:
       name: requestId
@@ -108,6 +210,127 @@ components:
       schema:
         type: string
   schemas:
+    GoogleLogin:
+      type: object
+      required: [idToken]
+      properties:
+        idToken:
+          type: string
+          description: Google Identity Services 가 준 credential (ID 토큰)
+    Refresh:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    Logout:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    Tokens:
+      type: object
+      description: 'API 호출은 Authorization: Bearer {accessToken}. 만료되면 POST /auth/refresh 로 새 쌍을 받는다(refresh token 도 바뀐다).'
+      properties:
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+        accessTokenExpiresIn:
+          type: integer
+          format: int64
+          description: access token 유효 시간(초)
+        refreshToken:
+          type: string
+        refreshTokenExpiresIn:
+          type: integer
+          format: int64
+          description: refresh token 유효 시간(초)
+    Me:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        email:
+          type: string
+        name:
+          type: string
+          description: Google 계정의 이름
+        pictureUrl:
+          type: string
+          description: Google 계정의 프로필 사진 주소
+        createdAt:
+          type: string
+          format: date-time
+    Login:
+      type: object
+      properties:
+        tokens:
+          $ref: '#/components/schemas/Tokens'
+        user:
+          $ref: '#/components/schemas/Me'
+        newUser:
+          type: boolean
+          description: 이번 로그인으로 가입했으면 true
+    ApiResponseLogin:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/Login'
+    ApiResponseTokens:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/Tokens'
+    ApiResponseMe:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/Me'
+    ApiResponseVoid:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+    ApiErrorResponse:
+      type: object
+      description: '실패 응답. code 는 에러 코드(예: AUTH401_1), result 는 입력값 오류일 때 필드별 메시지다.'
+      properties:
+        isSuccess:
+          type: boolean
+          example: false
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+          additionalProperties: true
     CreateTripRequestBody:
       type: object
       required: [message]
