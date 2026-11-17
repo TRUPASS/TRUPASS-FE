@@ -30,7 +30,7 @@ export function LandingPage() {
     <div className="landing-redesign">
       <title>여행을 말하면, 선택지는 정리됩니다 | Trupass</title>
       <main>
-        <Hero signedIn={signedIn} onStart={start} />
+        <Hero signedIn={signedIn} />
         <HowTo onNext={start} />
 
         <Services

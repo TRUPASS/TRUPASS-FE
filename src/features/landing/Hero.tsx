@@ -2,10 +2,9 @@ import { useLayoutEffect, useRef } from 'react';
 import { routes } from '@/app/routes';
 import { reduceMotion, still } from '@/shared/lib/capture';
 import { Button } from '@/shared/ui/Button';
-import { Icon } from '@/shared/ui/Icon';
 import { Logo } from '@/shared/ui/Logo';
 
-export function Hero({ signedIn, onStart }: { signedIn: boolean; onStart: () => void }) {
+export function Hero({ signedIn }: { signedIn: boolean }) {
   const section = useRef<HTMLElement>(null);
   const frame = useRef<HTMLDivElement>(null);
 
@@ -68,20 +67,6 @@ export function Hero({ signedIn, onStart }: { signedIn: boolean; onStart: () => 
             <nav className="landing-nav-actions" aria-label="랜딩 메뉴">
               <Button size="sm" to={signedIn ? routes.search : routes.login}>
                 {signedIn ? '새 검색' : '로그인'}
-              </Button>
-              <Button
-                className="landing-primary"
-                size="sm"
-                href="#search"
-                onClick={(event) => {
-                  event.preventDefault();
-                  onStart();
-                }}
-              >
-                검색 시작
-                <span className="landing-primary-arrow">
-                  <Icon name="arrow--up-right" size={16} />
-                </span>
               </Button>
             </nav>
           </header>

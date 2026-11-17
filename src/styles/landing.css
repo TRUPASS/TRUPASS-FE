@@ -70,30 +70,12 @@
 .landing-nav .logo {
   margin-top: 10px;
 }
-.landing-nav-actions {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
 .landing-nav-actions .btn {
   border-color: transparent;
   box-shadow: 0 6px 24px var(--d-16);
 }
 .landing-nav-actions .btn:hover {
   background: var(--n-50);
-}
-.landing-nav-actions .landing-primary {
-  gap: 8px;
-  padding-inline-end: 4px;
-}
-.landing-primary-arrow {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--brand);
-  color: var(--on-photo);
 }
 .landing-hero-copy {
   position: absolute;
@@ -203,9 +185,6 @@
   .landing-nav .wm {
     display: none;
   }
-  .landing-nav-actions {
-    gap: 6px;
-  }
   .landing-hero-copy {
     justify-content: flex-end;
     gap: 28px;
@@ -303,8 +282,13 @@
   background: hsl(var(--landing-hue) 13.04% 90.98%);
 }
 .landing-redesign .ftr-c .d {
-  margin-top: 10px;
   line-height: 1.8;
+}
+.landing-redesign .ftr-src + .d {
+  margin-top: 10px;
+}
+.landing-redesign .ftr-contact {
+  gap: 2px;
 }
 .landing-redesign .ftr-e {
   padding-top: 24px;

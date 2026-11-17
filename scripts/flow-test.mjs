@@ -461,11 +461,12 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     /예시/.test(await page.evaluate(() => document.querySelector('.rc-k').textContent)),
   );
   await page.goto(url('/'));
-  await page.waitForTimeout(300);
-  await page.focus('.landing-primary');
-  await page.keyboard.press('Enter');
-  const st = await svc(page);
-  ok('키보드: [검색 시작]에서 엔터 → 항공 문장 칸', st.focus === 'flight');
+  await page.locator('#search input[name="flight"]').focus();
+  await page.waitForFunction(() => !document.querySelector('#search').hasAttribute('data-zooming'));
+  ok(
+    '키보드: 항공 문장 칸에 초점이 가면 서비스 화면이 펼쳐진다',
+    (await svc(page)).focus === 'flight',
+  );
   await page.keyboard.type('삿포로 1월 말');
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.activeElement?.name === 'stay');
@@ -542,8 +543,9 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     isMobile: true,
   });
   await page.goto(url('/'));
-  await page.waitForTimeout(300);
-  await page.tap('.landing-primary');
+  await page.locator('#search input[name="flight"]').waitFor({ state: 'attached' });
+  await scrollService(page, 1);
+  await page.tap('#search input[name="flight"]');
   await page.keyboard.type('오사카 주말 2박');
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.activeElement?.name === 'stay');

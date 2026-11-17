@@ -262,11 +262,11 @@
   .lp-svc[data-scroll-intro] .svc-scroll-space {
     height: clamp(200px, 38svh, 380px);
   }
-  /* 확대가 끝난 뒤에도 같은 화면에서 50px 더 머문다. */
+  /* 확대가 끝난 뒤에도 같은 화면에서 200px 더 머문다. */
   .lp-svc[data-scroll-intro]::after {
     content: '';
     flex: none;
-    height: 50px;
+    height: 200px;
   }
   .lp-svc[data-scroll-intro] .svc-photo {
     --svc-photo-width: min(300px, 40vw, 50svh);
@@ -386,18 +386,21 @@
   --focus-gap: var(--n-900);
 }
 .ftr-g {
-  flex-direction: row;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 1fr));
   gap: 48px;
 }
+.ftr-details {
+  display: grid;
+  grid-column: span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-self: start;
+  gap: inherit;
+}
 .ftr-c {
-  flex: 1 1 0;
   gap: 8px;
   font-size: 15px;
   line-height: 24px;
-}
-.ftr-c:first-child {
-  flex: 1.6 1 0;
 }
 .ftr-c .k {
   line-height: 20px;
@@ -414,10 +417,12 @@
   color: var(--w-78);
   max-width: 420px;
 }
-.ftr-c a {
+.ftr-c a,
+.ftr-c button {
   align-self: flex-start;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+}
+.ftr-account {
+  margin-top: auto;
 }
 .ftr-src {
   flex-direction: row;
@@ -495,13 +500,11 @@
     font-size: 12px;
   }
   .ftr-g {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
-  .ftr-c,
-  .ftr-c:first-child {
-    flex: none;
-    align-self: stretch;
+  .ftr-details {
+    display: contents;
   }
   .ftr-e {
     flex-wrap: wrap;

@@ -500,11 +500,6 @@ body:where(.tp) > #root {
 .lnk {
   color: var(--sky-ink);
 }
-.ul {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 /* breakpoints: desktop ≥1200 · tablet 768–1199 · mobile ≤767
    표시 전환 클래스: d-only / t-only / m-only / dt-only(모바일에서 숨김) / tm-only(데스크톱에서 숨김) */
 @media (min-width: 1200px) {
