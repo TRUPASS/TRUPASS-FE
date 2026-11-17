@@ -67,21 +67,28 @@ const go = async (page, pattern, action, ready) => {
   if (ready) await page.waitForSelector(ready, { timeout: 4000 }).catch(() => {});
 };
 
-// 랜딩의 스크롤 구간([data-sec]) 안의 한 자리(0–1)로 간다
-const toStop = (page, k, f) =>
-  page.evaluate(
-    ([k, f]) => {
-      const el = document.querySelector(`[data-sec="${k}"]`);
-      const r = el.getBoundingClientRect();
-      window.scrollTo(0, r.top + window.scrollY + f * Math.max(0, r.height - window.innerHeight));
-    },
-    [k, f],
-  );
 const svc = (page) =>
   page.evaluate(() => ({
-    on: document.querySelector('.lp-svc').dataset.on,
-    focus: document.activeElement && document.activeElement.name,
+    field: document.querySelector('#search .svc-ui:not([inert]) input').name,
+    focus: document.activeElement?.name,
+    scroll: window.scrollY,
   }));
+async function scrollService(page, progress) {
+  await page.evaluate((progress) => {
+    const section = document.querySelector('#search');
+    const distance = section.querySelector('.svc-scroll-space').offsetHeight;
+    window.scrollTo({
+      top: window.scrollY + section.getBoundingClientRect().top + distance * progress,
+      behavior: 'instant',
+    });
+  }, progress);
+  await page.waitForFunction((progress) => {
+    const eased = progress * progress * (3 - 2 * progress);
+    const actual = Number(document.querySelector('#search').style.getPropertyValue('--svc-expand'));
+    return Math.abs(actual - eased) < 0.02;
+  }, progress);
+  return page.locator('.svc-photo').evaluate((photo) => photo.getBoundingClientRect().width);
+}
 // 결과 화면: 항공권 한 줄, 그 줄의 숙소 · 추가 선택
 const ROW = (id) => `.fo:has(input[name="flight"][value="${id}"])`;
 const STAY = (fid, hid) => `${ROW(fid)} label.sc:has(input[value="${hid}"])`;
@@ -91,46 +98,11 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
 {
   const { ctx, page } = await open(D);
   await page.goto(url('/'));
-  await page.waitForTimeout(600);
-  ok(
-    '랜딩: 오른쪽 위 [검색 시작] 끝에 동그란 화살표가 있다',
-    await page.evaluate(() => {
-      const a = document.querySelector('.lp-top a.cta .arr');
-      return (
-        !!a && a.getBoundingClientRect().width >= 24 && a.getAttribute('aria-hidden') === 'true'
-      );
-    }),
-  );
-  await toStop(page, 'hero', 0.5);
-  await page.waitForTimeout(900);
-  const p = await page.evaluate(
-    () => +document.querySelector('.lp-hero').style.getPropertyValue('--p'),
-  );
-  ok('하늘: 스크롤 진행도를 따라간다', Math.abs(p - 0.5) < 0.02, 'p=' + p);
-  ok(
-    '하늘: 진행 50%에서 소개 문장이 보인다',
-    +(await page.evaluate(() => getComputedStyle(document.querySelector('.hero-t')).opacity)) >
-      0.95,
-  );
-  const counts = () =>
-    page.evaluate(() =>
-      [...document.querySelectorAll('.lp-stats [data-count]')].map((e) => e.textContent).join(','),
-    );
-  await toStop(page, 'stats', 0.3);
-  await page.waitForTimeout(700);
-  const mid = await counts();
-  await toStop(page, 'stats', 1);
-  await page.waitForTimeout(900);
-  const end = await counts();
-  ok('숫자: 스크롤에 맞춰 센다', end === '6,23,9,30' && mid !== end, mid + ' → ' + end);
   await page.evaluate(() => document.querySelector('#how').scrollIntoView());
   await page.waitForTimeout(500);
   const PREV = '.how-car .btn[aria-label="이전 걸음"]';
   const NEXT = '.how-car .btn[aria-label="다음 걸음"]';
-  ok(
-    '이용 방법: 첫 장에서는 이전 버튼이 꺼져 있다',
-    (await page.getAttribute(PREV, 'aria-disabled')) === 'true',
-  );
+  ok('이용 방법: 첫 장에서는 이전 버튼이 없다', (await page.locator(PREV).count()) === 0);
   for (let i = 0; i < 4; i++) {
     await page.click(NEXT);
     await page.waitForTimeout(250);
@@ -138,37 +110,73 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   const car = await page.evaluate(() => ({
     done: document.querySelector('.lp-how').classList.contains('done'),
     on: [...document.querySelectorAll('.how-sl')].findIndex((s) => s.classList.contains('on')),
-    next: document
-      .querySelector('.how-car .btn[aria-label="다음 걸음"]')
-      .getAttribute('aria-disabled'),
+    next: !!document.querySelector('.how-car .btn[aria-label="다음 걸음"]'),
     dot: [...document.querySelectorAll('.how-dots button')].findIndex((d) =>
       d.getAttribute('aria-current'),
     ),
   }));
   ok(
-    '이용 방법: 마지막 장에서 스크롤 권유가 나타난다',
-    car.done && car.on === 4 && car.next === 'true' && car.dot === 4,
+    '이용 방법: 마지막 장에서 다음 버튼이 사라지고 검색 안내가 나타난다',
+    car.done && car.on === 4 && !car.next && car.dot === 4,
     JSON.stringify(car),
   );
   await page.waitForTimeout(600);
   await page.click('.how-go');
-  await page.waitForTimeout(1900);
+  await page.waitForFunction(() => {
+    const rect = document.querySelector('#search input').getBoundingClientRect();
+    return (
+      !document.querySelector('#search').hasAttribute('data-zooming') &&
+      rect.top >= 0 &&
+      rect.bottom <= innerHeight
+    );
+  });
+  const initial = await svc(page);
+  ok('이용 방법에서 검색으로 이동하면 항공에 초점이 간다', initial.focus === 'flight');
+
+  await page.locator('#search input[name="flight"]').fill('   ');
+  await page.keyboard.press('Enter');
+  ok('공백만 제출하면 항공 질문에 남는다', (await svc(page)).field === 'flight');
+  await page.locator('footer.lp-ftr').scrollIntoViewIfNeeded();
+  ok('답을 적지 않고 푸터로 내려가도 질문은 바뀌지 않는다', (await svc(page)).field === 'flight');
+  const small = await scrollService(page, 0);
+  const middle = await scrollService(page, 0.5);
+  const full = await scrollService(page, 1);
+  const fillsScreen = await page.locator('.svc-frame').evaluate((frame) => {
+    const rect = frame.getBoundingClientRect();
+    return rect.width >= innerWidth - 2 && rect.height >= innerHeight - 2 && Math.abs(rect.top) < 2;
+  });
+  const smaller = await scrollService(page, 0.5);
+  ok(
+    '서비스: 스크롤로 사진이 커지고 다시 위로 올리면 줄어든다',
+    small < middle && middle < full && Math.abs(smaller - middle) < 1,
+  );
+  ok('서비스: 최대 확대 상태에서 프레임이 화면을 채운다', fillsScreen);
+  await scrollService(page, 1);
+  const flight = page.locator('#search input[name="flight"]');
+  await flight.fill('크리스마스 전에 부산에서 오사카, 저녁 출발');
+  const before = await svc(page);
+  ok('입력만 하면 현재 질문에 남는다', before.field === 'flight');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => document.activeElement?.name === 'stay');
   let st = await svc(page);
   ok(
-    '스크롤 권유를 누르면 항공 문장 칸으로 가서 커서를 둔다',
-    st.on === '0' && st.focus === 'flight',
-    JSON.stringify(st),
+    '엔터로 제출하면 같은 위치에서 숙소 질문으로 바뀐다',
+    st.field === 'stay' && st.scroll === before.scroll,
+    `${before.scroll} → ${st.scroll}`,
   );
-  await page.keyboard.type('크리스마스 전에 부산에서 오사카, 저녁 출발');
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(2100);
+  await page.locator('#search input[name="stay"]').fill('난바역 근처 깔끔한 호텔 2박');
+  await page.locator('#search .svc-ui:not([inert]) button[type="submit"]').click();
+  await page.waitForFunction(() => document.activeElement?.name === 'exp');
   st = await svc(page);
-  ok('엔터: 숙소 문장 칸으로 넘어간다', st.on === '1' && st.focus === 'stay', JSON.stringify(st));
-  await page.keyboard.type('난바역 근처 깔끔한 호텔 2박');
+  ok('다음 버튼으로 제출하면 체험 질문으로 바뀐다', st.field === 'exp');
+  await page.getByRole('button', { name: '전 단계로 돌아가기' }).click();
+  await page.waitForFunction(() => document.activeElement?.name === 'stay');
+  ok(
+    '전 단계로 돌아가면 적어 둔 숙소 답변이 남아 있다',
+    (await page.inputValue('#search input[name="stay"]')) === '난바역 근처 깔끔한 호텔 2박',
+  );
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2100);
-  st = await svc(page);
-  ok('엔터: 체험 문장 칸으로 넘어간다', st.on === '2' && st.focus === 'exp', JSON.stringify(st));
+  await page.waitForFunction(() => document.activeElement?.name === 'exp');
   await page.keyboard.type('먹거리 위주, 유니버설 하루');
   const veil = page
     .waitForFunction(() => document.documentElement.classList.contains('leaving'), null, {
@@ -434,12 +442,6 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
       [...document.querySelectorAll('.fo')].map((e) => getComputedStyle(e).opacity).join(','),
     )) === '1,1,1',
   );
-  await page.goto(url('/'));
-  await page.waitForTimeout(300);
-  ok(
-    '움직임 줄이기: 흐르는 글자 멈춤 단추를 치운다',
-    await page.evaluate(() => document.querySelector('.mq-x').hidden),
-  );
   await ctx.close();
 }
 
@@ -448,85 +450,42 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   const { ctx, page } = await open(D);
   await page.goto(url('/'));
   await page.waitForTimeout(300);
-  await go(page, '**/login', () => page.click('.lp-top a:has-text("로그인")'), '.rc-k');
+  await go(
+    page,
+    '**/login',
+    () => page.click('.landing-nav-actions a:has-text("로그인")'),
+    '.rc-k',
+  );
   ok(
     '문장 없이 로그인: 예시 조건이라고 알린다',
     /예시/.test(await page.evaluate(() => document.querySelector('.rc-k').textContent)),
   );
   await page.goto(url('/'));
   await page.waitForTimeout(300);
-  await page.focus('.lp-top a.cta');
+  await page.focus('.landing-primary');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2600);
   const st = await svc(page);
-  ok(
-    '키보드: [검색 시작]에서 엔터 → 항공 문장 칸',
-    st.on === '0' && st.focus === 'flight',
-    JSON.stringify(st),
-  );
+  ok('키보드: [검색 시작]에서 엔터 → 항공 문장 칸', st.focus === 'flight');
   await page.keyboard.type('삿포로 1월 말');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2000);
+  await page.waitForFunction(() => document.activeElement?.name === 'stay');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2000);
-  await go(page, '**/login', () => page.keyboard.press('Enter'), '.rc');
-  await page.waitForTimeout(200);
+  ok('숙소를 비우고 엔터를 누르면 숙소 질문에 남는다', (await svc(page)).field === 'stay');
+
+  await go(page, '**/login', () => page.click('.landing-nav-actions a:has-text("로그인")'), '.rc');
   const rc = await page.evaluate(() =>
     [...document.querySelectorAll('.rc .v')].map((e) => e.textContent),
   );
   ok(
-    '일부만 적으면 나머지는 "적지 않았습니다"로 보인다',
+    '직접 로그인하면 작성한 문장과 비워 둔 항목을 구분해서 보여 준다',
     rc[0] === '삿포로 1월 말' && rc[1] === '적지 않았습니다' && rc[2] === '적지 않았습니다',
     JSON.stringify(rc),
   );
-  // [문장 다시 적기]로 돌아오면 첫 질문 자리에서 시작한다
-  await go(page, '**/#search', () => page.click('.rc-e'), '.lp-svc');
-  await page.waitForTimeout(1200);
-  const back = await svc(page);
+  await go(page, '**/#search', () => page.click('.rc-e'), '#search');
+  await page.waitForFunction(() => document.activeElement?.name === 'flight');
   ok(
-    '로그인의 [문장 다시 적기] → 랜딩의 항공 문장 칸',
-    back.on === '0' &&
-      back.focus === 'flight' &&
-      (await page.inputValue('.lp-svc input[name="flight"]')) === '삿포로 1월 말',
-    JSON.stringify(back),
-  );
-  // Tab 으로 내려가다 문장 칸에 닿으면(아직 창이 커지기 전) 그 질문 자리로 스크롤해 보여 준다
-  await page.evaluate(() => sessionStorage.clear());
-  await page.goto(url('/'));
-  await page.waitForTimeout(300);
-  await page.focus('.mq-x');
-  await page.keyboard.press('Tab');
-  await page.waitForTimeout(1900);
-  const tab = await page.evaluate(() => {
-    const s = document.querySelector('.lp-svc');
-    const el = document.activeElement;
-    const r = el.getBoundingClientRect();
-    return {
-      name: el.name,
-      live: s.classList.contains('live'),
-      on: s.dataset.on,
-      ui: +getComputedStyle(document.querySelector('.svc-ui')).opacity,
-      inView: r.top > 0 && r.bottom < innerHeight,
-    };
-  });
-  ok(
-    '키보드: Tab 으로 문장 칸에 닿으면 그 자리가 화면에 나타난다',
-    tab.name === 'flight' && tab.live && tab.on === '0' && tab.ui > 0.95 && tab.inView,
-    JSON.stringify(tab),
-  );
-  await toStop(page, 'svc', 0);
-  await page.waitForTimeout(700);
-  await page.click('.mq-x');
-  await page.waitForTimeout(80);
-  const mq = await page.evaluate(() => ({
-    paused: document.querySelector('.lp-svc').classList.contains('mq-paused'),
-    pressed: document.querySelector('.mq-x').getAttribute('aria-pressed'),
-    state: getComputedStyle(document.querySelector('.mq-t')).animationPlayState,
-  }));
-  ok(
-    '흐르는 글자: 단추로 멈춘다',
-    mq.paused && mq.pressed === 'true' && mq.state === 'paused',
-    JSON.stringify(mq),
+    '문장 다시 적기를 누르면 이전 항공 답을 불러온다',
+    (await page.inputValue('#search input[name="flight"]')) === '삿포로 1월 말',
   );
   // 독: 키보드로 열고 닫는다
   await page.goto(url('/results'));
@@ -584,15 +543,11 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   });
   await page.goto(url('/'));
   await page.waitForTimeout(300);
-  await page.tap('.lp-top a.cta');
-  await page.waitForTimeout(2600);
+  await page.tap('.landing-primary');
   await page.keyboard.type('오사카 주말 2박');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2200);
-  ok(
-    '모바일: 엔터로 숙소 문장 칸으로 넘어간다',
-    (await page.evaluate(() => document.querySelector('.lp-svc').dataset.on)) === '1',
-  );
+  await page.waitForFunction(() => document.activeElement?.name === 'stay');
+  ok('모바일: 엔터로 숙소 문장 칸으로 넘어간다', (await svc(page)).field === 'stay');
   await page.goto(url('/results'));
   await page.waitForTimeout(1500);
   await page.tap(`${ROW('F3')} summary.fo-tg`);
@@ -705,9 +660,11 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   ok('이미 로그인한 채로 로그인 화면을 열면 바로 다음 화면으로 간다', at(page, '/search'));
 
   await page.goto(url('/'));
-  await page.waitForSelector('.lp-top a', { timeout: 4000 }).catch(() => {});
+  await page.waitForSelector('.landing-nav-actions a', { timeout: 4000 }).catch(() => {});
   const top = await page.evaluate(() =>
-    [...document.querySelectorAll('.lp-top a')].map((a) => a.textContent.trim()).join(' | '),
+    [...document.querySelectorAll('.landing-nav-actions a')]
+      .map((a) => a.textContent.trim())
+      .join(' | '),
   );
   ok('로그인한 채로 랜딩에 오면 [로그인] 대신 [새 검색]이 보인다', top.startsWith('새 검색'), top);
 
@@ -738,7 +695,7 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     page,
     (u) => u.pathname === '/',
     () => page.click('.me-menu .me-it'),
-    '.lp-top',
+    '.landing-nav',
   );
   await settle(backend.calls.length, 1);
   ok(

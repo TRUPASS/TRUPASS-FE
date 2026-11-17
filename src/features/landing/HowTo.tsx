@@ -17,6 +17,8 @@ export function HowTo({ onNext }: { onNext: () => void }) {
   const [done, setDone] = useState(false);
   const car = useRef<HTMLElement>(null);
   const touchX = useRef<number | null>(null);
+  const previousArrow = useRef<HTMLButtonElement>(null);
+  const nextArrow = useRef<HTMLButtonElement>(null);
 
   const show = (next: number | ((i: number) => number)) =>
     setIndex((i) => {
@@ -59,14 +61,22 @@ export function HowTo({ onNext }: { onNext: () => void }) {
         <h2 className="t-display">다섯 걸음이면 여행이 정해집니다</h2>
       </div>
       <div className="how-car">
-        {/* 끝에서는 꺼진 모양만 보인다(disabled 로 막으면 키보드 초점이 사라지므로 aria-disabled 를 쓴다) */}
-        <IconButton
-          icon="arrow--left"
-          className="rb"
-          label="이전 걸음"
-          aria-disabled={index === 0 ? true : undefined}
-          onClick={() => show((i) => i - 1)}
-        />
+        {index > 0 ? (
+          <IconButton
+            ref={previousArrow}
+            icon="arrow--left"
+            className="rb"
+            label="이전 걸음"
+            onClick={(e) => {
+              if (index === 1 && e.currentTarget === document.activeElement) {
+                nextArrow.current?.focus({ preventScroll: true });
+              }
+              show((i) => i - 1);
+            }}
+          />
+        ) : (
+          <span className="how-arrow-slot" aria-hidden="true" />
+        )}
         <ol className="how-box">
           {HOW.map((h, i) => (
             <li key={h.t} className={cx('how-sl', i === index && 'on', i < index && 'was')}>
@@ -81,18 +91,29 @@ export function HowTo({ onNext }: { onNext: () => void }) {
               </div>
               <div className="how-tx">
                 <h3 className="t-h1">{h.t}</h3>
-                <p className="t-lg c2">{h.d}</p>
+                <p className="t-lg c2" data-manual-line-breaks={h.d.includes('\n') || undefined}>
+                  {h.d}
+                </p>
               </div>
             </li>
           ))}
         </ol>
-        <IconButton
-          icon="arrow--right"
-          className="rb"
-          label="다음 걸음"
-          aria-disabled={index === LAST ? true : undefined}
-          onClick={() => show((i) => i + 1)}
-        />
+        {index < LAST ? (
+          <IconButton
+            ref={nextArrow}
+            icon="arrow--right"
+            className="rb"
+            label="다음 걸음"
+            onClick={(e) => {
+              if (index === LAST - 1 && e.currentTarget === document.activeElement) {
+                previousArrow.current?.focus({ preventScroll: true });
+              }
+              show((i) => i + 1);
+            }}
+          />
+        ) : (
+          <span className="how-arrow-slot" aria-hidden="true" />
+        )}
       </div>
       <div className="how-ft">
         <div className="how-dots">
@@ -109,7 +130,7 @@ export function HowTo({ onNext }: { onNext: () => void }) {
         </div>
       </div>
       <button type="button" className="how-go" onClick={onNext}>
-        <span>다 읽으셨다면 아래로 스크롤하세요</span>
+        <span>이제 내 여행 찾아보기</span>
         <Icon name="arrow--down" size={18} />
       </button>
     </section>

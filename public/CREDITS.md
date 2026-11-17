@@ -27,14 +27,13 @@
 
 ## 배경 사진 (Wikimedia Commons)
 
-랜딩의 하늘 · 숫자 · 항공 · 숙소 · 체험 구간과 로그인 · 새 검색 화면의 창에 쓴 사진이다. 가로 1920~2400으로 줄이고 밝기를 조금 손봤다(변경 있음). 파일은 `src/assets/bg/` 에 있다.
+랜딩의 하늘 · 항공 · 숙소 · 체험 구간과 로그인 · 새 검색 화면의 창에 쓴 사진이다. 가로 1920~2400으로 줄이고 밝기를 조금 손봤다(변경 있음). 파일은 `src/assets/bg/` 에 있다.
 
 | 파일 | 쓰임 | 원본 | 작성자 | 라이선스 |
 | --- | --- | --- | --- | --- |
 | `bg/hero.jpg` | 랜딩 첫 화면의 하늘 · 로그인 화면의 창 | [Summer above the clouds (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Summer_above_the_clouds_(Unsplash).jpg) | Liane Metzler | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
-| `bg/deck.webp` | 스크롤하면 아래에서 올라오는 구름층 (아래쪽만 잘라 위 가장자리를 투명하게 녹임) | [Above The Clouds (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Above_The_Clouds_(Unsplash).jpg) | Aaron Burden | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
+| `bg/deck.webp` | 랜딩 첫 화면과 로그인 화면 전환의 구름층 (아래쪽만 잘라 위 가장자리를 투명하게 녹임) | [Above The Clouds (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Above_The_Clouds_(Unsplash).jpg) | Aaron Burden | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
 | `bg/flight.jpg` | 항공 구간 · 새 검색 화면의 창 | [Wing with morning sunrise sky.jpg](https://commons.wikimedia.org/wiki/File:Wing_with_morning_sunrise_sky.jpg) | Michael | 퍼블릭 도메인 |
-| `bg/stats.jpg` | 숫자 구간의 하늘 (위 사진에서 날개가 없는 왼쪽 위만 자름) | 위와 같음 | Michael | 퍼블릭 도메인 |
 | `bg/hotel.jpg` | 숙소 구간 | [Kyoto Yura Hotel MGallery Deluxe Room Twin 20201102-001.jpg](https://commons.wikimedia.org/wiki/File:Kyoto_Yura_Hotel_MGallery_Deluxe_Room_Twin_20201102-001.jpg) | J o | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) — 줄인 사진도 같은 조건으로 쓴다 |
 | `bg/exp.jpg` | 체험 구간 | [Orange hallway leading to Kyoto Prefecture (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Orange_hallway_leading_to_Kyoto_Prefecture_(Unsplash).jpg) | Peter Gabas | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
 

@@ -12,8 +12,6 @@ interface Look {
   icon?: IconName;
   after?: IconName;
   iconSize?: number;
-  /** 끝에 동그란 화살표를 붙인다. true 면 오른쪽 위를 가리키는 화살표, 아이콘 이름을 주면 그 아이콘 */
-  arrow?: boolean | IconName;
   onClick?: MouseEventHandler<HTMLElement>;
   children?: ReactNode;
 }
@@ -27,18 +25,13 @@ type AsButton = Look & Omit<ComponentProps<'button'>, Own>;
  * 버튼. `to` 를 주면 그 화면으로 가는 링크, `href` 를 주면 일반 링크, 둘 다 없으면 button 이다.
  */
 export function Button(props: AsLink | AsAnchor | AsButton) {
-  const { kind, size, className, icon, after, iconSize = 16, arrow, children, ...rest } = props;
-  const cls = ['btn', kind, size, arrow && 'cta', className].filter(Boolean).join(' ');
+  const { kind, size, className, icon, after, iconSize = 16, children, ...rest } = props;
+  const cls = ['btn', kind, size, className].filter(Boolean).join(' ');
   const inner = (
     <>
       {icon && <Icon name={icon} size={iconSize} />}
       {children}
       {after && <Icon name={after} size={iconSize} />}
-      {arrow && (
-        <span className="arr" aria-hidden="true">
-          <Icon name={arrow === true ? 'arrow--up-right' : arrow} size={size === 'sm' ? 14 : 16} />
-        </span>
-      )}
     </>
   );
   if ('to' in rest) {

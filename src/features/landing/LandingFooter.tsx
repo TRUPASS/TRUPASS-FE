@@ -3,14 +3,11 @@ import { routes } from '@/app/routes';
 import { BrandMark } from '@/shared/ui/BrandMark';
 import { brandName } from '@/shared/ui/brandName';
 import type { BrandKey } from '@/shared/ui/brands';
-import { Button } from '@/shared/ui/Button';
 import { Logo } from '@/shared/ui/Logo';
 
 const SOURCES: BrandKey[] = ['tripdotcom', 'expedia', 'bookingdotcom', 'hotelsdotcom'];
 
 interface LandingFooterProps {
-  /** [검색 시작]: 첫 질문 자리로 */
-  onStart: () => void;
   /** [이용 방법]: 이용 방법 상자로 */
   onHow: () => void;
   /** 로고: 맨 위로 */
@@ -18,23 +15,10 @@ interface LandingFooterProps {
 }
 
 /** 랜딩의 푸터. 스크롤이 여기서 끝난다. 회사 이름이 연동을 가정한 예시라는 사실을 적는다. */
-export function LandingFooter({ onStart, onHow, onTop }: LandingFooterProps) {
+export function LandingFooter({ onHow, onTop }: LandingFooterProps) {
   return (
     <footer className="lp-ftr">
       <div className="ftr-win">
-        <div className="ftr-t">
-          <p className="ftr-h">문장 세 개면 항공권과 숙소, 여행 장소가 한 화면에 정리됩니다.</p>
-          <Button
-            size="lg"
-            href="#search"
-            onClick={(e) => {
-              e.preventDefault();
-              onStart();
-            }}
-          >
-            검색 시작
-          </Button>
-        </div>
         <div className="ftr-g">
           <div className="ftr-c">
             <span className="k">검색 출처</span>
@@ -76,7 +60,7 @@ export function LandingFooter({ onStart, onHow, onTop }: LandingFooterProps) {
         <div className="ftr-e">
           <Logo
             size={20}
-            variant="duo"
+            variant="inv"
             to={routes.landing}
             label="Trupass 맨 위로"
             onClick={(e) => {

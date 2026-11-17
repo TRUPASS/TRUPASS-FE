@@ -1,7 +1,7 @@
 import { Fragment, useLayoutEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { routes } from '@/app/routes';
-import { Globe } from '@/features/search/Globe';
+import { Globe } from '@/features/search/SearchGlobe';
 import type { GlobeStage } from '@/features/search/globe';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { reduceMotion, still } from '@/shared/lib/capture';

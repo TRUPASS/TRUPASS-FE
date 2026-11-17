@@ -127,7 +127,7 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
   `Status`(Status · Tag · Kv · Note), `Steps`, `PageHead`, `Ask`(문장 입력), `Dock`(수정 요청), `Icon`, `Logo`, `BrandMark` 입니다.
 - **예시 데이터** — `src/shared/sample/data.ts` 한 곳에 있습니다. API 를 붙이면서 걷어 낼 대상입니다.
   결과 화면의 합계도 지금은 예시 데이터에서 더해서 보여 줍니다. API 를 붙일 때 백엔드가 준 금액으로 바꿉니다(아래 원칙).
-- **움직임** — 랜딩의 스크롤 연출은 `src/features/landing/scroll.ts`, 검색 중 화면의 지구본은 `src/features/search/globe.ts`,
+- **움직임** — 검색 중 화면의 지구본은 `src/features/search/globe.ts`,
   로그인으로 넘어갈 때의 구름 장막은 `src/app/layout/useLeave.ts` 에 있습니다. 움직임 줄이기를 켠 기기에서는 최종 상태만 보여 줍니다.
 - **정지 화면** — 주소 끝에 `#still` 을 붙이면 자동 이동과 움직임을 멈춘 화면이 나옵니다. 화면을 찍어 비교할 때 씁니다.
 - **로고 · 파비콘** — `scripts/logo/trupass-logo.webp`(팀이 만든 원본)에서 `python3 scripts/logo/make-logo.py` 로 만듭니다
@@ -149,8 +149,6 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 
 ### 가정한 것과 확인이 필요한 것
 
-- 랜딩의 숫자(연동 API 6개, 항공편 23건, 숙소 조합 9가지, 약 30초)는 예시 검색 한 건에서 나온 값입니다.
-  실제 수치가 정해지면 `src/shared/sample/data.ts` 의 `STATS` 를 바꿉니다. 화면에도 예시 값이라고 적혀 있습니다.
 - 항공사(대한항공 · 제주항공)와 요금 조회처 · 지도 · 후기 사이트는 실제 회사 이름을 씁니다.
   **연동을 가정한 예시이며 제휴 관계가 아닙니다.** 편명 · 시각 · 요금 · 평점은 예시 값입니다.
   연동할 곳이 정해지면 `src/shared/ui/brands.ts` 와 예시 데이터를 바꿉니다.

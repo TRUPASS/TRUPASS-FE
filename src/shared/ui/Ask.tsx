@@ -22,7 +22,7 @@ export interface AskPrompt {
 export interface AskHandle {
   /** 예시 문장으로 채우고 커서를 둔다 */
   fill(text: string): void;
-  focus(): void;
+  focus(options?: FocusOptions): void;
 }
 
 interface AskProps {
@@ -33,6 +33,8 @@ interface AskProps {
   plain?: boolean;
   /** 마지막 칸: 버튼이 [검색]이 된다 */
   last?: boolean;
+  /** 문장을 적어야 제출할 수 있다 */
+  required?: boolean;
   /** 엔터를 누르거나 버튼을 눌렀을 때 */
   onSubmit: () => void;
   ref?: Ref<AskHandle>;
@@ -41,9 +43,10 @@ interface AskProps {
 /**
  * 문장 검색 상자 (랜딩 · 새 검색). 적는 대로 sessionStorage 에 담아 다음 화면으로 넘긴다.
  */
-export function Ask({ prompt: p, filled, plain, last, onSubmit, ref }: AskProps) {
+export function Ask({ prompt: p, filled, plain, last, required, onSubmit, ref }: AskProps) {
   const [value, setValue] = useState(() => prompts.get()[p.k] || (filled ? p.v : ''));
   const input = useRef<HTMLInputElement>(null);
+  const answer = value.trim();
 
   useImperativeHandle(ref, () => ({
     fill(text) {
@@ -51,8 +54,8 @@ export function Ask({ prompt: p, filled, plain, last, onSubmit, ref }: AskProps)
       prompts.put(p.k, text);
       input.current?.focus({ preventScroll: true });
     },
-    focus() {
-      input.current?.focus();
+    focus(options) {
+      input.current?.focus(options);
     },
   }));
 
@@ -61,7 +64,8 @@ export function Ask({ prompt: p, filled, plain, last, onSubmit, ref }: AskProps)
       className={plain ? 'ask plain' : 'ask'}
       onSubmit={(e) => {
         e.preventDefault();
-        prompts.put(p.k, value.trim());
+        if (required && !answer) return;
+        prompts.put(p.k, answer);
         onSubmit();
       }}
     >
@@ -72,6 +76,7 @@ export function Ask({ prompt: p, filled, plain, last, onSubmit, ref }: AskProps)
         name={p.k}
         placeholder={p.ph}
         value={value}
+        required={required}
         autoComplete="off"
         enterKeyHint={last ? 'search' : 'next'}
         aria-label={p.q || p.l}
@@ -80,7 +85,12 @@ export function Ask({ prompt: p, filled, plain, last, onSubmit, ref }: AskProps)
           prompts.put(p.k, e.target.value.trim());
         }}
       />
-      <button className="go" type="submit" aria-label={last ? '검색' : '다음'}>
+      <button
+        className="go"
+        type="submit"
+        aria-label={last ? '검색' : '다음'}
+        disabled={required && !answer}
+      >
         <Icon name={last ? 'search' : 'arrow--right'} size={22} />
       </button>
     </form>

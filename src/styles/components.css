@@ -147,36 +147,6 @@
 .btn.fill {
   align-self: stretch;
 }
-/* 끝에 동그란 화살표가 붙는 버튼 (랜딩 오른쪽 위의 검색 시작). 올리면 화살표가 오른쪽으로 돈다 */
-.btn.cta {
-  padding-right: 8px;
-  gap: 12px;
-}
-.btn.sm.cta {
-  padding-right: 4px;
-  gap: 8px;
-}
-.btn .arr {
-  display: flex;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  align-items: center;
-  justify-content: center;
-  background: var(--brand);
-  color: var(--on-photo);
-  transition: transform 0.25s var(--ease);
-}
-.btn.sm .arr {
-  width: 30px;
-  height: 30px;
-  border-radius: 15px;
-}
-.btn.pri .arr {
-  background: var(--n-0);
-  color: var(--brand);
-}
 .btn:active {
   transform: translateY(1px);
 }
@@ -201,9 +171,6 @@
   }
   .btn.txt:hover {
     border-color: transparent;
-  }
-  .btn.cta:hover .arr {
-    transform: rotate(45deg);
   }
   .btn:disabled:hover,
   .btn[aria-disabled='true']:hover {
