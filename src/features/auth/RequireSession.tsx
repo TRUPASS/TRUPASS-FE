@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { routes } from '@/app/routes';
 import { authMode } from '@/shared/auth/mode';
 import { useSession } from '@/shared/auth/session';
+import { authEntryQuery } from './next';
 
 /**
  * 로그인해야 볼 수 있는 화면. 로그인 상태가 아니면 로그인 화면으로 보낸다.
@@ -10,6 +11,8 @@ import { useSession } from '@/shared/auth/session';
  */
 export function RequireSession({ children }: { children: ReactNode }) {
   const current = useSession();
-  if (authMode !== 'off' && !current) return <Navigate to={routes.login} replace />;
+  const { search } = useLocation();
+  if (authMode !== 'off' && !current)
+    return <Navigate to={`${routes.login}${authEntryQuery(search)}`} replace />;
   return children;
 }

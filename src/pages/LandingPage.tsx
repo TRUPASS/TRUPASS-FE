@@ -35,7 +35,7 @@ export function LandingPage() {
 
         <Services
           ref={services}
-          onComplete={() => leave(signedIn ? routes.searching : routes.login)}
+          onComplete={() => leave(signedIn ? routes.searching : `${routes.login}?from=search`)}
         />
       </main>
 

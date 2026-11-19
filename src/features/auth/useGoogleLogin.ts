@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
+import { useLocation } from 'react-router';
 import { useLeave } from '@/app/layout/useLeave';
 import { routes } from '@/app/routes';
 import { loginWithGoogle } from '@/shared/api/auth';
 import { loginErrorMessage } from './messages';
-import { afterLogin } from './next';
+import { afterLogin, authEntryQuery } from './next';
 
 /**
  * Google 이 준 ID 토큰으로 로그인하고 다음 화면으로 넘어간다.
@@ -11,6 +12,7 @@ import { afterLogin } from './next';
  */
 export function useGoogleLogin() {
   const leave = useLeave();
+  const { search } = useLocation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,13 +23,13 @@ export function useGoogleLogin() {
       try {
         const { newUser } = await loginWithGoogle(idToken);
         // 넘어가는 동안 버튼을 다시 누르지 못하게 busy 는 그대로 둔다
-        leave(newUser ? routes.signup : afterLogin());
+        leave(newUser ? `${routes.signup}${authEntryQuery(search)}` : afterLogin(search));
       } catch (e) {
         setError(loginErrorMessage(e));
         setBusy(false);
       }
     },
-    [leave],
+    [leave, search],
   );
 
   return { busy, error, login };
