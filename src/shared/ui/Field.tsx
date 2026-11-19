@@ -42,14 +42,16 @@ export function Input({
 
 interface SelectProps extends Omit<ComponentProps<'select'>, 'className' | 'children'> {
   options: readonly string[];
+  placeholder?: string;
   hinted?: boolean;
 }
 
 /** 고르는 칸(select) */
-export function Select({ options, hinted, id, ...rest }: SelectProps) {
+export function Select({ options, placeholder, hinted, id, ...rest }: SelectProps) {
   return (
     <div className="inp">
       <select id={id} aria-describedby={hinted && id ? `${id}-h` : undefined} {...rest}>
+        {placeholder && <option value="">{placeholder}</option>}
         {options.map((v) => (
           <option key={v}>{v}</option>
         ))}

@@ -186,8 +186,11 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
       () => true,
       () => false,
     );
-  await go(page, '**/login', () => page.keyboard.press('Enter'), '.rc');
-  ok('세 번째 엔터: 구름 장막이 덮인 뒤 로그인으로 넘어간다', at(page, '/login') && (await veil));
+  await go(page, '**/login?from=search', () => page.keyboard.press('Enter'), '.rc');
+  ok(
+    '세 번째 엔터: 구름 장막이 덮인 뒤 로그인으로 넘어간다',
+    at(page, '/login?from=search') && (await veil),
+  );
   await page.waitForTimeout(300);
   ok(
     '로그인: 장막이 걷힌다',
@@ -217,7 +220,7 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   await page.waitForSelector('.auth-gsi .fake-gsi', { timeout: 4000 }).catch(() => {});
   const gsi = await page.evaluate(() => ({
     slots: document.querySelectorAll('.auth-card .auth-gsi').length,
-    buttons: document.querySelectorAll('.auth-card a, .auth-card button').length,
+    buttons: document.querySelectorAll('.auth-gsi .fake-gsi').length,
     init: window.__gsi && window.__gsi.initialize,
     look: window.__gsi && window.__gsi.renderButton.at(-1),
   }));
@@ -232,25 +235,23 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
       gsi.look.locale === 'ko',
     JSON.stringify(gsi),
   );
-  await go(page, '**/signup', () => page.click('.auth-gsi .fake-gsi'), '.su-form');
+  await go(page, '**/signup?from=search', () => page.click('.auth-gsi .fake-gsi'), '.su-form');
   ok(
     'Google 계정으로 계속하기 → 처음 온 계정이라 백엔드가 가입시키고 회원 정보 입력으로 간다',
-    at(page, '/signup') && backend.calls.includes('POST /auth/google'),
+    at(page, '/signup?from=search') && backend.calls.includes('POST /auth/google'),
     backend.calls.join(', '),
   );
   const filled = await page.evaluate(() => ({
     mail: document.querySelector('#su-mail').value,
     nick: document.querySelector('#su-nick').value,
-    header: document.querySelector('.hdr').textContent,
   }));
   ok(
-    '회원 정보 입력: 로그인한 Google 계정의 이메일과 이름으로 채운다',
-    filled.mail === 'traveler@example.com' &&
-      filled.nick === '여행자' &&
-      filled.header.includes('traveler@example.com'),
+    '회원 정보 입력: Google 계정의 이메일을 채우고 닉네임은 빈칸으로 둔다',
+    filled.mail === 'traveler@example.com' && filled.nick === '',
     JSON.stringify(filled),
   );
   await page.waitForTimeout(1400);
+  await page.locator('.radios label').filter({ hasText: '선택 안 함' }).click();
   const ALL = '.su-form .pnl-b.g10 > .chk';
   const term = (i) => page.locator('.su-form .term .chk').nth(i);
   await page.click(ALL);
@@ -269,11 +270,10 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   );
   await term(0).click();
   await page.waitForTimeout(80);
-  await page.click('.su-form button[type="submit"]');
-  await page.waitForTimeout(300);
   ok(
-    '필수 약관을 풀면 가입이 넘어가지 않는다',
-    at(page, '/signup') &&
+    '필수 약관을 풀면 가입 버튼이 비활성화된다',
+    at(page, '/signup?from=search') &&
+      (await page.locator('.su-form button[type="submit"]').isDisabled()) &&
       (await page.evaluate(
         () => document.querySelectorAll('.su-form .term input:invalid').length === 1,
       )),
@@ -281,6 +281,8 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   await term(0).click();
   await page.waitForTimeout(80);
   await page.click('.tiles .opt:nth-child(1)');
+  await page.click('.tiles .opt:nth-child(5)');
+  await page.click('.tiles .opt:nth-child(6)');
   await page.waitForTimeout(80);
   const tiles = await page.evaluate(() => {
     const b = [...document.querySelectorAll('.tiles input')];
@@ -454,11 +456,15 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     page,
     '**/login',
     () => page.click('.landing-nav-actions a:has-text("로그인")'),
-    '.rc-k',
+    '.auth-card',
   );
   ok(
-    '문장 없이 로그인: 예시 조건이라고 알린다',
-    /예시/.test(await page.evaluate(() => document.querySelector('.rc-k').textContent)),
+    '문장 없이 로그인: 일반 안내를 보여 주고 조건 요약을 숨긴다',
+    await page.evaluate(
+      () =>
+        !document.querySelector('.rc') &&
+        document.querySelector('.auth-h').textContent.includes('Trupass에서 시작하세요'),
+    ),
   );
   await page.goto(url('/'));
   await page.locator('#search input[name="flight"]').focus();
@@ -473,12 +479,23 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
   await page.keyboard.press('Enter');
   ok('숙소를 비우고 엔터를 누르면 숙소 질문에 남는다', (await svc(page)).field === 'stay');
 
-  await go(page, '**/login', () => page.click('.landing-nav-actions a:has-text("로그인")'), '.rc');
+  await go(
+    page,
+    '**/login',
+    () => page.click('.landing-nav-actions a:has-text("로그인")'),
+    '.auth-card',
+  );
+  ok(
+    '직접 로그인하면 이전 문장이 남아 있어도 조건 요약을 숨긴다',
+    (await page.locator('.rc').count()) === 0,
+  );
+  await page.goto(url('/login?from=search'));
+  await page.waitForSelector('.rc');
   const rc = await page.evaluate(() =>
     [...document.querySelectorAll('.rc .v')].map((e) => e.textContent),
   );
   ok(
-    '직접 로그인하면 작성한 문장과 비워 둔 항목을 구분해서 보여 준다',
+    '검색 경로로 로그인하면 작성한 문장과 비워 둔 항목을 구분해서 보여 준다',
     rc[0] === '삿포로 1월 말' && rc[1] === '적지 않았습니다' && rc[2] === '적지 않았습니다',
     JSON.stringify(rc),
   );

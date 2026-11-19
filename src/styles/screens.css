@@ -649,20 +649,17 @@
 
 /* ───────── 02 로그인 ───────── */
 .auth {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   flex: 1 0 auto;
-  flex-direction: row;
   align-items: stretch;
   min-height: 100svh;
-  padding: var(--frame);
-  gap: var(--frame);
 }
 .auth-win {
   position: relative;
-  flex: 1.12 1 0;
   justify-content: space-between;
   gap: 40px;
   padding: 26px 30px 30px;
-  border-radius: var(--r-lg);
   overflow: hidden;
   isolation: isolate;
   color: var(--on-photo);
@@ -706,7 +703,9 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px 8px;
+}
+.rc-r + .rc-r {
   border-top: 1px solid var(--w-22);
 }
 .rc-r .ic {
@@ -720,16 +719,23 @@
   font-size: 15px;
   line-height: 22px;
 }
+.rc-actions {
+  border-top: 1px solid var(--w-22);
+}
 .rc-e {
+  display: inline-flex;
+  align-items: center;
   align-self: flex-start;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: 4px;
   margin-top: 8px;
   font-size: 13px;
   line-height: 20px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 .auth-side {
-  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   padding: 56px var(--gut);
@@ -738,6 +744,16 @@
   width: 100%;
   max-width: 420px;
   gap: 28px;
+  text-align: center;
+}
+.auth-legal {
+  gap: 8px;
+}
+.auth-legal-actions {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 /* Google 이 그리는 로그인 버튼(iframe)을 담는 칸. 버튼이 뜨기 전에도 자리를 잡아 둔다.
    안쪽은 Google 이 짜는 요소라 바탕 규칙(div 를 세로 flex 로)을 걸지 않는다 */
@@ -794,6 +810,22 @@
 /* ───────── 03 회원 정보 입력 ───────── */
 .su-form {
   gap: 0;
+  border: 0;
+}
+.su-form .hr {
+  background: none;
+}
+.su-form .su-terms-divider {
+  background: var(--line);
+}
+.su-form .pnl-f {
+  border-top: 0;
+}
+.su-form > .btn[type='submit'] {
+  margin-top: 24px;
+}
+.su-form > .btn:disabled:hover {
+  background: var(--n-100);
 }
 .su-hd {
   align-items: center;
@@ -1838,20 +1870,6 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   .two-r.stick {
     position: static;
   }
-  .auth {
-    flex-direction: column;
-  }
-  .auth-win {
-    flex: none;
-    min-height: 440px;
-  }
-  .auth-win .lyr {
-    background-image: var(--scrim-auth-s), url(../assets/bg/hero.jpg);
-  }
-  .auth-side {
-    flex: 1 0 auto;
-    padding: 40px var(--gut) 56px;
-  }
   .home-b {
     flex-wrap: wrap;
   }
@@ -1908,10 +1926,16 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   .pnl-f > .acts {
     flex: 1 1 0;
   }
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .auth-win {
     min-height: 0;
     padding: 18px 18px 20px;
     gap: 28px;
+  }
+  .auth-win .lyr {
+    background-image: var(--scrim-auth-s), url(../assets/bg/hero.jpg);
   }
   .rc {
     padding: 2px 16px 12px;

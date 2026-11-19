@@ -179,6 +179,10 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 
 백엔드(TRUPASS-BE `core`)의 Google 로그인에 맞춰 연동되어 있습니다. 비밀번호는 없고, 처음 로그인하면 그 자리에서 가입됩니다.
 
+- 상단 · 푸터의 로그인 버튼은 `/login` 으로 이동합니다. 이전 조건이 남아 있어도 일반 안내를 보여 주고, 로그인 후 새 검색 입력 화면으로 갑니다.
+- 랜딩의 질문 작성을 마치면 `/login?from=search` 로 이동합니다. 입력한 조건을 보여 주고, 로그인 후 바로 검색합니다. 신규 가입은 회원 정보 입력 화면에도 이 경로를 전달합니다.
+- 검색 경로로 들어와도 저장된 조건이 없으면 일반 로그인 흐름을 사용합니다.
+
 ```
 로그인 화면 ── Google 로그인 버튼(Google Identity Services) ──▶ ID 토큰
             ── POST /auth/google {idToken} ──▶ access token(30분) + refresh token(14일) + user + newUser

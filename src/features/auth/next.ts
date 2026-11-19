@@ -1,7 +1,16 @@
 import { routes } from '@/app/routes';
 import { prompts } from '@/shared/lib/prompts';
 
-/** 로그인(또는 회원 정보 입력)을 마친 뒤 갈 곳: 랜딩에서 적어 둔 문장이 있으면 바로 검색, 없으면 새 검색 화면 */
-export function afterLogin(): string {
-  return prompts.any() ? routes.searching : routes.search;
+/** 질문 작성을 마치고 들어온 경로에만 검색을 이어 간다. 저장된 문장만으로 판단하지 않는다. */
+export function isSearchLogin(search: string): boolean {
+  return new URLSearchParams(search).get('from') === 'search' && prompts.any();
+}
+
+/** 회원 정보 입력이나 재로그인을 거쳐도 검색 진입 경로를 유지한다. */
+export function authEntryQuery(search: string): string {
+  return isSearchLogin(search) ? '?from=search' : '';
+}
+
+export function afterLogin(search: string): string {
+  return isSearchLogin(search) ? routes.searching : routes.search;
 }

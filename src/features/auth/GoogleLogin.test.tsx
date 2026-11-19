@@ -24,7 +24,7 @@ afterEach(() => {
   for (const k of ['flight', 'stay', 'exp'] as const) prompts.put(k, '');
 });
 
-function renderLogin() {
+function renderLogin(search = '') {
   const router = createMemoryRouter(
     [
       { path: routes.login, element: <LoginPage /> },
@@ -32,7 +32,7 @@ function renderLogin() {
       { path: routes.search, element: <p>새 검색 화면</p> },
       { path: routes.searching, element: <p>검색 중 화면</p> },
     ],
-    { initialEntries: [routes.login] },
+    { initialEntries: [`${routes.login}${search}`] },
   );
   render(<RouterProvider router={router} />);
   return router;
@@ -69,10 +69,41 @@ describe('Google 로그인 (google 모드)', () => {
   it('이미 가입한 계정이고 랜딩에서 적어 둔 문장이 있으면 바로 검색한다', async () => {
     mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
     prompts.put('flight', '크리스마스 전에 부산에서 오사카');
-    renderLogin();
+    renderLogin('?from=search');
+    expect(screen.getByText('크리스마스 전에 부산에서 오사카')).toBeInTheDocument();
     await userEvent.click(await googleButton());
 
     expect(await screen.findByText('검색 중 화면')).toBeInTheDocument();
+  });
+
+  it('일반 로그인은 이전 조건이 남아 있어도 요약을 숨기고 새 검색으로 간다', async () => {
+    mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
+    prompts.put('flight', '이전에 적은 여행 조건');
+    renderLogin();
+
+    expect(screen.queryByText('이전에 적은 여행 조건')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '문장 다시 적기' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Trupass에서 시작하세요/)).toBeInTheDocument();
+    await userEvent.click(await googleButton());
+    expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+  });
+
+  it('검색 경로라도 조건이 없으면 일반 로그인으로 안내한다', async () => {
+    mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
+    renderLogin('?from=search');
+    expect(screen.queryByRole('link', { name: '문장 다시 적기' })).not.toBeInTheDocument();
+    await userEvent.click(await googleButton());
+    expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+  });
+
+  it('질문 작성 후 신규 가입은 회원 정보 입력에도 검색 경로를 전달한다', async () => {
+    prompts.put('flight', '부산에서 오사카');
+    const router = renderLogin('?from=search');
+    await userEvent.click(await googleButton());
+    expect(
+      await screen.findByText('회원 정보 입력 화면', {}, { timeout: 2000 }),
+    ).toBeInTheDocument();
+    expect(router.state.location.search).toBe('?from=search');
   });
 
   it('백엔드가 거절하면(이메일 미인증) 이유를 보여 주고 이 화면에 남는다', async () => {
@@ -84,10 +115,14 @@ describe('Google 로그인 (google 모드)', () => {
       '이메일 인증을 마친 Google 계정으로만 시작할 수 있습니다.',
     );
     expect(session.get()).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Google 계정으로 시작합니다' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Trupass 시작하기' })).toBeInTheDocument();
   });
 
-  it('이미 로그인한 채로 오면 바로 다음 화면으로 보낸다', async () => {
+  it.each([
+    ['', '새 검색 화면'],
+    ['?from=search', '검색 중 화면'],
+  ])('이미 로그인한 채로 오면 진입 경로 %s에 맞춰 %s으로 보낸다', async (search, destination) => {
+    prompts.put('flight', '부산에서 오사카');
     session.set(
       sessionFrom(
         {
@@ -99,8 +134,8 @@ describe('Google 로그인 (google 모드)', () => {
         { userId: 1, email: 'traveler@example.com', name: '여행자', pictureUrl: null },
       ),
     );
-    renderLogin();
+    renderLogin(search);
 
-    expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+    expect(await screen.findByText(destination)).toBeInTheDocument();
   });
 });
