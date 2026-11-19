@@ -20,7 +20,6 @@ export function Services({
   ref?: Ref<ServicesHandle>;
 }) {
   const [step, setStep] = useState(0);
-  const [marqueePaused, setMarqueePaused] = useState(false);
   const section = useRef<HTMLElement>(null);
   const scrollSpace = useRef<HTMLDivElement>(null);
   const ask = useRef<AskHandle>(null);
@@ -135,7 +134,7 @@ export function Services({
             ))}
           </div>
           <div className="svc-intro" aria-hidden="true">
-            <div className="svc-intro-track" data-paused={marqueePaused || undefined}>
+            <div className="svc-intro-track">
               {Array.from({ length: 6 }, (_, i) => (
                 <span key={i}>Flights · Hotels · Experiences</span>
               ))}
@@ -194,15 +193,6 @@ export function Services({
             })}
           </div>
         </div>
-        <button
-          type="button"
-          className="svc-intro-control"
-          aria-label="흐르는 글자 멈춤"
-          aria-pressed={marqueePaused}
-          onClick={() => setMarqueePaused((paused) => !paused)}
-        >
-          <Icon name={marqueePaused ? 'play--filled--alt' : 'pause--filled'} size={16} />
-        </button>
       </div>
       <div className="svc-scroll-space" ref={scrollSpace} aria-hidden="true" />
     </section>

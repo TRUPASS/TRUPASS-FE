@@ -226,21 +226,6 @@
   flex: none;
   padding-inline-end: 0.6em;
 }
-.svc-intro-control {
-  display: none;
-  position: absolute;
-  z-index: 1;
-  right: calc(var(--frame) + 18px);
-  bottom: calc(var(--frame) + 18px);
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--n-0);
-  color: var(--tx);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-}
 @keyframes svc-marquee {
   to {
     transform: translateX(-33.333333%);
@@ -288,15 +273,10 @@
     visibility: visible;
     opacity: var(--svc-intro-opacity);
   }
-  .lp-svc[data-scroll-intro]:not([data-intro-hidden]) .svc-intro-control {
-    display: flex;
-    opacity: var(--svc-intro-opacity);
-  }
   .lp-svc[data-scroll-intro] .svc-intro-track {
     animation: svc-marquee 36s linear infinite;
   }
   .lp-svc[data-intro-hidden] .svc-intro-track,
-  .lp-svc .svc-intro-track[data-paused],
   .lp-svc .svc-intro:hover .svc-intro-track {
     animation-play-state: paused;
   }
