@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { routes } from '@/app/routes';
 import { authMode } from '@/shared/auth/mode';
 import { env } from '@/shared/lib/env';
 import { GoogleMark } from '@/shared/ui/BrandMark';
 import { initGoogleId, loadGoogleId, onCredential } from './gis';
 import { MOCK_ID_TOKEN } from './mock';
+import { authEntryQuery } from './next';
 import { useGoogleLogin } from './useGoogleLogin';
 
 /** 디자인의 Google 버튼 모양 (Mock 로그인과 로그인 없이 보는 화면에서 쓴다) */
@@ -129,9 +130,10 @@ function ConnectedLogin() {
  * - off: 디자인의 버튼. 로그인 없이 회원 정보 입력 화면으로 넘어간다 (화면 확인용)
  */
 export function GoogleLogin() {
+  const { search } = useLocation();
   if (authMode === 'off') {
     return (
-      <Link className="btn pri lg fill gbtn" to={routes.signup}>
+      <Link className="btn pri lg fill gbtn" to={`${routes.signup}${authEntryQuery(search)}`}>
         <GoogleLook />
       </Link>
     );

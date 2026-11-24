@@ -84,12 +84,11 @@ describe('계정 메뉴 · 로그인이 필요한 화면', () => {
     expect(screen.getByText('로그인 화면')).toBeInTheDocument();
   });
 
-  it('회원 정보 입력은 로그인한 Google 계정의 이메일과 이름을 채워 둔다', () => {
+  it('회원 정보 입력은 Google 계정의 이메일을 채우고 닉네임은 빈칸으로 둔다', () => {
     signIn();
     renderAt(routes.signup);
 
     expect(screen.getByLabelText('이메일')).toHaveValue('harim@example.com');
-    expect(screen.getByLabelText('닉네임')).toHaveValue('김하림');
-    expect(screen.getAllByText('harim@example.com').length).toBeGreaterThan(0);
+    expect(screen.getByRole('textbox', { name: /닉네임/ })).toHaveValue('');
   });
 });
