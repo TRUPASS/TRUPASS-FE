@@ -1,6 +1,6 @@
 import { cx } from '@/shared/lib/cx';
 import { PAY } from '@/shared/sample/data';
-import { Icon } from '@/shared/ui/Icon';
+import { IconButton } from '@/shared/ui/Button';
 import type { PayDoc } from './docs';
 
 interface DocRowProps {
@@ -9,16 +9,16 @@ interface DocRowProps {
   first?: boolean;
 }
 
-/** 문서 한 줄: 문서 이름과 찾는 번호, 이메일로 보낸 시각 */
+/** 문서 한 줄: 문서 이름과 찾는 번호, 이메일로 보낸 시각, 받기 단추 */
 export function DocRow({ doc, first }: DocRowProps) {
   return (
     <div className={cx('doc', first && 'first')}>
-      <Icon name={doc.icon} size={20} className="c2" />
       <div className="g2 grow">
         <span className="t-md w5">{doc.title}</span>
         <span className="t-xs c3">{doc.sub}</span>
       </div>
       <span className="t-xs c3 num fn">{`${PAY.mailed} 발송`}</span>
+      <IconButton icon="download" kind="txt n" size="sm" label={`${doc.title} 받기`} />
     </div>
   );
 }

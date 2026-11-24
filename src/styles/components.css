@@ -195,7 +195,7 @@
   display: flex;
   width: 28px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: var(--r-sm);
   align-items: center;
   justify-content: center;
   background: var(--n-0);
@@ -400,7 +400,7 @@ input:disabled:checked + .box {
   flex: none;
   width: 52px;
   height: 52px;
-  border-radius: 26px;
+  border-radius: var(--r-pill);
   align-items: center;
   justify-content: center;
   background: var(--brand);
@@ -664,7 +664,7 @@ html.leaving .veil::after {
   height: 22px;
   padding: 0 9px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-xs);
   background: var(--n-0);
   font-size: 11px;
   line-height: 16px;
@@ -713,7 +713,7 @@ html.leaving .veil::after {
   gap: 12px;
   padding: 14px 18px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-md);
   background: var(--surface-sub);
   font-size: 13px;
   line-height: 20px;
@@ -800,16 +800,13 @@ html.leaving .veil::after {
   background: var(--brand);
 }
 
-/* 상단 바 (앱 화면): 바탕 위에 그대로 얹는다. 안쪽 내용은 본문 폭(--page)에 맞춘다. .wide 는 화면 폭을 다 쓰는 화면(새 검색)용 */
+/* 상단 바 (앱 화면): 바탕 위에 그대로 얹는다. 모든 앱 화면에서 화면 폭을 다 쓰고 좌우에 --gut 만 띄운다 */
 .hdr {
   flex-direction: row;
   align-items: center;
   gap: 32px;
   flex: none;
   height: 76px;
-  padding: 0 max(var(--gut), calc((100% - var(--page)) / 2));
-}
-.hdr.wide {
   padding: 0 var(--gut);
 }
 .hdr > :last-child > .btn.txt:last-child {
@@ -825,17 +822,16 @@ html.leaving .veil::after {
   align-items: center;
   height: 40px;
   padding: 0 16px;
-  border-radius: var(--r-pill);
   font-size: 15px;
   line-height: 22px;
   color: var(--tx-2);
   white-space: nowrap;
 }
+/* 지금 화면의 메뉴: 아래에 주 색 밑줄. 그림자로 그려 글자 자리가 움직이지 않는다 */
 .hdr .nav a.on {
   color: var(--tx);
   font-weight: 500;
-  background: var(--n-0);
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: inset 0 -2px 0 var(--brand);
 }
 .hdr .me {
   display: flex;
@@ -910,7 +906,7 @@ html.leaving .veil::after {
   gap: 10px;
   height: 44px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--r-xs);
   font-size: 15px;
   line-height: 22px;
   color: var(--tx);
@@ -924,14 +920,11 @@ html.leaving .veil::after {
   gap: 20px;
   flex: none;
   min-height: 64px;
-  padding: 16px max(var(--gut), calc((100% - var(--page)) / 2));
+  padding: 16px var(--gut);
   border-top: 1px solid var(--line);
   font-size: 12px;
   line-height: 18px;
   color: var(--tx-3);
-}
-.ftr.wide {
-  padding: 16px var(--gut);
 }
 
 /* 바깥 사이트로 이어지는 자리 (글자 + 아이콘). 시안에서는 눌러도 나가지 않는다 */
@@ -974,19 +967,48 @@ html.leaving .veil::after {
   box-shadow: 0 -4px 20px var(--k-10);
   pointer-events: auto;
 }
+/* 머리줄: 왼쪽은 올리는 단추(내려가 있을 때만 누를 수 있게 보인다), 오른쪽 끝은 올리고 내리는 화살표 단추 */
 .dock-h {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
   height: 51px;
-  padding: 0 20px 0 24px;
+  padding-right: 10px;
   flex: none;
-  cursor: pointer;
+  white-space: nowrap;
   border-radius: var(--r-md) var(--r-md) 0 0;
 }
-.dock-h {
-  white-space: nowrap;
+.dock-hb {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: stretch;
+  padding: 0 10px 0 24px;
+  text-align: left;
+  border-radius: var(--r-md) 0 0 0;
+  cursor: pointer;
+}
+.dock.up .dock-hb {
+  cursor: default;
+}
+.dock-tg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  color: var(--tx-3);
+  cursor: pointer;
+  transition: background 0.2s var(--ease);
+}
+.dock-tg:hover {
+  background: var(--surface-sub);
+  color: var(--tx);
 }
 .dock-ph,
 .dock-de {
@@ -1045,7 +1067,7 @@ html.leaving .veil::after {
 /* 문장 입력 상자 (독 안): 실제 textarea */
 .pbox {
   border: 1px solid var(--edge);
-  border-radius: 18px;
+  border-radius: var(--r-md);
   background: var(--n-0);
 }
 .pbox-x {
@@ -1056,7 +1078,7 @@ html.leaving .veil::after {
   font-size: 15px;
   line-height: 24px;
   color: var(--tx);
-  border-radius: 18px 18px 0 0;
+  border-radius: var(--r-md) var(--r-md) 0 0;
 }
 .pbox-x::placeholder {
   color: var(--tx-ph);
@@ -1069,7 +1091,7 @@ html.leaving .veil::after {
   padding: 8px 8px 8px 18px;
   border-top: 1px solid var(--line);
   background: var(--surface-sub);
-  border-radius: 0 0 17px 17px;
+  border-radius: 0 0 calc(var(--r-md) - 1px) calc(var(--r-md) - 1px);
 }
 
 /* 화면 아래 고정 영역: 독은 본문 칸(오른쪽 요약 칸 제외)에 맞춘다 */
@@ -1125,7 +1147,8 @@ body.vp {
     border-radius: 0;
     box-shadow: 0 -2px 12px var(--k-08);
   }
-  .dock-h {
+  .dock-h,
+  .dock-hb {
     border-radius: 0;
   }
   .js body.has-dock {
@@ -1145,7 +1168,6 @@ body.vp {
   .ask .go {
     width: 44px;
     height: 44px;
-    border-radius: 22px;
   }
   .steps {
     gap: 8px;
@@ -1154,7 +1176,10 @@ body.vp {
     width: 14px;
   }
   .dock-h {
-    padding: 0 12px 0 16px;
+    padding-right: 4px;
+  }
+  .dock-hb {
+    padding-left: 16px;
   }
   .dock-b {
     padding: 2px 16px 16px;
