@@ -26,7 +26,7 @@ export function SearchPage() {
   return (
     <>
       <title>새 검색 | Trupass</title>
-      <AppHeader on="새 검색" wide />
+      <AppHeader on="새 검색" />
       <main className="home">
         <section className="home-win">
           <div className="lyr" />
@@ -97,7 +97,7 @@ export function SearchPage() {
           </div>
         </section>
       </main>
-      <AppFooter wide />
+      <AppFooter />
     </>
   );
 }

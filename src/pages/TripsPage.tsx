@@ -14,7 +14,7 @@ export function TripsPage() {
   return (
     <>
       <title>내 여행 | Trupass</title>
-      <AppHeader on="내 여행" wide />
+      <AppHeader on="내 여행" />
       <main className="main">
         <div className="cx g24">
           <div className="g10">
@@ -36,7 +36,7 @@ export function TripsPage() {
           </div>
         </div>
       </main>
-      <AppFooter wide />
+      <AppFooter />
     </>
   );
 }

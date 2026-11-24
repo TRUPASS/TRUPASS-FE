@@ -800,16 +800,13 @@ html.leaving .veil::after {
   background: var(--brand);
 }
 
-/* 상단 바 (앱 화면): 바탕 위에 그대로 얹는다. 안쪽 내용은 본문 폭(--page)에 맞춘다. .wide 는 화면 폭을 다 쓰는 화면(새 검색)용 */
+/* 상단 바 (앱 화면): 바탕 위에 그대로 얹는다. 모든 앱 화면에서 화면 폭을 다 쓰고 좌우에 --gut 만 띄운다 */
 .hdr {
   flex-direction: row;
   align-items: center;
   gap: 32px;
   flex: none;
   height: 76px;
-  padding: 0 max(var(--gut), calc((100% - var(--page)) / 2));
-}
-.hdr.wide {
   padding: 0 var(--gut);
 }
 .hdr > :last-child > .btn.txt:last-child {
@@ -923,14 +920,11 @@ html.leaving .veil::after {
   gap: 20px;
   flex: none;
   min-height: 64px;
-  padding: 16px max(var(--gut), calc((100% - var(--page)) / 2));
+  padding: 16px var(--gut);
   border-top: 1px solid var(--line);
   font-size: 12px;
   line-height: 18px;
   color: var(--tx-3);
-}
-.ftr.wide {
-  padding: 16px var(--gut);
 }
 
 /* 바깥 사이트로 이어지는 자리 (글자 + 아이콘). 시안에서는 눌러도 나가지 않는다 */
