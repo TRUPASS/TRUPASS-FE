@@ -17,7 +17,7 @@ export function DockSection() {
           <div className="dock-demo">
             <Dock placeholder={PLACEHOLDER} />
           </div>
-          <span className="t-sm w6">올림 · 마우스를 올렸거나 입력 중</span>
+          <span className="t-sm w6">올림 · 머리줄을 눌렀거나 입력 중</span>
           <div className="dock-demo">
             <Dock
               up

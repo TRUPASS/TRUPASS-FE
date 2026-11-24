@@ -1,11 +1,9 @@
 import { AppFooter } from '@/app/layout/AppFooter';
 import { AppHeader } from '@/app/layout/AppHeader';
-import { routes } from '@/app/routes';
 import { PaySummary } from '@/features/pay/PaySummary';
 import { PastTrips } from '@/features/trips/PastTrips';
 import { TripDocs } from '@/features/trips/TripDocs';
 import { TripPanel } from '@/features/trips/TripPanel';
-import { Button } from '@/shared/ui/Button';
 
 /**
  * 내 여행. 결제를 마친 여행의 일정과 문서를 모아 보는 화면이다.
@@ -16,7 +14,7 @@ export function TripsPage() {
   return (
     <>
       <title>내 여행 | Trupass</title>
-      <AppHeader on="내 여행" />
+      <AppHeader on="내 여행" wide />
       <main className="main">
         <div className="cx g24">
           <div className="g10">
@@ -34,16 +32,11 @@ export function TripsPage() {
             </div>
             <aside className="two-r">
               <PaySummary />
-              <div className="g8">
-                <Button kind="pri" size="lg" className="fill" to={routes.search}>
-                  새 검색
-                </Button>
-              </div>
             </aside>
           </div>
         </div>
       </main>
-      <AppFooter />
+      <AppFooter wide />
     </>
   );
 }

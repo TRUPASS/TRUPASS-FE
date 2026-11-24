@@ -4,12 +4,11 @@ import { cx } from '@/shared/lib/cx';
 import { usePromptText, type PromptKey } from '@/shared/lib/prompts';
 import { APPLIED, PROMPTS, type Cond, type Prompt } from '@/shared/sample/data';
 import { Icon } from '@/shared/ui/Icon';
-import { Tag } from '@/shared/ui/Status';
 
 /** 수정 요청으로 바뀐 조건. 문장마다 같은 이름의 조건을 바꿔 끼운다: { stay: [['위치', '우에노역 도보 5분 이내', '변경']] } */
 export type CondChange = Partial<Record<PromptKey, Cond[]>>;
 
-/** 조건 묶음: [이름, 값, 표식]. 이름 칸의 폭을 맞춰 값이 같은 자리에서 시작한다. */
+/** 조건 묶음: [이름, 값, 표식]. 이름 칸의 폭을 맞춰 값이 같은 자리에서 시작한다. 표식은 테두리 없이 글자로만 붙인다. */
 function Conds({ pairs }: { pairs: Cond[] }) {
   return (
     <dl className="rq-d">
@@ -18,7 +17,7 @@ function Conds({ pairs }: { pairs: Cond[] }) {
           <dt>{name}</dt>
           <dd>
             <span>{value}</span>
-            {mark && <Tag tone={mark === '변경' ? 'y' : 'b'}>{mark}</Tag>}
+            {mark && <span className={cx('rq-m', mark === '변경' && 'chg')}>{mark}</span>}
           </dd>
         </div>
       ))}
@@ -60,24 +59,7 @@ export function RequestPanel({ change, edit = true }: RequestPanelProps) {
   return (
     <section className="pnl rq">
       <table className="rq-t">
-        <thead>
-          <tr>
-            <th scope="col">
-              <span className="vh">구분</span>
-            </th>
-            <th scope="col">적은 문장</th>
-            <th scope="col">
-              <div className="row jb g12">
-                <span>이렇게 찾았습니다</span>
-                {edit && (
-                  <Link className="lnk w5" to={routes.search}>
-                    문장 다시 적기
-                  </Link>
-                )}
-              </div>
-            </th>
-          </tr>
-        </thead>
+        <caption className="vh">적은 문장과 검색에 적용한 조건</caption>
         <tbody>
           {PROMPTS.map((p) => (
             <RequestRow key={p.k} prompt={p} change={change?.[p.k]} />
@@ -85,7 +67,7 @@ export function RequestPanel({ change, edit = true }: RequestPanelProps) {
         </tbody>
       </table>
       {edit && (
-        <Link className="lnk w5 t-sm rq-e m-only" to={routes.search}>
+        <Link className="lnk w5 t-sm rq-e" to={routes.search}>
           문장 다시 적기
         </Link>
       )}

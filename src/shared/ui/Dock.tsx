@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { cx } from '@/shared/lib/cx';
@@ -32,8 +25,8 @@ interface DockProps {
 /**
  * 수정 요청 독: 결과 화면 아래에 늘 붙어 있다.
  * - 내림(기본): 머리줄 한 줄만 보인다.
- * - 올림(.up): 머리줄을 누르거나 마우스를 올리거나 입력을 시작하면 입력 상자가 올라온다.
- * - 입력 없이 포인터가 벗어난 채 4초가 지나면 다시 내려간다. 글자가 있거나 초점이 안에 있으면 내려가지 않는다.
+ * - 올림(.up): 머리줄이나 오른쪽 화살표 단추를 누르면 입력 상자가 올라온다. 입력 칸으로 커서를 옮기지는 않는다.
+ * - 독 바깥을 누르거나 화살표 단추를 다시 누르면 내려간다. 적던 글은 그대로 남는다.
  */
 export function Dock({
   up: startUp = false,
@@ -51,66 +44,29 @@ export function Dock({
   const root = useRef<HTMLDivElement>(null);
   const head = useRef<HTMLButtonElement>(null);
   const area = useRef<HTMLTextAreaElement>(null);
-  // hover: 마우스가 올라와 있어 내리지 않는다, inside: 마우스가 독 위에 있다고 알고 있다, pinned: 누르거나 적어서 올렸다
-  const live = useRef({
-    hover: false,
-    inside: false,
-    pinned: false,
-    timer: 0,
-    text: startText,
-    up: startUp,
-  });
   const has = text.trim().length > 0;
 
-  useEffect(() => {
-    live.current.text = text;
-    live.current.up = state.up;
-  }, [text, state.up]);
-  useEffect(() => {
-    const now = live.current;
-    return () => clearTimeout(now.timer);
-  }, []);
-
   const set = (up: boolean) => {
-    live.current.up = up;
-    if (!up) live.current.pinned = false;
-    // 내려가 있는 동안 입력 상자는 화면에 없어 커서를 둘 수 없다. 올린 바로 다음에 커서를 두므로 화면에 반영하고 돌아온다
-    flushSync(() => setState({ up, moved: true }));
+    // 예시를 고르면 올린 바로 다음에 입력 칸에 커서를 두므로 화면에 반영하고 돌아온다
+    flushSync(() => setState((now) => (now.up === up ? now : { up, moved: true })));
   };
-  const raise = () => {
-    clearTimeout(live.current.timer);
-    if (!live.current.up) set(true);
-  };
-  const lower = (force?: boolean) => {
-    const now = live.current;
-    if (!now.up) return;
-    const busy =
-      now.text.trim().length > 0 || now.hover || !!root.current?.contains(document.activeElement);
-    if (!force && busy) return;
-    set(false);
-  };
-  const arm = () => {
-    clearTimeout(live.current.timer);
-    live.current.timer = window.setTimeout(() => lower(), 4000);
-  };
+
+  // 올라와 있는 동안 독 바깥을 누르면 내려간다
+  useEffect(() => {
+    if (!state.up) return;
+    const outside = (e: globalThis.PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) {
+        setState((now) => (now.up ? { up: false, moved: true } : now));
+      }
+    };
+    document.addEventListener('pointerdown', outside);
+    return () => document.removeEventListener('pointerdown', outside);
+  }, [state.up]);
+
   const fill = (value: string) => {
-    raise();
-    live.current.pinned = true;
+    set(true);
     setText(value.slice(0, MAX));
     area.current?.focus();
-  };
-  // 마우스로 가리킬 때만 따라 올라온다 (터치는 누른 것으로만 판단한다)
-  const enter = (e: PointerEvent) => {
-    if (e.pointerType !== 'mouse') return;
-    live.current.inside = true;
-    live.current.hover = true;
-    raise();
-  };
-  const leave = (e: PointerEvent) => {
-    if (e.pointerType !== 'mouse') return;
-    live.current.inside = false;
-    live.current.hover = false;
-    arm();
   };
   const submit = () => {
     if (has && to) navigate(to);
@@ -125,43 +81,34 @@ export function Dock({
     <div
       ref={root}
       className={cx('dock', state.up && 'up', state.moved && (state.up ? 'lift' : 'drop'))}
-      onPointerEnter={enter}
-      // 화면이 바뀌면서 독이 마우스 밑에서 새로 그려지면 들어왔다는 신호가 오지 않는다. 그때는 첫 움직임을 들어온 것으로 본다
-      onPointerMove={(e) => {
-        if (!live.current.inside) enter(e);
-      }}
-      onPointerLeave={leave}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) arm();
-      }}
     >
-      <button
-        ref={head}
-        type="button"
-        className="dock-h"
-        aria-expanded={state.up}
-        onClick={() => {
-          const now = live.current;
-          if (now.up && now.pinned && !has) {
-            now.hover = false;
-            lower(true);
-          } else {
-            raise();
-            now.pinned = true;
-            area.current?.focus();
-          }
-        }}
-      >
-        <Icon name="edit" size={16} className="c2" />
-        <span className="t-sm w6 fn">수정 요청</span>
-        <span className="dock-ph t-sm grow">{placeholder}</span>
-        <span className="dock-de t-sm c2 grow">
-          바꾸고 싶은 점을 문장으로 적어 주세요.
-          <span className="dt-only">{` ${desc || '조건을 반영해 다시 검색합니다.'}`}</span>
-        </span>
-        <Icon name="chevron--up" size={16} className="c3 i-up" />
-        <Icon name="chevron--down" size={16} className="c3 i-dn" />
-      </button>
+      <div className="dock-h">
+        <button
+          ref={head}
+          type="button"
+          className="dock-hb"
+          aria-expanded={state.up}
+          onClick={() => set(true)}
+        >
+          <Icon name="edit" size={16} className="c2" />
+          <span className="t-sm w6 fn">수정 요청</span>
+          <span className="dock-ph t-sm grow">{placeholder}</span>
+          <span className="dock-de t-sm c2 grow">
+            바꾸고 싶은 점을 문장으로 적어 주세요.
+            <span className="dt-only">{` ${desc || '조건을 반영해 다시 검색합니다.'}`}</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="dock-tg"
+          aria-label={state.up ? '입력 창 접기' : '입력 창 펼치기'}
+          aria-expanded={state.up}
+          onClick={() => set(!state.up)}
+        >
+          <Icon name="chevron--up" size={16} className="i-up" />
+          <Icon name="chevron--down" size={16} className="i-dn" />
+        </button>
+      </div>
       <div className="dock-b">
         <div className="pbox">
           <textarea
@@ -173,17 +120,14 @@ export function Dock({
             aria-label="수정 요청"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onFocus={() => {
-              live.current.pinned = true;
-              raise();
-            }}
+            onFocus={() => set(true)}
             onKeyDown={(e) => {
               if (e.nativeEvent.isComposing || e.keyCode === 229) return; // 한글 조합 중의 엔터는 넘기지 않는다
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 submit();
               } else if (e.key === 'Escape' && !has) {
-                lower(true);
+                set(false);
                 head.current?.focus();
               }
             }}

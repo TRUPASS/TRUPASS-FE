@@ -123,15 +123,15 @@
   --focus-gap: var(--n-0);
 
   --font: 'Outfit', 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-  --r-xs: 6px;
-  --r-sm: 14px;
-  --r-md: 24px;
-  --r-lg: 28px;
+  --r-xs: 4px; /* 체크 · 작은 표식 */
+  --r-sm: 8px; /* 버튼 · 입력 */
+  --r-md: 12px; /* 카드 · 검색창 */
+  --r-lg: 16px; /* 창 */
   --r-pill: 999px;
   --e1: 0 6px 24px var(--k-08);
   --e2: 0 24px 64px var(--k-18);
   --gut: 32px; /* 페이지 좌우 여백 */
-  --frame: 16px; /* 창(사진 틀)과 화면 가장자리 사이 */
+  --frame: 16px; /* 창(사진 틀) 아래 띄우는 간격. 창은 좌우 · 위로 화면에 꽉 붙인다 */
   --pad: 24px; /* 카드 안쪽 여백 */
   --page: 1240px; /* 앱 화면의 본문 폭. 상단 바와 푸터도 이 폭에 맞춘다 */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -528,8 +528,6 @@ body:where(.tp) > #root {
     --gut: 16px;
     --frame: 8px;
     --pad: 16px;
-    --r-md: 20px;
-    --r-lg: 22px;
   }
   .d-only,
   .t-only,

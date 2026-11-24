@@ -170,7 +170,7 @@
 
 /* 항공 · 숙소 · 체험: 짧게 확대된 뒤 질문 하나를 보여 준다. */
 .svc-frame {
-  padding: var(--frame);
+  padding: 0 0 var(--frame);
 }
 .svc-scroll-space {
   flex: none;
@@ -178,7 +178,7 @@
 .lp-svc .win {
   position: relative;
   flex: none;
-  border-radius: var(--r-lg);
+  border-radius: 0;
   overflow: hidden;
   isolation: isolate;
   background: transparent;
@@ -258,9 +258,7 @@
     --svc-photo-height: calc(var(--svc-photo-width) * 7 / 6);
     inset: calc((50% - var(--svc-photo-height) / 2) * var(--svc-remaining))
       calc((50% - var(--svc-photo-width) / 2) * var(--svc-remaining));
-    border-radius: calc(
-      var(--r-lg) + (clamp(32px, 6vw, 84px) - var(--r-lg)) * var(--svc-remaining)
-    );
+    border-radius: calc(clamp(32px, 6vw, 84px) * var(--svc-remaining));
   }
   .lp-svc[data-scroll-intro] .svc-photo::after,
   .lp-svc[data-scroll-intro] .svc-stages {
@@ -308,7 +306,7 @@
   justify-items: center;
   align-items: center;
   gap: 32px;
-  min-height: calc(100dvh - 2 * var(--frame));
+  min-height: calc(100dvh - var(--frame));
   padding: clamp(32px, 6vw, 84px) clamp(18px, 4vw, 56px) clamp(24px, 4vw, 48px);
   color: var(--on-photo);
   --focus: var(--n-0);
@@ -688,7 +686,7 @@
 .rc {
   max-width: 580px;
   padding: 4px 20px 14px;
-  border-radius: 24px;
+  border-radius: var(--r-md);
   background: var(--d-28);
   box-shadow: inset 0 0 0 1px var(--w-34);
   -webkit-backdrop-filter: blur(16px);
@@ -836,7 +834,7 @@
 /* ───────── 05 새 검색 ───────── */
 .home {
   flex: 1 0 auto;
-  padding: 0 var(--frame) 40px;
+  padding: 0 0 40px;
   gap: 16px;
 }
 .home-win {
@@ -845,7 +843,7 @@
   justify-content: center;
   min-height: 640px;
   padding: 64px var(--gut);
-  border-radius: var(--r-lg);
+  border-radius: 0;
   overflow: hidden;
   isolation: isolate;
   color: var(--on-photo);
@@ -908,6 +906,7 @@
   flex-direction: row;
   align-items: stretch;
   gap: 16px;
+  padding: 0 var(--gut);
 }
 .hb {
   flex: 1 1 0;
@@ -1068,7 +1067,7 @@ body[data-stage='done'] .dots {
   align-items: center;
   gap: 7px;
   height: 32px;
-  padding: 0 14px 0 10px;
+  padding: 0 14px;
   border-radius: var(--r-pill);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   font-size: 13px;
@@ -1096,6 +1095,8 @@ body[data-stage='done'] .dots {
 body[data-stage='stay'] .sp[data-sp='flight'],
 body[data-stage='done'] .sp[data-sp='flight'],
 body[data-stage='done'] .sp[data-sp='stay'] {
+  /* 체크가 붙는 단계는 왼쪽을 좁혀 아이콘과 글자 묶음이 가운데 오게 한다 */
+  padding-left: 10px;
   color: var(--tx-2);
   box-shadow: inset 0 0 0 1px var(--line);
   background: var(--n-0);
@@ -1149,23 +1150,11 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   line-height: 20px;
   vertical-align: top;
 }
-.rq-t thead th {
-  padding-top: 9px;
-  padding-bottom: 9px;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--tx-3);
-  background: var(--surface-sub);
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
-}
-.rq-t thead th:first-child,
 .rq-t tbody th {
   width: 88px;
   padding-left: var(--pad);
   padding-right: 0;
 }
-.rq-t thead th:last-child,
 .rq-t td:last-child {
   width: 54%;
   padding-right: var(--pad);
@@ -1209,9 +1198,18 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   gap: 2px 8px;
   font-weight: 500;
 }
+/* 조건 옆 표식 (가까운 공항 포함 · 앞뒤 3일로 넓힘 · 변경): 테두리와 바탕 없이 글자색으로만 */
+.rq-m {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--b-700);
+}
+.rq-m.chg {
+  color: var(--y-700);
+}
 .rq-e {
   align-self: flex-start;
-  padding: 0 var(--pad) 14px;
+  padding: 4px var(--pad) 14px;
 }
 /* 항공권 표: 한 건이 한 줄. 상자 없이 가는 선으로 나누고, 고른 줄은 옅은 하늘색 면으로 표시한다 */
 .ocs {
@@ -1257,7 +1255,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   display: flex;
   width: 20px;
   flex: none;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   cursor: pointer;
 }
 .fo-a {
@@ -1372,7 +1370,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   flex: none;
   height: 34px;
   padding: 0 10px 0 14px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   background: var(--n-0);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   font-size: 13px;
@@ -1409,7 +1407,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   position: relative;
   flex: 1 1 0;
   gap: 10px;
-  border-radius: 16px;
+  border-radius: var(--r-md);
   cursor: pointer;
   --d0: 0.05s;
 }
@@ -1417,7 +1415,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   position: relative;
   display: flex;
   flex: none;
-  border-radius: 16px;
+  border-radius: var(--r-md);
   overflow: hidden;
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -1528,7 +1526,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 /* ───────── 09 숙소 위치와 추천 장소 ───────── */
 .map {
   position: relative;
-  border-radius: 18px;
+  border-radius: var(--r-md);
   overflow: hidden;
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -1570,7 +1568,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   display: flex;
   transform: translate(calc(-100% - 26px), -50%);
   padding: 4px 12px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-xs);
   background: var(--n-900);
   color: var(--on-photo);
   font-size: 12px;
@@ -1583,7 +1581,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   position: absolute;
   right: 14px;
   top: 14px;
-  border-radius: 16px;
+  border-radius: var(--r-sm);
   background: var(--n-0);
   box-shadow: var(--e1);
   overflow: hidden;
@@ -1604,7 +1602,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   right: 0;
   bottom: 0;
   padding: 2px 10px 2px 8px;
-  border-radius: 8px 0 0 0;
+  border-radius: var(--r-xs) 0 0 0;
   background: var(--w-86);
   font-size: 11px;
   line-height: 16px;
@@ -1690,7 +1688,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 .pc-ph {
   width: 124px;
   height: 93px;
-  border-radius: 16px;
+  border-radius: var(--r-md);
 }
 .pc-i {
   flex: 1 1 0;
@@ -1723,7 +1721,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 .rv-ph {
   width: 52px;
   height: 39px;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
 }
 .star {
   color: var(--y-600);
@@ -1824,10 +1822,12 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 .tl-d.first {
   border-top: 0;
 }
+/* 날짜 칸: 기간('12.19 (토) ~ 12.20 (일)')도 한 줄에 들어가는 폭. 모든 날의 시각 칸이 같은 줄에 선다 */
 .tl-k {
-  width: 104px;
+  width: 148px;
   flex: none;
   font-weight: 600;
+  white-space: nowrap;
 }
 .tl-l {
   flex: 1 1 0;
@@ -1854,6 +1854,10 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 }
 .doc.first {
   border-top: 0;
+}
+/* 받기 단추: 아이콘의 오른쪽 끝을 카드 안쪽 여백 선에 맞춘다 */
+.doc .btn.ico {
+  margin-right: -9px;
 }
 
 @media (max-width: 1199px) {
@@ -1939,7 +1943,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   }
   .rc {
     padding: 2px 16px 12px;
-    border-radius: 20px;
+    border-radius: var(--r-md);
   }
   .auth-side {
     padding: 32px var(--gut) 44px;
@@ -1994,9 +1998,6 @@ body[data-stage='done'] .sp[data-sp='done'] b {
     margin-top: 2px;
   }
   /* 표는 줄마다 묶음으로 바꿔 쌓는다 */
-  .rq-t thead {
-    display: none;
-  }
   .rq-t,
   .rq-t tbody,
   .rq-t tr,
@@ -2081,7 +2082,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   .pc-ph {
     width: 84px;
     height: 63px;
-    border-radius: 12px;
+    border-radius: var(--r-sm);
   }
   .pc-rv {
     width: 100%;
@@ -2089,7 +2090,7 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   .map-attr {
     right: auto;
     left: 0;
-    border-radius: 0 8px 0 0;
+    border-radius: 0 var(--r-xs) 0 0;
   }
   .addon {
     align-items: flex-start;
@@ -2279,13 +2280,13 @@ body[data-stage='done'] .sp[data-sp='done'] b {
 }
 .rd.sh-1 {
   width: 130px;
-  border-radius: 24px;
+  border-radius: var(--r-md);
   border-color: transparent;
   box-shadow: var(--e1);
 }
 .rd.sh-2 {
   width: 130px;
-  border-radius: 28px;
+  border-radius: var(--r-lg);
   border-color: transparent;
   box-shadow: var(--e2);
 }
