@@ -66,14 +66,16 @@ describe('Google 로그인 (google 모드)', () => {
     expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
   });
 
-  it('이미 가입한 계정이고 랜딩에서 적어 둔 문장이 있으면 바로 검색한다', async () => {
+  it('이미 가입한 계정이고 랜딩에서 적어 둔 문장이 있으면 그 문장으로 검색을 시작하러 간다', async () => {
     mockDb.signIn({ sub: 'traveler', email: 'traveler@example.com', name: '여행자' });
     prompts.put('flight', '크리스마스 전에 부산에서 오사카');
-    renderLogin('?from=search');
+    const router = renderLogin('?from=search');
     expect(screen.getByText('크리스마스 전에 부산에서 오사카')).toBeInTheDocument();
     await userEvent.click(await googleButton());
 
-    expect(await screen.findByText('검색 중 화면')).toBeInTheDocument();
+    // 새 검색 화면이 ?start=1 을 보고 적어 둔 문장으로 곧바로 POST /searches 를 보낸다 (SearchPage.test)
+    expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+    expect(router.state.location.search).toBe('?start=1');
   });
 
   it('일반 로그인은 이전 조건이 남아 있어도 요약을 숨기고 새 검색으로 간다', async () => {
@@ -119,23 +121,27 @@ describe('Google 로그인 (google 모드)', () => {
   });
 
   it.each([
-    ['', '새 검색 화면'],
-    ['?from=search', '검색 중 화면'],
-  ])('이미 로그인한 채로 오면 진입 경로 %s에 맞춰 %s으로 보낸다', async (search, destination) => {
-    prompts.put('flight', '부산에서 오사카');
-    session.set(
-      sessionFrom(
-        {
-          accessToken: 'a',
-          accessTokenExpiresIn: 1800,
-          refreshToken: 'r',
-          refreshTokenExpiresIn: 1_209_600,
-        },
-        { userId: 1, email: 'traveler@example.com', name: '여행자', pictureUrl: null },
-      ),
-    );
-    renderLogin(search);
+    ['', ''],
+    ['?from=search', '?start=1'],
+  ])(
+    '이미 로그인한 채로 오면 진입 경로 %s에 맞춰 새 검색 화면(%s)으로 보낸다',
+    async (search, next) => {
+      prompts.put('flight', '부산에서 오사카');
+      session.set(
+        sessionFrom(
+          {
+            accessToken: 'a',
+            accessTokenExpiresIn: 1800,
+            refreshToken: 'r',
+            refreshTokenExpiresIn: 1_209_600,
+          },
+          { userId: 1, email: 'traveler@example.com', name: '여행자', pictureUrl: null },
+        ),
+      );
+      const router = renderLogin(search);
 
-    expect(await screen.findByText(destination)).toBeInTheDocument();
-  });
+      expect(await screen.findByText('새 검색 화면')).toBeInTheDocument();
+      expect(router.state.location.search).toBe(next);
+    },
+  );
 });

@@ -5,7 +5,7 @@ import { routes } from '@/app/routes';
 import { RequestPanel, type CondChange } from '@/features/search/RequestPanel';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { cx } from '@/shared/lib/cx';
-import type { Combo } from '@/shared/sample/data';
+import { REQ, type Combo } from '@/shared/sample/data';
 import { Bottom, Dock } from '@/shared/ui/Dock';
 import { PageHead } from '@/shared/ui/PageHead';
 import { useChoice } from './choice';
@@ -80,6 +80,8 @@ export function ResultScreen({
             <aside className="two-r stick">
               <SummaryPanel
                 sum={ctl.sum}
+                budget={REQ.budget}
+                pax={REQ.pax}
                 say={ctl.say}
                 ver={ver}
                 cta="추천 장소 보기"
@@ -94,7 +96,9 @@ export function ResultScreen({
       <AppFooter />
       <Bottom
         dock={<Dock {...DOCK} {...dock} />}
-        bar={<CtaBar total={ctl.sum.total} label="추천 장소 보기" to={routes.places} />}
+        bar={
+          <CtaBar total={ctl.sum.total} pax={REQ.pax} label="추천 장소 보기" to={routes.places} />
+        }
       />
     </>
   );

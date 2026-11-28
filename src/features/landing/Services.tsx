@@ -1,4 +1,6 @@
 import { useImperativeHandle, useLayoutEffect, useRef, useState, type Ref } from 'react';
+import { searchApiOn } from '@/features/search/searchRef';
+import { SENTENCE_MAX } from '@/features/search/useStartSearch';
 import { asset } from '@/shared/lib/assets';
 import { still } from '@/shared/lib/capture';
 import { PROMPTS } from '@/shared/sample/data';
@@ -161,6 +163,7 @@ export function Services({
                       prompt={prompt}
                       last={last}
                       required
+                      maxLength={searchApiOn ? SENTENCE_MAX : undefined}
                       onSubmit={() => {
                         if (last) onComplete();
                         else setStep(index + 1);

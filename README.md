@@ -90,13 +90,15 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 | `/search`          | 새 검색 (로그인 후)                                             |
 | `/search/progress` | 검색 중 — 지구본 위 비행기와 호텔                               |
 | `/results`         | 검색 결과 — 항공권과 숙소 조합. `?rev=2` 는 수정 요청 뒤의 결과 |
-| `/places`          | 숙소 주변 추천 장소                                             |
-| `/pay/mandate`     | 결제 권한 등록 (첫 결제 때 한 번)                               |
-| `/pay/checkout`    | 결제 확인                                                       |
-| `/pay/processing`  | 결제 진행                                                       |
-| `/pay/complete`    | 결제 완료                                                       |
-| `/trips`           | 내 여행                                                         |
-| `/styleguide`      | 디자인 기준 — 색 · 글꼴 · 컴포넌트 · 움직임을 한 장에 모은 문서 |
+
+검색 중 · 검색 결과는 주소에 `?searchId=12&versionNo=1` 이 붙으면 백엔드 검색 API 로 그리고, 없으면 예시 화면입니다. 아래 [검색 (API)](#검색-api).
+| `/places` | 숙소 주변 추천 장소 |
+| `/pay/mandate` | 결제 권한 등록 (첫 결제 때 한 번) |
+| `/pay/checkout` | 결제 확인 |
+| `/pay/processing` | 결제 진행 |
+| `/pay/complete` | 결제 완료 |
+| `/trips` | 내 여행 |
+| `/styleguide` | 디자인 기준 — 색 · 글꼴 · 컴포넌트 · 움직임을 한 장에 모은 문서 |
 
 아래는 API 연동 뼈대 페이지입니다. 위 화면에 API 를 붙이면서 하나씩 합칩니다.
 
@@ -141,7 +143,8 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 - **동작하는 것** — 랜딩의 스크롤 움직임과 이용 방법 상자, 문장 입력과 엔터 이동, 회원 정보 폼의 입력과 선택, 지구본,
   결과 화면의 항공권 · 숙소 · 추가 선택과 합계, 수정 요청 독, 결제 단계 이동. 전부 키보드로도 됩니다.
 - **적은 문장** — 다음 화면(로그인 · 검색 중 · 결과)의 "적어 둔 문장"에 그대로 나옵니다(`sessionStorage`).
-  검색 결과는 문장과 무관하게 같은 예시 데이터이고, 결과 화면에서 고른 조합도 다음 화면으로 넘어가지 않습니다.
+  예시 화면의 검색 결과는 문장과 무관하게 같은 예시 데이터이고, 결과 화면에서 고른 조합도 다음 화면으로 넘어가지 않습니다.
+  검색 API 에 붙은 설정(Mock · Google 로그인)에서는 새 검색이 실제로 검색을 시작합니다([검색 (API)](#검색-api)).
   장소 화면부터는 기본 조합(대한항공 KE 703 + 우에노 스테이 인)으로 고정되어 있습니다.
 - **모양만 있는 것** — 바깥 사이트로 이어지는 자리(Google 지도에서 열기, 후기 검색), 상단의 `결제 내역` · 알림 · 계정 메뉴,
   모바일 폭의 메뉴 단추, 약관 `[보기]`, 결제수단 `[변경]`. 모바일에서 내 여행은 결제 완료 화면의 버튼으로 갑니다.
@@ -187,7 +190,7 @@ Mock 시나리오는 URL 쿼리로 바꿀 수 있습니다.
 로그인 화면 ── Google 로그인 버튼(Google Identity Services) ──▶ ID 토큰
             ── POST /auth/google {idToken} ──▶ access token(30분) + refresh token(14일) + user + newUser
 newUser = true  → 회원 정보 입력(/signup) → 검색
-newUser = false → 랜딩에서 적어 둔 문장이 있으면 검색 중(/search/progress), 없으면 새 검색(/search)
+newUser = false → 랜딩에서 적어 둔 문장이 있으면 그 문장으로 검색 시작(/search?start=1), 없으면 새 검색(/search)
 ```
 
 ### 로그인 방식 (환경 변수로 정해진다)
@@ -234,7 +237,7 @@ TRUPASS 용 OAuth 2.0 클라이언트(웹 애플리케이션)는 발급되어 �
   refresh token 은 한 번만 쓸 수 있어서(다시 쓰면 백엔드가 그 사람의 토큰을 모두 폐기한다) 동시에 여러 요청이 만료돼도 한 번만 바꾸고, 다른 탭과는 Web Locks 로 차례를 맞춥니다.
 - refresh token 까지 거절되면 로그인 상태를 지웁니다. 앱을 열 때 `GET /users/me` 로 로그인이 유효한지 확인하고 이름 · 사진을 최신으로 맞춥니다 (`src/app/SessionSync.tsx`).
 - 로그아웃은 상단 바의 계정 메뉴(모바일은 메뉴 단추)와 회원 정보 입력 화면의 [로그아웃]에 있습니다. `POST /auth/logout` 으로 refresh token 을 폐기합니다.
-- 로그인해야 볼 수 있는 화면은 지금 회원 정보 입력 하나입니다(`RequireSession`). 검색 · 결제 화면은 아직 예시 데이터라 막지 않았고, API 를 붙일 때 같은 컴포넌트로 감쌉니다.
+- 로그인해야 볼 수 있는 화면은 지금 회원 정보 입력 하나입니다(`RequireSession`). 검색은 화면을 막지 않고, 로그인 전에 검색을 시작하면 적은 문장을 남겨 둔 채 로그인으로 보냅니다(아래 [검색 (API)](#검색-api)). 결제 화면은 아직 예시 데이터라 막지 않았습니다.
 
 ### 백엔드에 아직 없는 것
 
@@ -243,11 +246,62 @@ TRUPASS 용 OAuth 2.0 클라이언트(웹 애플리케이션)는 발급되어 �
 - **회원 정보를 입력했는지 알 수 있는 값이 없습니다.** `newUser` 는 처음 로그인한 그 한 번만 `true` 라서, 회원 정보 입력을 마치지 않고 나가면 다시 그 화면으로 오지 않습니다.
   `GET /users/me` 에 `profileCompleted` 같은 값이 생기면 그것으로 회원 정보 입력에 보낼지 정하는 것이 맞습니다.
 
+## 검색 (API)
+
+새 검색 → 검색 중 → 검색 결과의 **요청 표와 선택한 조합**을 백엔드 검색 API 계약(팀 Notion "엔드포인트" DB, B1 · B2)에 맞춰 연결했습니다.
+배포된 백엔드에는 아직 검색 API 가 없어서 **Mock API(MSW)로 먼저 동작**하고, 백엔드가 공개 API 를 올리면 Mock 을 끄고 확인합니다.
+FE 는 백엔드의 `/internal/*` 주소를 부르지 않습니다.
+
+```
+새 검색(/search) ── 마지막 칸에서 엔터 ── POST /searches {flightSentence, staySentence, experienceSentence}
+   └▶ 검색 중(/search/progress?searchId=12&versionNo=1) ── 1.5초마다 GET …/progress
+        COMPLETED → 결과(/results?searchId=12&versionNo=1)
+        FAILED · CANCELED → 새 검색 (실패 이유 · 취소 안내, 적은 문장은 그대로)
+   결과 ── GET /searches/{id}/versions/{n} (요청 표) + GET …/combination (선택한 조합 · 아래 합계 바)
+```
+
+- **로그인 전에 시작하면** 적은 문장을 `sessionStorage` 에 둔 채 `/login?from=search` 로 보냅니다. 로그인(처음이면 회원 정보 입력)을 마치면 `/search?start=1` 로 와서 같은 문장으로 곧바로 검색합니다. 랜딩에서 로그인한 채 문장을 다 적어도 같습니다.
+- **단계**는 `progressStep` 으로 그립니다. 항공과 숙소를 동시에 찾아 폴링 사이에 단계를 건너뛸 수 있으므로, 지금 단계보다 앞선 단계는 모두 끝난 것으로 그립니다. 시간을 가정한 단계 움직임은 없습니다.
+- **지구본**은 나라 코드(alpha-2)를 숫자 코드로 바꿔 칠합니다(`src/features/search/countries.ts`: KR · JP · TH · TW · HK · SG · VN). 표에 없는 나라는 칠하지 않고, 문장 해석 전(나라를 모름)에는 기본 상태입니다. 경로는 나라 도형의 중심(`geoCentroid`)을 잇고, 지도 데이터에 도형이 없는 홍콩 · 싱가포르는 고정 좌표를 씁니다.
+- **3분**이 넘도록 진행 중이면 "오래 걸리고 있습니다" 안내와 [검색 취소]를 보입니다(서버의 `startedAt` 부터 셉니다). 취소가 409(`SEARCH409_2`, 이미 끝남)면 진행 상태를 한 번 다시 읽고 그 상태대로 갑니다.
+- **결과**: 금액은 서버의 `flightAmount` · `stayAmount` · `addonAmount` · `totalAmount` · `budgetGap` 을 그대로 보여 줍니다(FE 는 더하거나 빼지 않습니다). 항공권 표 · 수정 요청 독 · 검색 기록은 결과 목록 API(B3)가 생길 때까지 숨기고 "항공권 · 숙소 비교 목록은 준비 중입니다" 한 줄만 둡니다. 조합이 아직 없으면(`COMBINATION404_1`) 진행 상태를 보고 검색 중 · 새 검색으로 보냅니다.
+- 주소에 `searchId` · `versionNo` 가 없거나 `?rev=2` 면 지금의 예시 화면을 그대로 보여 줍니다. 로그인 없이 화면만 보는 설정(off)도 늘 예시 화면입니다.
+
+코드: 쿼리 훅 `src/shared/api/queries/searches.ts`, 화면 `src/features/search/SearchProgressScreen.tsx` · `src/features/results/SearchResultScreen.tsx`, 시작 `src/features/search/useStartSearch.ts`.
+
+### Mock 시나리오
+
+`VITE_USE_MOCK=true` 로 띄우고 새 검색 주소에 `?mockScenario=` 를 붙여 검색을 시작합니다(예: `/search?mockScenario=searchSlow`). 진행 상태는 시작한 뒤 흐른 시간으로 바뀝니다: 0–2초 문장 해석, 2–5초 항공, 5–7초 숙소, 7–9초 결과 정리, 그 뒤 완료. Mock 은 문장과 상관없이 늘 같은 여행(인천 → 도쿄, 성인 2명 3박, 합계 909,000원)을 돌려줍니다.
+
+| 시나리오       | 동작                                                                |
+| -------------- | ------------------------------------------------------------------- |
+| (없음)         | 네 단계를 거쳐 완료 → 결과                                          |
+| `searchFailed` | 문장 해석 중 3초 뒤 `FAILED` → 새 검색에 실패 안내                  |
+| `searchSlow`   | 숙소 단계에서 멈춤 → 시작 3분 뒤 "오래 걸리고 있습니다"와 취소 버튼 |
+| `skipStay`     | `FLIGHT` 에서 바로 `SUMMARY` (숙소 단계를 건너뜀)                   |
+| `noBudget`     | `budgetAmount` · `budgetGap` 이 null → 예산 "정하지 않음"           |
+| `overBudget`   | `budgetGap` 이 음수 → "109,000원 초과"                              |
+| `rateLimited`  | 검색 시작이 429 → 백엔드 문장을 새 검색에 보임                      |
+
+### 실제 백엔드로 확인하기 (B1 · B2 가 develop 에 들어간 뒤)
+
+1. 백엔드를 로컬(`http://localhost:8080`)에서 띄우고 `pnpm gen:api --remote` 로 `/v3/api-docs` 의 스키마를 뽑아, `openapi/trupass.yaml` 에 손으로 쓴 검색 정의와 비교합니다. 다르면 백엔드에 알립니다(Swagger: `http://localhost:8080/swagger-ui`).
+2. `.env.local` 을 `VITE_USE_MOCK=false` · `VITE_API_BASE_URL=http://localhost:8080` · `VITE_GOOGLE_CLIENT_ID=<클라이언트 ID>` 로 두고 검색 한 번이 끝까지(결과의 요청 표 · 선택한 조합) 되는지 봅니다.
+3. 운영 확인은 백엔드가 검색 API 를 배포한 뒤에 합니다. **그 전에 이 화면이 운영에 나가면 Google 로그인을 켠 배포에서는 검색 시작이 실패합니다**(운영 백엔드에 `POST /searches` 가 없음).
+
+### 백엔드에 물어볼 것
+
+- **오류 코드 이름**: 계약의 `SEARCH404_1` · `SEARCH404_2`(없는 검색 · 버전)가 백엔드 develop 의 `SearchErrorCode` 에서는 "조건에 맞는 항공편 · 숙소가 없음"으로 이미 쓰이고 있습니다. 429 의 코드 이름도 아직 정해지지 않았습니다(Mock 은 `SEARCH429_1`). FE 는 코드가 아니라 상태(404 · 409 · 429)와 백엔드 문장으로 처리하고, 코드로 가르는 곳은 `COMBINATION404_1` 하나입니다.
+- **실패 이유**: `failureReason`(사용자에게 보여 줄 한국어 문장)을 추가하는지. FE 는 값이 있으면 보여 주고, 없으면 "검색하지 못했습니다. 문장을 고쳐 다시 시도해 주세요." 입니다. 지금 백엔드의 `SEARCH422_*`(지원하지 않는 도착지 · 출발일 없음 · 같은 도시 · 인원 초과) 문장이 그 값으로 알맞아 보입니다.
+- **테스트 요금 안내 문구**: 지금 요금은 Duffel 테스트 · LiteAPI 샌드박스 값입니다. 화면에 안내를 둘지, 둔다면 문구를 백엔드(예: develop 의 `dataNotice`)가 줄지.
+- **좌표 · 출발 도시**: 응답에 좌표와 출발 도시가 없어 지구본은 나라 중심을 잇고 출발 이름표에 나라 이름을 씁니다. 국내 노선(서울 → 제주처럼 같은 나라)은 경로를 그리지 못해 도착지 점만 보입니다. 공항 좌표나 출발 도시가 필요해지면 필드를 요청합니다.
+- **시각 형식**: `departTimeFrom` · `departTimeTo` 가 `"06:00"` 으로 오는지 `"06:00:00"` 으로 오는지(FE 는 둘 다 받습니다).
+
 ## 테스트
 
 - `pnpm test` — Vitest 로 단위 · 컴포넌트 테스트를 돌립니다. CI 에서도 돕니다.
 - `pnpm test:flow` — 앱을 Google 로그인을 켠 설정으로 빌드(`dist-flow`)해 미리보기 서버로 띄우고, Playwright 로 랜딩부터 Google 로그인 · 회원 정보 입력 · 결제 완료 · 내 여행까지 실제 브라우저에서 눌러 봅니다.
-  Google 과 백엔드는 검사 스크립트가 브라우저 안에서 대신 응답합니다(`scripts/flow/`: 백엔드 코드와 같은 규칙. 처음 가입, 이미 가입한 계정, 거절, 토큰 재발급, 로그아웃)
+  Google 과 백엔드는 검사 스크립트가 브라우저 안에서 대신 응답합니다(`scripts/flow/`: 백엔드 코드와 같은 규칙. 처음 가입, 이미 가입한 계정, 거절, 토큰 재발급, 로그아웃, 검색 시작 · 진행 상태 · 결과 · 취소)
   (마우스 · 키보드 · 터치 · 움직임 줄이기). 1분 반쯤 걸리고 CI 에는 넣지 않았습니다. 화면의 동작을 고쳤다면 올리기 전에 돌려 주세요.
   처음 한 번은 브라우저를 받아야 합니다: `pnpm exec playwright install chromium`
   이미 떠 있는 서버를 검사하려면 `node scripts/flow-test.mjs --base=http://localhost:5173` 처럼 주소를 줍니다. 그 서버도 `scripts/flow-test.mjs` 의 `FLOW_ENV` 와 같은 환경 변수로 띄운 것이어야 합니다.
@@ -256,7 +310,7 @@ TRUPASS 용 OAuth 2.0 클라이언트(웹 애플리케이션)는 발급되어 �
 
 API 타입은 손으로 쓰지 않고 OpenAPI 스펙에서 **생성**합니다.
 
-- 지금은 `openapi/trupass.yaml` 에 스펙을 둡니다. 로그인 · 사용자(`/auth/*`, `/users/me`)는 백엔드 코드에 맞춰 적었고, 나머지(`/api/...`)는 FE 가 먼저 쓴 초안입니다(백엔드에는 아직 없고, 백엔드 경로에는 `/api` 가 붙지 않습니다).
+- 지금은 `openapi/trupass.yaml` 에 스펙을 둡니다. 로그인 · 사용자(`/auth/*`, `/users/me`)는 백엔드 코드에 맞춰 적었고, 검색(`/searches/...`)은 팀 Notion "엔드포인트" DB 의 계약(B1 · B2)을 옮겼습니다. 나머지(`/api/...`)는 FE 가 먼저 쓴 초안입니다(백엔드에는 아직 없고, 백엔드 경로에는 `/api` 가 붙지 않습니다).
 - 백엔드가 준비되면 `pnpm gen:api --remote` 로 생성하고, 필요하면 `openapi/trupass.yaml` 을 백엔드 스펙으로 교체합니다.
 - 호출은 `src/shared/api/client.ts` 의 `apiClient`(openapi-fetch)로 하고, 쿼리 훅은 `src/shared/api/queries/` 에 둡니다.
 - 스펙을 바꾸면 `src/mocks/handlers.ts` 의 Mock 도 함께 맞춰주세요.

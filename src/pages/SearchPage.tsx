@@ -1,27 +1,64 @@
-import { useRef } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { AppFooter } from '@/app/layout/AppFooter';
 import { AppHeader } from '@/app/layout/AppHeader';
 import { routes } from '@/app/routes';
+import { readNotice } from '@/features/search/notice';
+import { searchApiOn, START_PARAM } from '@/features/search/searchRef';
+import { SENTENCE_MAX, useStartSearch, type Sentences } from '@/features/search/useStartSearch';
 import { useMember } from '@/shared/auth/member';
 import { PROMPTS } from '@/shared/sample/data';
 import { Ask, Chips, type AskHandle } from '@/shared/ui/Ask';
 import { BrandSource } from '@/shared/ui/BrandMark';
 import type { BrandKey } from '@/shared/ui/brands';
-import { Status } from '@/shared/ui/Status';
+import { Note, Status } from '@/shared/ui/Status';
 
 const SOURCES: BrandKey[] = ['tripdotcom', 'expedia', 'bookingdotcom', 'hotelsdotcom'];
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+/** 세 칸에 지금 적힌 문장 */
+function sentencesIn(asks: (AskHandle | null)[]): Sentences {
+  const at = (i: number) => asks[i]?.value() ?? '';
+  return { flight: at(0), stay: at(1), exp: at(2) };
+}
+
 /**
  * 새 검색. 로그인한 회원이 [새 검색]으로 들어오는 화면이다. 랜딩의 문장 세 개를 한 창에 모았다.
- * 엔터를 누르면 다음 칸으로, 마지막 칸에서는 검색 중 화면으로 넘어간다.
+ * 엔터를 누르면 다음 칸으로, 마지막 칸에서는 검색을 시작한다.
+ * - API 에 붙으면: POST /searches 를 보내고 받은 searchId · versionNo 로 검색 중 화면에 간다. 주소에 ?start=1 이 붙어 오면
+ *   (로그인 직후 등) 적어 둔 문장으로 곧바로 보낸다. 검색이 실패 · 취소돼 돌아오면 그 안내를 보여 주고, 문장은 그대로 남아 있다.
+ * - 로그인 없이 화면만 볼 때(off): 예시 검색 중 화면으로 간다.
  */
 export function SearchPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { nick } = useMember();
   const asks = useRef<(AskHandle | null)[]>([]);
   const last = PROMPTS.length - 1;
+  const { start, busy, error } = useStartSearch();
+  // 검색 중 화면에서 실패 · 취소로 돌아왔을 때의 안내. 다시 검색하면 지운다
+  const [notice, setNotice] = useState(() => readNotice(location.state));
+
+  const submit = () => {
+    if (!searchApiOn) {
+      void navigate(routes.searching);
+      return;
+    }
+    setNotice(null);
+    start(sentencesIn(asks.current));
+  };
+
+  const auto = searchApiOn && new URLSearchParams(location.search).get(START_PARAM) === '1';
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!auto || autoRan.current) return;
+    autoRan.current = true;
+    // 새로고침하거나 뒤로 가서 다시 열어도 또 보내지 않게 주소에서 지운다
+    void navigate(routes.search, { replace: true });
+    start(sentencesIn(asks.current));
+  }, [auto, navigate, start]);
+
+  const message = error ? { tone: 'fail' as const, text: error } : notice;
 
   return (
     <>
@@ -51,13 +88,27 @@ export function SearchPage() {
                     prompt={p}
                     filled
                     last={i === last}
-                    onSubmit={() =>
-                      i < last ? asks.current[i + 1]?.focus() : void navigate(routes.searching)
-                    }
+                    required={searchApiOn}
+                    maxLength={searchApiOn ? SENTENCE_MAX : undefined}
+                    busy={i === last && busy}
+                    onSubmit={() => (i < last ? asks.current[i + 1]?.focus() : submit())}
                   />
                 </div>
               ))}
             </div>
+            <p className="vh" role="status">
+              {busy ? '검색을 시작하고 있습니다.' : ''}
+            </p>
+            {message && (
+              <div className="home-m" role={message.tone === 'fail' ? 'alert' : 'status'}>
+                <Note
+                  tone={message.tone === 'fail' ? 'y' : 'b'}
+                  icon={message.tone === 'fail' ? 'warning--alt' : 'information'}
+                >
+                  {message.text}
+                </Note>
+              </div>
+            )}
             <div className="home-e">
               <span className="t-sm fn">예시</span>
               <Chips

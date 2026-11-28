@@ -47,6 +47,8 @@ export function PlacesPage() {
             <aside className="two-r stick">
               <SummaryPanel
                 sum={V1}
+                budget={REQ.budget}
+                pax={REQ.pax}
                 ver={`v1 ${REQ.at.slice(11)}`}
                 cta="이 조합으로 결제"
                 to={routes.mandate}
@@ -72,7 +74,7 @@ export function PlacesPage() {
             to={routes.places}
           />
         }
-        bar={<CtaBar total={V1.total} label="이 조합으로 결제" to={routes.mandate} />}
+        bar={<CtaBar total={V1.total} pax={REQ.pax} label="이 조합으로 결제" to={routes.mandate} />}
       />
     </>
   );

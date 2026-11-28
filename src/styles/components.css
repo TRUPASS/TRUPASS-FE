@@ -1154,6 +1154,10 @@ body.vp {
   .js body.has-dock {
     padding-bottom: 132px;
   }
+  /* 독 없이 합계 바만 붙는 화면 (검색 결과 API 화면) */
+  .js body.has-bar {
+    padding-bottom: 80px;
+  }
 }
 @media (max-width: 767px) {
   .ask {
@@ -1190,6 +1194,9 @@ body.vp {
   }
   .js body.has-dock {
     padding-bottom: 124px;
+  }
+  .js body.has-bar {
+    padding-bottom: 72px;
   }
   .hdr {
     height: 64px;

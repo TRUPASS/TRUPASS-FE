@@ -47,9 +47,9 @@ function summarize(map: StayMap, { f, h, bag, meal }: Choice): Sum {
   return { lines, total, left: REQ.budget - total };
 }
 
-/** 예산 대비: "691,000원 여유" 또는 "12,000원 초과" */
+/** 예산 대비: "691,000원 여유" 또는 "12,000원 초과". 받은 값의 부호만 보고 크기를 그대로 적는다 */
 export const gapText = (left: number) =>
-  left >= 0 ? `${formatKrw(left)} 여유` : `${formatKrw(-left)} 초과`;
+  left >= 0 ? `${formatKrw(left)} 여유` : `${formatKrw(Math.abs(left))} 초과`;
 
 interface State {
   choice: Choice;

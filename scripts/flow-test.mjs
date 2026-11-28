@@ -4,7 +4,7 @@
 //   pnpm test:flow                              # 흐름 검사용으로 빌드(dist-flow)한 뒤 미리보기 서버를 띄워 검사한다
 //   node scripts/flow-test.mjs --base=<주소>     # 이미 떠 있는 서버를 검사한다 (아래 FLOW_ENV 와 같은 설정으로 띄운 것)
 //
-// Google 로그인은 진짜 Google 과 백엔드 대신 이 스크립트가 브라우저 안에서 응답한다 (scripts/flow/).
+// Google 로그인과 백엔드(로그인 · 검색 API)는 진짜 대신 이 스크립트가 브라우저 안에서 응답한다 (scripts/flow/).
 // 브라우저가 없으면 먼저 `pnpm exec playwright install chromium` 을 한 번 실행한다.
 import { chromium } from 'playwright';
 import * as vite from 'vite';
@@ -55,6 +55,10 @@ const open = async (opts) => {
     route.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE_GSI }),
   );
   await ctx.route(`${FLOW_ENV.VITE_API_BASE_URL}/**`, (route) => backend.handle(route));
+  // Vercel 분석 스크립트(/_vercel/…)는 Vercel 에서만 있다. 미리보기 서버는 그 주소에 index.html 을 돌려주므로 빈 스크립트로 대신한다
+  await ctx.route('**/_vercel/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }),
+  );
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message));
   return { ctx, page };
@@ -300,22 +304,77 @@ const total = (page) => page.evaluate(() => document.querySelector('.sum .t-h1.n
     (await page.evaluate(() => document.querySelector('.inp:has(#su-nick) .num').textContent)) ===
       '3 / 12',
   );
-  await go(page, '**/search/progress', () => page.click('.su-form button[type="submit"]'));
-  ok('가입 → 검색 중', at(page, '/search/progress'));
+  const mark = backend.calls.length;
+  await go(page, '**/search/progress?*', () => page.click('.su-form button[type="submit"]'));
+  ok(
+    '가입 → 적어 둔 문장으로 검색을 시작해(POST /searches) 검색 중으로 간다',
+    at(page, '/search/progress?searchId=1&versionNo=1') &&
+      backend.calls.slice(mark).includes('POST /searches (토큰)'),
+    backend.calls.slice(mark).join(', '),
+  );
   const stages = [];
   const t0 = Date.now();
-  for (let i = 0; i < 44 && at(page, '/search/progress'); i++) {
+  const onProgress = () => new URL(page.url()).pathname === '/search/progress';
+  for (let i = 0; i < 60 && onProgress(); i++) {
     const s = await page.evaluate(() => document.body.dataset.stage).catch(() => 'nav');
     if (s && stages[stages.length - 1] !== s) stages.push(s);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(250);
   }
-  await page.waitForURL('**/results', { timeout: 8000 }).catch(() => {});
-  await page.waitForSelector('.fo', { timeout: 4000 }).catch(() => {});
+  await page.waitForURL('**/results?*', { timeout: 8000 }).catch(() => {});
   ok(
-    '검색 중: 항공 → 숙소 → 완료 뒤 결과로 넘어간다',
-    at(page, '/results') && stages.join('>').startsWith('flight>stay'),
+    '검색 중: 진행 상태대로 문장 해석 → 항공 → 숙소 → 결과 정리 뒤 결과로 넘어간다',
+    at(page, '/results?searchId=1&versionNo=1') && stages.join('>') === 'parse>flight>stay>done',
     stages.join('>') + ' · ' + ((Date.now() - t0) / 1000).toFixed(1) + '초',
   );
+  await page.waitForSelector('.sum .t-h1.num', { timeout: 4000 }).catch(() => {});
+  const api = await page.evaluate(() => ({
+    sentence: document.querySelector('.rq-t .rq-s')?.textContent,
+    total: document.querySelector('.sum .t-h1.num')?.textContent,
+    budget: document.querySelector('.sum')?.textContent.includes('정하지 않음'),
+    bar: document.querySelector('.cta-bar .t-h3.num')?.textContent,
+    rows: document.querySelectorAll('.fo').length,
+    dock: document.querySelectorAll('.dock').length,
+  }));
+  ok(
+    '결과(API): 보낸 문장 · 서버 합계를 보이고 항공권 표와 독은 숨긴다',
+    api.sentence.includes('부산에서 오사카') &&
+      api.total === '594,400원' &&
+      api.bar === '594,400원' &&
+      api.budget &&
+      api.rows === 0 &&
+      api.dock === 0,
+    JSON.stringify(api),
+  );
+  // 로그인한 채 새 검색을 다시 시작해 진행 중에 취소한다
+  await page.goto(url('/search'));
+  await page.focus('.ask input[name="exp"]');
+  await go(page, '**/search/progress?*', () => page.keyboard.press('Enter'));
+  await page
+    .waitForFunction(() => document.body.dataset.stage === 'flight', null, { timeout: 4000 })
+    .catch(() => {});
+  const beforeCancel = backend.calls.length;
+  await go(
+    page,
+    (u) => u.pathname === '/search',
+    () => page.click('.srch-top button:has-text("검색 취소")'),
+    '.home-m',
+  );
+  const notice = await page
+    .locator('.home-m')
+    .textContent()
+    .catch(() => '');
+  ok(
+    '검색 취소: 취소 API 를 부르고 새 검색으로 돌아와 안내를 보여 준다',
+    at(page, '/search') &&
+      backend.calls
+        .slice(beforeCancel)
+        .some((c) => /^POST \/searches\/2\/versions\/1\/cancel/.test(c)) &&
+      notice.includes('검색을 취소했습니다'),
+    notice,
+  );
+  // 아래는 예시 결과 화면(항공권 표 · 숙소 고르기 · 수정 요청 독)을 본다
+  await page.goto(url('/results'));
+  await page.waitForSelector('.fo', { timeout: 4000 }).catch(() => {});
   await page.waitForTimeout(1600);
   ok(
     '결과: 처음에는 항공권 세 줄이 모두 접혀 있다',
