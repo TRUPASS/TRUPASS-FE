@@ -1,4 +1,5 @@
 import type { MockScenario } from './fixtures/checkout';
+import type { MockSearch } from './fixtures/search';
 
 interface MockCheckout {
   packageId: string;
@@ -45,6 +46,29 @@ function saveUsers(users: MockUser[]) {
 let users: MockUser[] | null = null;
 const allUsers = () => (users ??= loadUsers());
 
+// 검색은 새로고침해도 이어지도록 sessionStorage 에 둔다 (검색 중 화면을 다시 열거나 결과에서 뒤로 갈 때)
+const SEARCHES_KEY = 'tp.mock.searches';
+let searches: MockSearch[] | null = null;
+
+function loadSearches(): MockSearch[] {
+  try {
+    const raw = sessionStorage.getItem(SEARCHES_KEY);
+    return raw ? (JSON.parse(raw) as MockSearch[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSearches(list: MockSearch[]) {
+  try {
+    sessionStorage.setItem(SEARCHES_KEY, JSON.stringify(list));
+  } catch {
+    // 저장소를 쓸 수 없으면 이 탭에서만 기억한다
+  }
+}
+
+const allSearches = () => (searches ??= loadSearches());
+
 export const mockDb = {
   nextId(prefix: string) {
     sequence += 1;
@@ -79,6 +103,31 @@ export const mockDb = {
   findUser(userId: number) {
     return allUsers().find((u) => u.userId === userId);
   },
+  /** 검색을 하나 만든다. 번호는 1부터 차례로 붙는다 */
+  createSearch(search: Omit<MockSearch, 'searchId' | 'versionNo'>): MockSearch {
+    const list = allSearches();
+    const created: MockSearch = {
+      searchId: list.reduce((max, s) => Math.max(max, s.searchId), 0) + 1,
+      versionNo: 1,
+      ...search,
+    };
+    list.push(created);
+    saveSearches(list);
+    return created;
+  },
+  findSearch(searchId: number) {
+    return allSearches().find((s) => s.searchId === searchId);
+  },
+  /** 검색 하나를 바꿔 저장한다 (취소한 시각 등) */
+  updateSearch(searchId: number, change: Partial<MockSearch>) {
+    const list = allSearches();
+    const i = list.findIndex((s) => s.searchId === searchId);
+    if (i < 0) return undefined;
+    const next = { ...list[i]!, ...change };
+    list[i] = next;
+    saveSearches(list);
+    return next;
+  },
   /** refresh token 을 한 번 쓴다. 이미 쓴 것이면 false */
   useRefreshToken(token: string): boolean {
     if (usedRefreshTokens.has(token)) return false;
@@ -92,8 +141,10 @@ export function resetMockDb() {
   sequence = 0;
   usedRefreshTokens.clear();
   users = null;
+  searches = null;
   try {
     localStorage.removeItem(USERS_KEY);
+    sessionStorage.removeItem(SEARCHES_KEY);
   } catch {
     // 저장소가 없는 환경
   }

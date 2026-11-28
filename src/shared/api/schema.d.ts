@@ -84,6 +84,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 검색 시작 (비동기)
+         * @description 문장 세 개를 받아 검색을 시작한다. 응답은 바로 오고 검색은 서버 뒤에서 돈다. 진행 상태는 progress 를 폴링해서 본다. 로그인이 필요하고 사용자별 요청 한도가 있다.
+         */
+        post: operations["createSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/searches/{searchId}/versions/{versionNo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 검색 조건 — 결과 화면의 요청 표 */
+        get: operations["getSearchVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/searches/{searchId}/versions/{versionNo}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 검색 진행 상태 — FE 가 1.5초마다 폴링한다
+         * @description COMPLETED · FAILED · CANCELED 가 오면 폴링을 멈춘다. 문장 해석(PARSING)이 끝나기 전에는 국가 · 날짜 필드가 null 이다. 항공과 숙소를 동시에 검색하므로 폴링 사이에 단계를 건너뛸 수 있다(FLIGHT 다음에 바로 SUMMARY · COMPLETED).
+         */
+        get: operations["getSearchProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/searches/{searchId}/versions/{versionNo}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 검색 취소
+         * @description 본문은 없다. 이미 끝난 검색이면 409(SEARCH409_2)다.
+         */
+        post: operations["cancelSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/searches/{searchId}/versions/{versionNo}/combination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 선택한 조합 — 결과 화면의 [선택한 조합]과 아래 고정 바
+         * @description 검색이 끝나면 서버가 1순위 추천 조합을 기본 조합으로 저장해 둔다. 금액은 모두 서버가 계산한 값이다.
+         */
+        get: operations["getCombination"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trip-requests": {
         parameters: {
             query?: never;
@@ -250,6 +347,293 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        CreateSearchBody: {
+            /**
+             * @description 항공 문장 (화면의 첫 번째 질문)
+             * @example 12월 18일 전후로 인천에서 도쿄, 아침에 출발하는 왕복 항공권. 성인 2명
+             */
+            flightSentence: string;
+            /**
+             * @description 숙소 문장 (두 번째 질문)
+             * @example 미술관에서 가까운 조용한 호텔로 3박. 항공권까지 합쳐 160만원 이내
+             */
+            staySentence: string;
+            /**
+             * @description 체험 · 여행 요구사항 문장 (세 번째 질문)
+             * @example 미술관과 건축물 탐방 위주로 조용하게. 쇼핑은 하루만.
+             */
+            experienceSentence: string;
+        };
+        /** @enum {string} */
+        SearchStatus: "IN_PROGRESS" | "COMPLETED" | "FAILED" | "CANCELED";
+        /**
+         * @description PARSING(문장 해석) · FLIGHT(항공편 검색) · STAY(숙소 검색) · SUMMARY(결과 정리)
+         * @enum {string}
+         */
+        SearchProgressStep: "PARSING" | "FLIGHT" | "STAY" | "SUMMARY";
+        SearchStarted: {
+            /**
+             * Format: int64
+             * @example 12
+             */
+            searchId: number;
+            /**
+             * Format: int32
+             * @description 첫 검색은 1
+             * @example 1
+             */
+            versionNo: number;
+            status: components["schemas"]["SearchStatus"];
+            progressStep: components["schemas"]["SearchProgressStep"];
+            /**
+             * Format: date-time
+             * @example 2026-11-10T05:01:55Z
+             */
+            startedAt: string;
+        };
+        SearchProgress: {
+            /** Format: int64 */
+            searchId: number;
+            /** Format: int32 */
+            versionNo: number;
+            status: components["schemas"]["SearchStatus"];
+            progressStep: components["schemas"]["SearchProgressStep"];
+            flightSentence: string;
+            staySentence: string;
+            experienceSentence: string;
+            /** @description 재검색 버전에만 있다. 지금은 늘 null */
+            revisionRequest?: string | null;
+            /** @example 대한민국 */
+            originCountry?: string | null;
+            /** @example 일본 */
+            destinationCountry?: string | null;
+            /**
+             * @description ISO 3166-1 alpha-2
+             * @example KR
+             */
+            originCountryCode?: string | null;
+            /**
+             * @description ISO 3166-1 alpha-2
+             * @example JP
+             */
+            destinationCountryCode?: string | null;
+            /** @example 도쿄 */
+            destinationCity?: string | null;
+            /**
+             * Format: date
+             * @description 출발일 범위의 시작. 지금은 departDateTo 와 같은 날로 온다
+             * @example 2026-12-18
+             */
+            departDateFrom?: string | null;
+            /**
+             * Format: date
+             * @example 2026-12-18
+             */
+            departDateTo?: string | null;
+            /**
+             * @description HH:mm. 오전 06:00–12:00 · 오후 12:00–18:00 · 저녁 18:00–23:59. 시간대를 말하지 않으면 null
+             * @example 06:00
+             */
+            departTimeFrom?: string | null;
+            /** @example 12:00 */
+            departTimeTo?: string | null;
+            /**
+             * Format: int32
+             * @example 2
+             */
+            adultCount?: number | null;
+            /**
+             * Format: int32
+             * @example 3
+             */
+            nights?: number | null;
+            /**
+             * Format: int32
+             * @description 항공편 검색이 끝난 뒤 찾은 항공권 수
+             */
+            flightOfferCount?: number | null;
+            /** @description 지금 단계에서 조회 중인 출처 이름 (지금은 Duffel · LiteAPI) */
+            providerNames: string[];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            completedAt?: string | null;
+        };
+        SearchCanceled: {
+            /** Format: int64 */
+            searchId: number;
+            /** Format: int32 */
+            versionNo: number;
+            status: components["schemas"]["SearchStatus"];
+        };
+        /** @enum {string} */
+        SearchConditionCategory: "FLIGHT" | "STAY" | "EXPERIENCE";
+        SearchCondition: {
+            /** Format: int64 */
+            conditionId: number;
+            category: components["schemas"]["SearchConditionCategory"];
+            /** @example 출발 */
+            label: string;
+            /** @example 12.18 (금), 오전 06:00 ~ 12:00 */
+            value: string;
+            /**
+             * @description 넓혀 잡았거나 채워 넣은 조건의 설명
+             * @example 출발지를 서울로 검색
+             */
+            note?: string | null;
+            /** @description 재검색에서 바뀐 조건인가 */
+            changed: boolean;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        SearchVersion: {
+            /** Format: int64 */
+            searchId: number;
+            /** Format: int32 */
+            versionNo: number;
+            /** @description 이 검색의 최신 버전인가 */
+            latest: boolean;
+            status: components["schemas"]["SearchStatus"];
+            flightSentence: string;
+            staySentence: string;
+            experienceSentence: string;
+            /** @description 재검색 버전에만 있다. 지금은 늘 null */
+            revisionRequest?: string | null;
+            /** @description 재검색 버전에만 있다. 지금은 늘 null */
+            changeSummary?: string | null;
+            conditions: components["schemas"]["SearchCondition"][];
+            /** Format: int32 */
+            adultCount?: number | null;
+            /** Format: int32 */
+            nights?: number | null;
+            /**
+             * Format: int64
+             * @description 예산(원). 예산을 말하지 않았으면 null
+             */
+            budgetAmount?: number | null;
+            /**
+             * Format: date-time
+             * @description 요금을 조회한 시각
+             */
+            priceCheckedAt?: string | null;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            completedAt?: string | null;
+        };
+        CombinationFlight: {
+            /**
+             * Format: int64
+             * @example 101
+             */
+            flightOfferId: number;
+            /** @example 대한항공 */
+            airlineName: string;
+            /** @example KE 703 */
+            outboundFlightNo: string;
+            /** @example KE 704 */
+            inboundFlightNo: string;
+            /**
+             * @description 지금은 이코노미(ECONOMY)만 검색한다
+             * @example ECONOMY
+             */
+            cabinClass: string;
+            /**
+             * Format: int32
+             * @example 2
+             */
+            passengerCount: number;
+        };
+        CombinationStay: {
+            /**
+             * Format: int64
+             * @example 201
+             */
+            stayOfferId: number;
+            /** @example 우에노 스테이 인 */
+            hotelName: string;
+            /** @example 스탠다드 더블 */
+            roomType: string;
+            /**
+             * Format: int32
+             * @example 3
+             */
+            nights: number;
+            breakfastIncluded: boolean;
+        };
+        /** @description 금액은 모두 서버가 계산한 원 단위 정수다. FE 는 더하거나 빼지 않고 그대로 보여 준다. 지금 요금은 테스트 데이터다. */
+        Combination: {
+            /**
+             * Format: int64
+             * @description 나중에 추천 장소 · 주문에 쓴다
+             * @example 41
+             */
+            combinationId: number;
+            /** Format: int64 */
+            searchId: number;
+            /** Format: int32 */
+            versionNo: number;
+            flight: components["schemas"]["CombinationFlight"];
+            stay: components["schemas"]["CombinationStay"];
+            /** @description 추가 선택(수하물 · 조식). 지금은 늘 빈 배열이다 */
+            addons: {
+                [key: string]: unknown;
+            }[];
+            /** Format: int64 */
+            flightAmount: number;
+            /** Format: int64 */
+            stayAmount: number;
+            /** Format: int64 */
+            addonAmount: number;
+            /** Format: int64 */
+            totalAmount: number;
+            /**
+             * Format: int64
+             * @description 예산이 없으면 null
+             */
+            budgetAmount?: number | null;
+            /**
+             * Format: int64
+             * @description 예산에서 합계를 뺀 값. 음수면 예산 초과. 예산이 없으면 null
+             */
+            budgetGap?: number | null;
+            /** @example KRW */
+            currency: string;
+            /** Format: date-time */
+            selectedAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ApiResponseSearchStarted: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["SearchStarted"];
+        };
+        ApiResponseSearchProgress: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["SearchProgress"];
+        };
+        ApiResponseSearchCanceled: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["SearchCanceled"];
+        };
+        ApiResponseSearchVersion: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["SearchVersion"];
+        };
+        ApiResponseCombination: {
+            isSuccess?: boolean;
+            code?: string;
+            message?: string;
+            result?: components["schemas"]["Combination"];
+        };
         CreateTripRequestBody: {
             /** @example 다음 달에 오사카 2박 3일 다녀오고 싶어 */
             message: string;
@@ -317,6 +701,8 @@ export interface components {
     parameters: {
         RequestId: string;
         CheckoutId: string;
+        SearchId: number;
+        VersionNo: number;
     };
     requestBodies: never;
     headers: never;
@@ -433,6 +819,167 @@ export interface operations {
                 };
             };
             /** @description COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    createSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSearchBody"];
+            };
+        };
+        responses: {
+            /** @description 검색을 시작했다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseSearchStarted"];
+                };
+            };
+            /** @description 400(문장이 비었거나 너무 김) · 401(로그인 필요) · 429(요청이 너무 잦음. 코드 이름은 확정 전) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getSearchVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: components["parameters"]["SearchId"];
+                versionNo: components["parameters"]["VersionNo"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 이 버전의 문장과 검색에 적용한 조건 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseSearchVersion"];
+                };
+            };
+            /** @description SEARCH404_1 · SEARCH404_2(없는 검색 · 버전이거나 내 검색이 아님) · 401 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getSearchProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: components["parameters"]["SearchId"];
+                versionNo: components["parameters"]["VersionNo"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 지금 상태 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseSearchProgress"];
+                };
+            };
+            /** @description SEARCH404_1 · SEARCH404_2(없는 검색 · 버전이거나 내 검색이 아님) · 401 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    cancelSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: components["parameters"]["SearchId"];
+                versionNo: components["parameters"]["VersionNo"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 취소했다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseSearchCanceled"];
+                };
+            };
+            /** @description SEARCH409_2(이미 끝난 검색) · SEARCH404_1 · SEARCH404_2 · 401 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getCombination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: components["parameters"]["SearchId"];
+                versionNo: components["parameters"]["VersionNo"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 지금 고른 조합 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseCombination"];
+                };
+            };
+            /** @description COMBINATION404_1(검색이 안 끝났거나 결과가 없음) · SEARCH404_1 · SEARCH404_2 · 401 */
             default: {
                 headers: {
                     [name: string]: unknown;

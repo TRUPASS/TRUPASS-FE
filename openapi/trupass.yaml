@@ -12,6 +12,7 @@ tags:
   - name: users
   - name: trip-requests
   - name: checkouts
+  - name: searches
 paths:
   # 로그인 · 사용자: 백엔드(core)에 구현된 그대로 옮겼다 (AuthController, UserController).
   # 응답은 모두 공통 형식 {isSuccess, code, message, result} 이다. 백엔드처럼 응답 필드는 필수로 표시하지 않는다.
@@ -104,6 +105,125 @@ paths:
                 $ref: '#/components/schemas/ApiResponseMe'
         default:
           description: COMMON401(토큰 없음) · COMMON401_1(토큰이 틀렸거나 만료됨) · USER404_1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  # 검색: 팀 Notion "엔드포인트" DB 의 계약(B1 · B2)을 옮겼다. 원본과 다르면 원본이 맞다.
+  # 계약표에서 'null 가능 X' 인 필드는 required, 'O' 인 필드는 nullable 로 적었다 (null 이면 빠져서 올 수도 있게 required 에는 넣지 않았다).
+  # 백엔드가 B1 · B2 를 올리면 `pnpm gen:api --remote` 로 뽑은 스키마와 비교하고, 다르면 백엔드에 알린다.
+  /searches:
+    post:
+      tags: [searches]
+      operationId: createSearch
+      summary: 검색 시작 (비동기)
+      description: >-
+        문장 세 개를 받아 검색을 시작한다. 응답은 바로 오고 검색은 서버 뒤에서 돈다. 진행 상태는 progress 를 폴링해서 본다.
+        로그인이 필요하고 사용자별 요청 한도가 있다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSearchBody'
+      responses:
+        '200':
+          description: 검색을 시작했다
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseSearchStarted'
+        default:
+          description: '400(문장이 비었거나 너무 김) · 401(로그인 필요) · 429(요청이 너무 잦음. 코드 이름은 확정 전)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /searches/{searchId}/versions/{versionNo}:
+    get:
+      tags: [searches]
+      operationId: getSearchVersion
+      summary: 검색 조건 — 결과 화면의 요청 표
+      parameters:
+        - $ref: '#/components/parameters/SearchId'
+        - $ref: '#/components/parameters/VersionNo'
+      responses:
+        '200':
+          description: 이 버전의 문장과 검색에 적용한 조건
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseSearchVersion'
+        default:
+          description: 'SEARCH404_1 · SEARCH404_2(없는 검색 · 버전이거나 내 검색이 아님) · 401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /searches/{searchId}/versions/{versionNo}/progress:
+    get:
+      tags: [searches]
+      operationId: getSearchProgress
+      summary: 검색 진행 상태 — FE 가 1.5초마다 폴링한다
+      description: >-
+        COMPLETED · FAILED · CANCELED 가 오면 폴링을 멈춘다. 문장 해석(PARSING)이 끝나기 전에는 국가 · 날짜 필드가 null 이다.
+        항공과 숙소를 동시에 검색하므로 폴링 사이에 단계를 건너뛸 수 있다(FLIGHT 다음에 바로 SUMMARY · COMPLETED).
+      parameters:
+        - $ref: '#/components/parameters/SearchId'
+        - $ref: '#/components/parameters/VersionNo'
+      responses:
+        '200':
+          description: 지금 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseSearchProgress'
+        default:
+          description: 'SEARCH404_1 · SEARCH404_2(없는 검색 · 버전이거나 내 검색이 아님) · 401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /searches/{searchId}/versions/{versionNo}/cancel:
+    post:
+      tags: [searches]
+      operationId: cancelSearch
+      summary: 검색 취소
+      description: 본문은 없다. 이미 끝난 검색이면 409(SEARCH409_2)다.
+      parameters:
+        - $ref: '#/components/parameters/SearchId'
+        - $ref: '#/components/parameters/VersionNo'
+      responses:
+        '200':
+          description: 취소했다
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseSearchCanceled'
+        default:
+          description: 'SEARCH409_2(이미 끝난 검색) · SEARCH404_1 · SEARCH404_2 · 401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /searches/{searchId}/versions/{versionNo}/combination:
+    get:
+      tags: [searches]
+      operationId: getCombination
+      summary: 선택한 조합 — 결과 화면의 [선택한 조합]과 아래 고정 바
+      description: 검색이 끝나면 서버가 1순위 추천 조합을 기본 조합으로 저장해 둔다. 금액은 모두 서버가 계산한 값이다.
+      parameters:
+        - $ref: '#/components/parameters/SearchId'
+        - $ref: '#/components/parameters/VersionNo'
+      responses:
+        '200':
+          description: 지금 고른 조합
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCombination'
+        default:
+          description: 'COMBINATION404_1(검색이 안 끝났거나 결과가 없음) · SEARCH404_1 · SEARCH404_2 · 401'
           content:
             application/json:
               schema:
@@ -209,6 +329,20 @@ components:
       required: true
       schema:
         type: string
+    SearchId:
+      name: searchId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    VersionNo:
+      name: versionNo
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
   schemas:
     GoogleLogin:
       type: object
@@ -331,6 +465,443 @@ components:
         result:
           type: object
           additionalProperties: true
+    CreateSearchBody:
+      type: object
+      required: [flightSentence, staySentence, experienceSentence]
+      properties:
+        flightSentence:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 항공 문장 (화면의 첫 번째 질문)
+          example: 12월 18일 전후로 인천에서 도쿄, 아침에 출발하는 왕복 항공권. 성인 2명
+        staySentence:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 숙소 문장 (두 번째 질문)
+          example: 미술관에서 가까운 조용한 호텔로 3박. 항공권까지 합쳐 160만원 이내
+        experienceSentence:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 체험 · 여행 요구사항 문장 (세 번째 질문)
+          example: 미술관과 건축물 탐방 위주로 조용하게. 쇼핑은 하루만.
+    SearchStatus:
+      type: string
+      enum: [IN_PROGRESS, COMPLETED, FAILED, CANCELED]
+    SearchProgressStep:
+      type: string
+      description: PARSING(문장 해석) · FLIGHT(항공편 검색) · STAY(숙소 검색) · SUMMARY(결과 정리)
+      enum: [PARSING, FLIGHT, STAY, SUMMARY]
+    SearchStarted:
+      type: object
+      required: [searchId, versionNo, status, progressStep, startedAt]
+      properties:
+        searchId:
+          type: integer
+          format: int64
+          example: 12
+        versionNo:
+          type: integer
+          format: int32
+          description: 첫 검색은 1
+          example: 1
+        status:
+          $ref: '#/components/schemas/SearchStatus'
+        progressStep:
+          $ref: '#/components/schemas/SearchProgressStep'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2026-11-10T05:01:55Z'
+    SearchProgress:
+      type: object
+      required:
+        [
+          searchId,
+          versionNo,
+          status,
+          progressStep,
+          flightSentence,
+          staySentence,
+          experienceSentence,
+          providerNames,
+          startedAt,
+        ]
+      properties:
+        searchId:
+          type: integer
+          format: int64
+        versionNo:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/SearchStatus'
+        progressStep:
+          $ref: '#/components/schemas/SearchProgressStep'
+        flightSentence:
+          type: string
+        staySentence:
+          type: string
+        experienceSentence:
+          type: string
+        revisionRequest:
+          type: string
+          nullable: true
+          description: 재검색 버전에만 있다. 지금은 늘 null
+        originCountry:
+          type: string
+          nullable: true
+          example: 대한민국
+        destinationCountry:
+          type: string
+          nullable: true
+          example: 일본
+        originCountryCode:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2
+          example: KR
+        destinationCountryCode:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2
+          example: JP
+        destinationCity:
+          type: string
+          nullable: true
+          example: 도쿄
+        departDateFrom:
+          type: string
+          format: date
+          nullable: true
+          description: 출발일 범위의 시작. 지금은 departDateTo 와 같은 날로 온다
+          example: '2026-12-18'
+        departDateTo:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-12-18'
+        departTimeFrom:
+          type: string
+          nullable: true
+          description: 'HH:mm. 오전 06:00–12:00 · 오후 12:00–18:00 · 저녁 18:00–23:59. 시간대를 말하지 않으면 null'
+          example: '06:00'
+        departTimeTo:
+          type: string
+          nullable: true
+          example: '12:00'
+        adultCount:
+          type: integer
+          format: int32
+          nullable: true
+          example: 2
+        nights:
+          type: integer
+          format: int32
+          nullable: true
+          example: 3
+        flightOfferCount:
+          type: integer
+          format: int32
+          nullable: true
+          description: 항공편 검색이 끝난 뒤 찾은 항공권 수
+        providerNames:
+          type: array
+          description: 지금 단계에서 조회 중인 출처 이름 (지금은 Duffel · LiteAPI)
+          items:
+            type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    SearchCanceled:
+      type: object
+      required: [searchId, versionNo, status]
+      properties:
+        searchId:
+          type: integer
+          format: int64
+        versionNo:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/SearchStatus'
+    SearchConditionCategory:
+      type: string
+      enum: [FLIGHT, STAY, EXPERIENCE]
+    SearchCondition:
+      type: object
+      required: [conditionId, category, label, value, changed, sortOrder]
+      properties:
+        conditionId:
+          type: integer
+          format: int64
+        category:
+          $ref: '#/components/schemas/SearchConditionCategory'
+        label:
+          type: string
+          example: 출발
+        value:
+          type: string
+          example: 12.18 (금), 오전 06:00 ~ 12:00
+        note:
+          type: string
+          nullable: true
+          description: 넓혀 잡았거나 채워 넣은 조건의 설명
+          example: 출발지를 서울로 검색
+        changed:
+          type: boolean
+          description: 재검색에서 바뀐 조건인가
+        sortOrder:
+          type: integer
+          format: int32
+    SearchVersion:
+      type: object
+      required:
+        [
+          searchId,
+          versionNo,
+          latest,
+          status,
+          flightSentence,
+          staySentence,
+          experienceSentence,
+          conditions,
+          startedAt,
+        ]
+      properties:
+        searchId:
+          type: integer
+          format: int64
+        versionNo:
+          type: integer
+          format: int32
+        latest:
+          type: boolean
+          description: 이 검색의 최신 버전인가
+        status:
+          $ref: '#/components/schemas/SearchStatus'
+        flightSentence:
+          type: string
+        staySentence:
+          type: string
+        experienceSentence:
+          type: string
+        revisionRequest:
+          type: string
+          nullable: true
+          description: 재검색 버전에만 있다. 지금은 늘 null
+        changeSummary:
+          type: string
+          nullable: true
+          description: 재검색 버전에만 있다. 지금은 늘 null
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchCondition'
+        adultCount:
+          type: integer
+          format: int32
+          nullable: true
+        nights:
+          type: integer
+          format: int32
+          nullable: true
+        budgetAmount:
+          type: integer
+          format: int64
+          nullable: true
+          description: 예산(원). 예산을 말하지 않았으면 null
+        priceCheckedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 요금을 조회한 시각
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CombinationFlight:
+      type: object
+      required:
+        [flightOfferId, airlineName, outboundFlightNo, inboundFlightNo, cabinClass, passengerCount]
+      properties:
+        flightOfferId:
+          type: integer
+          format: int64
+          example: 101
+        airlineName:
+          type: string
+          example: 대한항공
+        outboundFlightNo:
+          type: string
+          example: KE 703
+        inboundFlightNo:
+          type: string
+          example: KE 704
+        cabinClass:
+          type: string
+          description: 지금은 이코노미(ECONOMY)만 검색한다
+          example: ECONOMY
+        passengerCount:
+          type: integer
+          format: int32
+          example: 2
+    CombinationStay:
+      type: object
+      required: [stayOfferId, hotelName, roomType, nights, breakfastIncluded]
+      properties:
+        stayOfferId:
+          type: integer
+          format: int64
+          example: 201
+        hotelName:
+          type: string
+          example: 우에노 스테이 인
+        roomType:
+          type: string
+          example: 스탠다드 더블
+        nights:
+          type: integer
+          format: int32
+          example: 3
+        breakfastIncluded:
+          type: boolean
+    Combination:
+      type: object
+      description: 금액은 모두 서버가 계산한 원 단위 정수다. FE 는 더하거나 빼지 않고 그대로 보여 준다. 지금 요금은 테스트 데이터다.
+      required:
+        [
+          combinationId,
+          searchId,
+          versionNo,
+          flight,
+          stay,
+          addons,
+          flightAmount,
+          stayAmount,
+          addonAmount,
+          totalAmount,
+          currency,
+          selectedAt,
+          updatedAt,
+        ]
+      properties:
+        combinationId:
+          type: integer
+          format: int64
+          description: 나중에 추천 장소 · 주문에 쓴다
+          example: 41
+        searchId:
+          type: integer
+          format: int64
+        versionNo:
+          type: integer
+          format: int32
+        flight:
+          $ref: '#/components/schemas/CombinationFlight'
+        stay:
+          $ref: '#/components/schemas/CombinationStay'
+        addons:
+          type: array
+          description: 추가 선택(수하물 · 조식). 지금은 늘 빈 배열이다
+          items:
+            type: object
+            additionalProperties: true
+        flightAmount:
+          type: integer
+          format: int64
+        stayAmount:
+          type: integer
+          format: int64
+        addonAmount:
+          type: integer
+          format: int64
+        totalAmount:
+          type: integer
+          format: int64
+        budgetAmount:
+          type: integer
+          format: int64
+          nullable: true
+          description: 예산이 없으면 null
+        budgetGap:
+          type: integer
+          format: int64
+          nullable: true
+          description: 예산에서 합계를 뺀 값. 음수면 예산 초과. 예산이 없으면 null
+        currency:
+          type: string
+          example: KRW
+        selectedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ApiResponseSearchStarted:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/SearchStarted'
+    ApiResponseSearchProgress:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/SearchProgress'
+    ApiResponseSearchCanceled:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/SearchCanceled'
+    ApiResponseSearchVersion:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/SearchVersion'
+    ApiResponseCombination:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/Combination'
     CreateTripRequestBody:
       type: object
       required: [message]
