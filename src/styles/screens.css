@@ -895,6 +895,9 @@
 .home-l b {
   font-weight: 400;
 }
+.home-m {
+  width: 100%;
+}
 .home-e {
   flex-direction: row;
   flex-wrap: wrap;
@@ -1136,6 +1139,42 @@ body[data-stage='done'] .sp[data-sp='done'] b {
   font-size: 13px;
   line-height: 20px;
   color: var(--tx-3);
+}
+
+/* 검색 중(API): 문장 해석이 지금 단계일 때. 예시 화면은 문장 해석을 늘 끝난 단계로 그린다 */
+body[data-stage='parse'] .srch-t[data-st='parse'] {
+  display: flex;
+}
+.js body[data-stage='parse'] .srch-t[data-st='parse'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+body[data-stage='parse'] .sp[data-sp='parse'] {
+  padding-left: 14px;
+  background: var(--brand);
+  color: var(--on-photo);
+  box-shadow: none;
+}
+body[data-stage='parse'] .sp[data-sp='parse'] .ic {
+  display: none;
+}
+body[data-stage='parse'] .sp[data-sp='parse'] b {
+  font-weight: 500;
+}
+/* 결과 정리가 아직 진행 중이면(API) 점을 계속 보인다 */
+body[data-stage='done'] .dots.live {
+  display: inline-flex;
+}
+/* 문장에서 읽은 여행 조건 한 줄 (출발일 · 시간대 · 인원 · 숙박) */
+.srch-fx {
+  text-align: center;
+}
+/* 오래 걸림 · 불러오지 못함 안내 */
+.srch-n {
+  width: 100%;
+  max-width: 600px;
 }
 
 /* ───────── 07 · 08 검색 결과 ───────── */

@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { routes } from '@/app/routes';
 import { Globe } from '@/features/search/SearchGlobe';
 import type { GlobeStage } from '@/features/search/globe';
+import { SearchProgressScreen } from '@/features/search/SearchProgressScreen';
+import { readSearchKey, searchApiOn } from '@/features/search/searchRef';
 import { useBodyClass } from '@/shared/hooks/useBodyClass';
 import { reduceMotion, still } from '@/shared/lib/capture';
 import { APPLIED, FLIGHTS, PROMPTS, ROUTE } from '@/shared/sample/data';
@@ -32,12 +34,23 @@ const TEXT: Record<GlobeStage, [title: string, desc: string]> = {
 };
 
 /**
- * 검색 중. 화면 가운데 지구본 위에서 검색이 진행되는 모습을 보여 준다.
+ * 검색 중. 주소에 searchId · versionNo 가 있으면(API 에 붙은 설정일 때) 백엔드의 진행 상태로 그리고,
+ * 없으면 예시 화면을 그대로 보여 준다(디자인 확인용).
+ */
+export function SearchingPage() {
+  const [params] = useSearchParams();
+  const key = searchApiOn ? readSearchKey(params) : null;
+  if (key) return <SearchProgressScreen key={`${key.searchId}.${key.versionNo}`} searchKey={key} />;
+  return <SampleSearching />;
+}
+
+/**
+ * 검색 중(예시). 화면 가운데 지구본 위에서 검색이 진행되는 모습을 보여 준다.
  * - 항공: 출발 국가(남색)에서 도착 국가(하늘색)로 비행기가 호를 그리며 난다.
  * - 숙소: 도착 국가를 가까이 당기고 그 영토 위에 호텔 건물이 층층이 올라가기를 반복한다.
  * 끝나면 검색 결과로 넘어간다. 주소에 `?stage=stay` 를 붙이면 숙소 장면에 멈춘 모습을 본다.
  */
-export function SearchingPage() {
+function SampleSearching() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   // 한 장면에 멈춘 화면: 숙소 장면을 따로 보거나, 정지 화면 캡처일 때

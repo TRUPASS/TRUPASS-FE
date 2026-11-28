@@ -1,6 +1,8 @@
 import { useLocation, useSearchParams } from 'react-router';
 import { routes } from '@/app/routes';
 import { ResultScreen } from '@/features/results/ResultScreen';
+import { SearchResultScreen } from '@/features/results/SearchResultScreen';
+import { readSearchKey, searchApiOn } from '@/features/search/searchRef';
 import { FLIGHTS, REQ, REV, V1, V2 } from '@/shared/sample/data';
 import { Note } from '@/shared/ui/Status';
 
@@ -13,6 +15,8 @@ const T2 = REV.at.slice(11);
  * - /results?dock=up: 수정 요청 독이 올라와 문장이 적힌 모습. 화면 높이만큼만 보여 준다.
  * - /results?rev=2: 수정 요청을 반영해 다시 검색한 결과. 무엇이 바뀌고 무엇을 유지했는지 맨 위에 적고,
  *   바뀐 조건과 새로 찾은 숙소에 표식을 단다. 바뀐 숙소가 바로 보이도록 고른 항공권의 숙소를 펼쳐 둔다.
+ * - /results?searchId=12&versionNo=1: API 에 붙은 설정이면 백엔드의 검색 조건과 선택한 조합으로 그린다 (SearchResultScreen).
+ *   위의 쿼리가 없거나 rev=2 면 예시 화면을 그대로 보여 준다.
  */
 export function ResultsPage() {
   const [params] = useSearchParams();
@@ -46,6 +50,11 @@ export function ResultsPage() {
         dock={{ placeholder: '예) 조식이 포함된 숙소만 보여 주세요' }}
       />
     );
+  }
+
+  const search = searchApiOn ? readSearchKey(params) : null;
+  if (search) {
+    return <SearchResultScreen key={`${search.searchId}.${search.versionNo}`} searchKey={search} />;
   }
 
   const up = params.get('dock') === 'up';

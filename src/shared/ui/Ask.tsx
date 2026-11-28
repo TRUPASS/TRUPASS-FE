@@ -23,6 +23,8 @@ export interface AskHandle {
   /** 예시 문장으로 채우고 커서를 둔다 */
   fill(text: string): void;
   focus(options?: FocusOptions): void;
+  /** 지금 칸에 적힌 문장 (앞뒤 공백 없이). 읽으면서 다음 화면으로 넘길 저장소에도 담는다 */
+  value(): string;
 }
 
 interface AskProps {
@@ -35,6 +37,10 @@ interface AskProps {
   last?: boolean;
   /** 문장을 적어야 제출할 수 있다 */
   required?: boolean;
+  /** 적을 수 있는 최대 글자 수 */
+  maxLength?: number;
+  /** 보내는 중: 버튼을 끄고 다시 제출하지 못하게 한다 */
+  busy?: boolean;
   /** 엔터를 누르거나 버튼을 눌렀을 때 */
   onSubmit: () => void;
   ref?: Ref<AskHandle>;
@@ -43,7 +49,17 @@ interface AskProps {
 /**
  * 문장 검색 상자 (랜딩 · 새 검색). 적는 대로 sessionStorage 에 담아 다음 화면으로 넘긴다.
  */
-export function Ask({ prompt: p, filled, plain, last, required, onSubmit, ref }: AskProps) {
+export function Ask({
+  prompt: p,
+  filled,
+  plain,
+  last,
+  required,
+  maxLength,
+  busy,
+  onSubmit,
+  ref,
+}: AskProps) {
   const [value, setValue] = useState(() => prompts.get()[p.k] || (filled ? p.v : ''));
   const input = useRef<HTMLInputElement>(null);
   const answer = value.trim();
@@ -57,14 +73,19 @@ export function Ask({ prompt: p, filled, plain, last, required, onSubmit, ref }:
     focus(options) {
       input.current?.focus(options);
     },
+    value() {
+      prompts.put(p.k, answer);
+      return answer;
+    },
   }));
 
   return (
     <form
       className={plain ? 'ask plain' : 'ask'}
+      aria-busy={busy || undefined}
       onSubmit={(e) => {
         e.preventDefault();
-        if (required && !answer) return;
+        if (busy || (required && !answer)) return;
         prompts.put(p.k, answer);
         onSubmit();
       }}
@@ -77,6 +98,7 @@ export function Ask({ prompt: p, filled, plain, last, required, onSubmit, ref }:
         placeholder={p.ph}
         value={value}
         required={required}
+        maxLength={maxLength}
         autoComplete="off"
         enterKeyHint={last ? 'search' : 'next'}
         aria-label={p.q || p.l}
@@ -89,7 +111,7 @@ export function Ask({ prompt: p, filled, plain, last, required, onSubmit, ref }:
         className="go"
         type="submit"
         aria-label={last ? '검색' : '다음'}
-        disabled={required && !answer}
+        disabled={busy || (required && !answer)}
       >
         <Icon name={last ? 'search' : 'arrow--right'} size={22} />
       </button>

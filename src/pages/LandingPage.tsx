@@ -6,6 +6,7 @@ import { Hero } from '@/features/landing/Hero';
 import { HowTo } from '@/features/landing/HowTo';
 import { LandingFooter } from '@/features/landing/LandingFooter';
 import { Services, type ServicesHandle } from '@/features/landing/Services';
+import { searchStartPath } from '@/features/search/searchRef';
 import { useSignedInUser } from '@/shared/auth/member';
 import { reduceMotion, still } from '@/shared/lib/capture';
 
@@ -35,7 +36,7 @@ export function LandingPage() {
 
         <Services
           ref={services}
-          onComplete={() => leave(signedIn ? routes.searching : `${routes.login}?from=search`)}
+          onComplete={() => leave(signedIn ? searchStartPath() : `${routes.login}?from=search`)}
         />
       </main>
 
